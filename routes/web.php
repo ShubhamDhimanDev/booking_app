@@ -59,5 +59,5 @@ Route::get('/payu/payment', [PayuController::class, 'paymentForm'])->name('payu.
 Route::post('/payu/success', [PayuController::class, 'paymentSuccess'])->name('payu.success');
 Route::post('/payu/failure', [PayuController::class, 'paymentFailure'])->name('payu.failure');
 
-// require __DIR__ . '/auth.php';
+require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';

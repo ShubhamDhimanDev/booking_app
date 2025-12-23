@@ -8,7 +8,6 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -19,7 +18,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Auth/Login', [
+        if (auth()->check()) {
+            // redirect based on role if already logged in
+            $user = auth()->user();
+            $isAdmin = method_exists($user, 'hasRole') && $user->hasRole('admin');
+            return redirect($isAdmin ? '/bookings' : '/user/bookings');
+        }
+
+        return view('admin.auth.login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
         ]);

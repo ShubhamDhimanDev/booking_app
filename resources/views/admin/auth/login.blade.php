@@ -54,7 +54,7 @@
                   @endif
 
                   {{-- main form --}}
-                  <form method="POST" action="{{ route('admin.login') }}">
+                  <form method="POST" action="{{ route('login') }}">
                     @csrf
 
                     <div class="mb-3">
@@ -112,6 +112,12 @@
                     </div>
 
                   </form>
+
+                  <div class="text-center mt-3">
+                    <a href="{{ route('password.request') }}">Forgot password?</a>
+                    <span class="text-muted mx-2">|</span>
+                    <a href="{{ route('register') }}">Create an account</a>
+                  </div>
                 </div>
               </div>
             </div>
