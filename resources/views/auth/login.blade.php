@@ -32,7 +32,7 @@
               <div class="card shadow-sm">
                 <div class="card-body">
                   <div class="text-center mb-3">
-                    <img src="{{ asset('admins/assets/images/AC-Logo_1-8.png') }}" alt="logo" style="max-height: 60px;">
+                    <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" style="max-height: 60px;">
                   </div>
 
                   <h4 class="text-center mb-1">Hello! let's get started</h4>

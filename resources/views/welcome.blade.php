@@ -74,8 +74,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <img src="{{ asset('admins/assets/images/AC-Logo_1-8.png') }}" alt="MeetFlow" class="h-8">
-                    <span class="ml-2 text-xl font-bold gradient-text">MeetFlow</span>
+                    <img src="{{ asset('admins/assets/images/logo.png') }}" alt="MeetFlow" class="h-20 w-auto">
                 </div>
                 <div class="hidden md:flex space-x-8">
                     <a href="#features" class="text-gray-300 hover:text-white transition">Features</a>
@@ -421,8 +420,7 @@
                 <!-- Brand -->
                 <div class="col-span-1">
                     <div class="flex items-center mb-4">
-                        <img src="{{ asset('admins/assets/images/AC-Logo_1-8.png') }}" alt="MeetFlow" class="h-8">
-                        <span class="ml-2 text-xl font-bold gradient-text">MeetFlow</span>
+                        <img src="{{ asset('admins/assets/images/logo.png') }}" alt="MeetFlow" class="h-20">
                     </div>
                     <p class="text-gray-400 text-sm">
                         Smart booking and calendar management platform for modern businesses.
