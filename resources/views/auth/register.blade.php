@@ -4,10 +4,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Register</title>
+    <title>MeetFlow - Register</title>
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/css/vendor.bundle.base.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
+    <link rel="stylesheet" href="{{ asset('admins/assets/css/theme-overrides.css') }}">
     <link rel="shortcut icon" href="{{ asset('admins/assets/images/favicon.ico') }}" />
   </head>
   <body>

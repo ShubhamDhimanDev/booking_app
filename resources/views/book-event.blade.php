@@ -52,7 +52,7 @@
             <h3>🎉 Meeting Scheduled!</h3>
             <p id="summary"></p>
             <p>You'll receive your web conferencing details shortly via email.</p>
-            <p>Or <a href="{{ route('admin.login') }}">login here</a></p>
+            <p>Or <a href="{{ route('login') }}">login here</a></p>
         </div>
     </div>
 
@@ -408,10 +408,12 @@
                 <input type="hidden" name="productinfo" value="${orderData.product_info}">
                 <input type="hidden" name="firstname" value="${orderData.first_name}">
                 <input type="hidden" name="email" value="${orderData.email}">
-                <input type="hidden" name="phone" value="">
+                <input type="hidden" name="phone" value="${orderData.phone || ''}">
                 <input type="hidden" name="surl" value="{{ route('payu.success') }}">
                 <input type="hidden" name="furl" value="{{ route('payu.failure') }}">
                 <input type="hidden" name="hash" value="${orderData.hash}">
+                <input type="hidden" name="service_provider" value="payu_paisa">
+                <input type="hidden" name="mid" value="${orderData.merchant_id}">
                 <input type="hidden" name="booking_id" value="${bookingId}">
             `;
             document.body.appendChild(form);

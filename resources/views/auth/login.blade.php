@@ -5,7 +5,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Star Admin2 — Admin Login</title>
+    <title>MeetFlow - Login</title>
 
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/feather/feather.css') }}">
@@ -22,6 +22,7 @@
     <!-- endinject -->
     <link rel="shortcut icon" href="{{ asset('admins/assets/images/favicon.ico') }}" />
     <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
+    <link rel="stylesheet" href="{{ asset('admins/assets/css/theme-overrides.css') }}">
   </head>
   <body>
     <div class="container-scroller">

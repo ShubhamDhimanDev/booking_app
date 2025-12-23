@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/css/vendor.bundle.base.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
+    <link rel="stylesheet" href="{{ asset('admins/assets/css/theme-overrides.css') }}">
     <link rel="shortcut icon" href="{{ asset('admins/assets/images/favicon.ico') }}" />
   </head>
   <body>

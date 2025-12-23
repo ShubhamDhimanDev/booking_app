@@ -1,10 +1,8 @@
 <?php
 // routes/admin.php
 
-use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
-use App\Http\Controllers\Admin\GoogleAuthController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BookingController;
