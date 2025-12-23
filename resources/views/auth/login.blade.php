@@ -1,4 +1,4 @@
-<!-- resources/views/admin/auth/login.blade.php -->
+<!-- resources/views/auth/login.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
   <head>

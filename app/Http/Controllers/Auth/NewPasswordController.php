@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
+use Illuminate\Contracts\View\View;
 
 class NewPasswordController extends Controller
 {
@@ -18,11 +18,11 @@ class NewPasswordController extends Controller
      * Display the password reset view.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Inertia\Response
+     * @return View
      */
     public function create(Request $request)
     {
-        return view('admin.auth.reset-password', [
+        return view('auth.reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),
         ]);

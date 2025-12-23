@@ -1,4 +1,4 @@
-<!-- resources/views/admin/auth/verify-email.blade.php -->
+<!-- resources/views/auth/verify-email.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
   <head>

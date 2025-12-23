@@ -39,7 +39,7 @@
                     <a class="dropdown-item preview-item">
                         <div class="preview-item-content flex-grow py-2">
                             <p class="preview-subject ellipsis fw-medium text-dark">Angular Bundle</p>
-                            <p class="fw-light small-text mb-0">Everything you’ll ever need for your Angular projects
+                            <p class="fw-light small-text mb-0">Everything you'll ever need for your Angular projects
                             </p>
                         </div>
                     </a>

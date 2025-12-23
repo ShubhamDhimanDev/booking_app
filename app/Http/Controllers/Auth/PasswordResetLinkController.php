@@ -6,18 +6,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
+use Illuminate\Contracts\View\View;
 
 class PasswordResetLinkController extends Controller
 {
     /**
      * Display the password reset link request view.
      *
-     * @return \Inertia\Response
+     * @return View
      */
     public function create()
     {
-        return view('admin.auth.forgot-password', [
+        return view('auth.forgot-password', [
             'status' => session('status'),
         ]);
     }

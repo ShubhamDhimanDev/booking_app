@@ -1,10 +1,10 @@
-<!-- resources/views/admin/auth/reset-password.blade.php -->
+<!-- resources/views/auth/confirm-password.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Reset Password</title>
+    <title>Confirm Password</title>
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/css/vendor.bundle.base.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
@@ -21,8 +21,12 @@
                   <div class="text-center mb-3">
                     <img src="{{ asset('admins/assets/images/AC-Logo_1-8.png') }}" alt="logo" style="max-height: 60px;">
                   </div>
-                  <h4 class="text-center mb-1">Reset your password</h4>
-                  <p class="text-center text-muted mb-4">Enter your new password below.</p>
+                  <h4 class="text-center mb-1">Confirm your password</h4>
+                  <p class="text-center text-muted mb-4">For security, please confirm your password to continue.</p>
+
+                  @if(session('status'))
+                    <div class="alert alert-success">{{ session('status') }}</div>
+                  @endif
 
                   @if($errors->any())
                     <div class="alert alert-danger">
@@ -34,33 +38,23 @@
                     </div>
                   @endif
 
-                  <form method="POST" action="{{ route('password.store') }}">
+                  <form method="POST" action="{{ route('password.confirm') }}">
                     @csrf
-                    <input type="hidden" name="token" value="{{ $token }}">
 
                     <div class="mb-3">
-                      <label for="email" class="form-label">Email</label>
-                      <input type="email" id="email" name="email" class="form-control" value="{{ old('email', $email) }}" required>
+                      <label for="password" class="form-label">Password</label>
+                      <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" required autofocus>
+                      @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                      @enderror
                     </div>
 
-                    <div class="mb-3">
-                      <label for="password" class="form-label">New Password</label>
-                      <input type="password" id="password" name="password" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="password_confirmation" class="form-label">Confirm Password</label>
-                      <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
-                    </div>
-
-                    <div class="d-grid">
-                      <button type="submit" class="btn btn-primary px-4">Reset Password</button>
+                    <div class="d-grid mb-2">
+                      <button type="submit" class="btn btn-primary px-4">Confirm</button>
                     </div>
                   </form>
 
                   <div class="text-center mt-3">
-                    <a href="{{ route('login') }}">Back to login</a>
-                    <span class="text-muted mx-2">|</span>
                     <a href="{{ route('password.request') }}">Forgot password?</a>
                   </div>
                 </div>

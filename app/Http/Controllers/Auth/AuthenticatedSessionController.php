@@ -14,7 +14,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      *
-     * @return \Inertia\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function create()
     {
@@ -25,7 +25,7 @@ class AuthenticatedSessionController extends Controller
             return redirect($isAdmin ? '/bookings' : '/user/bookings');
         }
 
-        return view('admin.auth.login', [
+        return view('auth.login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
         ]);

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class EmailVerificationPromptController extends Controller
 {
@@ -21,7 +20,7 @@ class EmailVerificationPromptController extends Controller
             return redirect()->intended(RouteServiceProvider::HOME);
         }
 
-        return view('admin.auth.verify-email', [
+        return view('auth.verify-email', [
             'status' => session('status'),
         ]);
     }
