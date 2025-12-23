@@ -1,0 +1,264 @@
+/* Dark theme overrides for admin (dark-overrides.css)
+   Background: #010101
+   Headings: #b28631
+   Adjusts colors while leaving original styles intact.
+*/
+:root {
+  --bg: #010101;
+  --panel: #0a0a0a;
+  --muted: #e6e6e6;
+  --heading: #b28631;
+  --accent: #d9b07a;
+  --border: #222;
+}
+
+html, body {
+  background-color: var(--bg) !important;
+  color: var(--muted) !important;
+}
+
+.container-scroller,
+.page-body-wrapper,
+.main-panel,
+.content-wrapper {
+  background-color: var(--bg) !important;
+  color: var(--muted) !important;
+}
+
+/* Navbar / Sidebar */
+.navbar,
+.navbar .navbar-menu-wrapper,
+.sidebar {
+  background-color: #070707 !important;
+  border-color: var(--border) !important;
+}
+
+/* Headings and key accents */
+.navbar .welcome-text,
+.menu-title,
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading) !important;
+}
+
+/* General text and links */
+a,
+.nav-link,
+.menu-title,
+.small-text,
+.text-muted,
+p,
+span {
+  color: var(--muted) !important;
+}
+
+a:hover,
+.nav-link:hover {
+  color: var(--accent) !important;
+}
+
+/* Cards, panels, tables */
+.card,
+.card-body,
+.content-wrapper .row .col-sm-12,
+.page-body-wrapper {
+  background-color: var(--panel) !important;
+  border-color: var(--border) !important;
+}
+
+.table thead th {
+  background-color: transparent !important;
+  color: var(--heading) !important;
+  border-bottom-color: var(--border) !important;
+}
+
+/* Buttons / badges */
+.btn-primary,
+.badge-primary {
+  background-color: var(--heading) !important;
+  border-color: var(--heading) !important;
+  color: #010101 !important;
+}
+
+/* Forms */
+.form-control,
+.form-select {
+  background-color: #0b0b0b !important;
+  color: var(--muted) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.alert {
+  background-color: #111 !important;
+  color: var(--muted) !important;
+  border-color: var(--border) !important;
+}
+
+.footer {
+  background: transparent !important;
+  color: var(--muted) !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+/* --- Payments history specific tweaks ---
+   Targets the transaction table/card in /admin/payment/history
+   Keep these here so all page overrides remain in dark-overrides.css
+*/
+.content-wrapper .card,
+.content-wrapper .card .card-body,
+.card {
+  background-color: var(--panel) !important;
+  color: var(--muted) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.content-wrapper h4, .content-wrapper h5, .page-header, .page-title {
+  color: var(--heading) !important;
+}
+
+/* Table adjustments */
+.table,
+.table tbody,
+.table thead,
+.table td,
+.table th {
+  background: transparent !important;
+  color: var(--muted) !important;
+}
+
+.table thead th {
+  color: var(--heading) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.table tbody tr {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(255,255,255,0.02) !important;
+}
+
+.table a {
+  color: var(--accent) !important;
+}
+
+/* Keep success badges visible but slightly darker on dark background */
+.badge-success,
+.btn-success {
+  background-color: #2f9e4a !important;
+  color: #010101 !important;
+  border-color: rgba(0,0,0,0.15) !important;
+}
+
+/* Sidebar active state to match heading accent */
+.sidebar .nav .nav-link.active,
+.sidebar .nav .nav-link[aria-current="page"] {
+  background: rgba(178,134,49,0.06) !important;
+  color: var(--heading) !important;
+  border-left: 3px solid var(--heading) !important;
+}
+
+/* Make small muted text lighter for contrast */
+.small-text,
+.text-muted {
+  color: rgba(230,230,230,0.85) !important;
+}
+
+/* Sidebar & Navbar fixes to remove bright white pill and align colors */
+.sidebar .nav .nav-link {
+  background: transparent !important;
+  color: var(--muted) !important;
+  border-radius: 0.5rem !important;
+  padding-left: 1.1rem !important;
+  padding-right: 1.1rem !important;
+}
+
+.sidebar .nav .nav-link .menu-icon {
+  color: rgba(230,230,230,0.75) !important;
+}
+
+.sidebar .nav .nav-link:hover,
+.sidebar .nav .nav-link:focus {
+  background: rgba(255,255,255,0.02) !important;
+  color: var(--muted) !important;
+}
+
+.sidebar .nav .nav-link.active {
+  background: rgba(178,134,49,0.10) !important;
+  color: var(--heading) !important;
+  border-left: 3px solid var(--heading) !important;
+  box-shadow: none !important;
+}
+
+.sidebar .nav .nav-link.active .menu-icon,
+.sidebar .nav .nav-link:hover .menu-icon {
+  color: var(--heading) !important;
+}
+
+/* Ensure brand area isn't a bright white block */
+.navbar .navbar-brand-wrapper {
+  background: transparent !important;
+}
+
+/* Welcome text in navbar: don't use literal .text-black color */
+.navbar .welcome-text .text-black {
+  color: var(--heading) !important;
+}
+
+/* Navbar dropdowns: ensure all dropdown menus use the dark theme */
+.navbar .dropdown-menu,
+.dropdown-menu.navbar-dropdown,
+.navbar .dropdown-menu.preview-list,
+.dropdown-menu {
+  background-color: #0b0b0b !important;
+  color: var(--muted) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6) !important;
+}
+
+.dropdown-menu .dropdown-item,
+.dropdown-menu .preview-item,
+.dropdown-item.preview-item {
+  background: transparent !important;
+  color: var(--muted) !important;
+}
+
+.dropdown-menu .dropdown-header,
+.dropdown-menu .preview-subject,
+.dropdown-menu .preview-subject.ellipsis {
+  color: var(--heading) !important;
+}
+
+.dropdown-menu .preview-thumbnail i,
+.dropdown-menu .dropdown-item img {
+  filter: none !important;
+  opacity: 0.95 !important;
+}
+
+.dropdown-menu .badge,
+.dropdown-menu .badge-pill {
+  background-color: rgba(178,134,49,0.12) !important;
+  color: var(--heading) !important;
+  border: 1px solid rgba(178,134,49,0.08) !important;
+}
+
+.dropdown-menu .preview-item:hover,
+.dropdown-menu .dropdown-item:hover {
+  background-color: rgba(255,255,255,0.02) !important;
+  color: var(--muted) !important;
+}
+
+/* Ensure any inline dropdown headings/muted texts are readable */
+.dropdown-header p,
+.dropdown-menu .small-text,
+.dropdown-menu .fw-light {
+  color: rgba(230,230,230,0.75) !important;
+}
+.form-text {
+  color: var(--muted);
+}
+table a.btn-warning {
+  color: black !important;
+}
+
