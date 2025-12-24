@@ -241,3 +241,6 @@ a.btn.btn-outline-danger:hover{
 .form-check .form-check-input{
     margin: 0;
 }
+.badge.bg-success {
+  color: white !important;
+}
