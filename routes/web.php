@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayuController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\TestRazorpayRefundController;
 use App\Http\Controllers\TransactionsController;
 
 /*
@@ -49,6 +50,10 @@ Route::post('/payu/failure', [PayuController::class, 'paymentFailure'])->name('p
 
 Route::get('/test', [TestController::class, 'index'])->name('test.index');
 Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
+
+Route::get('/test/razorpay-refund', [TestRazorpayRefundController::class, 'index']);
+Route::post('/test/razorpay-refund', [TestRazorpayRefundController::class, 'refund'])
+    ->name('razorpay.refund');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
