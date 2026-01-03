@@ -19,6 +19,7 @@ class PaymentGatewayController extends Controller
                 'key_id' => Setting::getSetting($gateway . '_key_id', ''),
                 'key_secret' => Setting::getSetting($gateway . '_key_secret', ''),
                 'merchant_key' => Setting::getSetting($gateway . '_merchant_key', ''),
+                'merchant_id' => Setting::getSetting($gateway . '_merchant_id', ''),
                 'merchant_salt' => Setting::getSetting($gateway . '_merchant_salt', ''),
             ];
         }
@@ -37,6 +38,7 @@ class PaymentGatewayController extends Controller
             'razorpay_key_id' => 'nullable|string',
             'razorpay_key_secret' => 'nullable|string',
             'payu_merchant_key' => 'nullable|string',
+            'payu_merchant_id' => 'nullable|string',
             'payu_merchant_salt' => 'nullable|string',
         ]);
 
@@ -54,6 +56,9 @@ class PaymentGatewayController extends Controller
         // Store PayU credentials (encrypted)
         if ($request->filled('payu_merchant_key')) {
             Setting::setSetting('payu_merchant_key', $request->payu_merchant_key, true);
+        }
+        if ($request->filled('payu_merchant_id')) {
+            Setting::setSetting('payu_merchant_id', $request->payu_merchant_id, true);
         }
         if ($request->filled('payu_merchant_salt')) {
             Setting::setSetting('payu_merchant_salt', $request->payu_merchant_salt, true);

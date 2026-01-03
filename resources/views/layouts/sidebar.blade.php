@@ -40,6 +40,15 @@
                   <span class="menu-title">Payments</span>
               </a>
           </li>
+
+
+          {{-- Payment Gateways --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.payment-gateway.*') }}" href="{{ route('admin.payment-gateway.edit') }}">
+                  <i class="mdi mdi-credit-card-settings-outline menu-icon"></i>
+                  <span class="menu-title">Payment Gateways</span>
+              </a>
+          </li>
         @endhasanyrole
 
         @role('user')

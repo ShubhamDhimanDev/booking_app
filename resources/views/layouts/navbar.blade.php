@@ -7,10 +7,10 @@
         </div>
         <div>
             <a class="navbar-brand brand-logo" href="index.html">
-                <img src="{{ asset('admins/assets/images/AC-Logo_1-8.png') }}" alt="logo" />
+                <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" />
             </a>
             <a class="navbar-brand brand-logo-mini" href="index.html">
-                <img src="{{ asset('admins/assets/images/AC-Logo_1-8.png') }}" alt="logo" />
+                <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" />
             </a>
         </div>
     </div>
@@ -39,7 +39,7 @@
                     <a class="dropdown-item preview-item">
                         <div class="preview-item-content flex-grow py-2">
                             <p class="preview-subject ellipsis fw-medium text-dark">Angular Bundle</p>
-                            <p class="fw-light small-text mb-0">Everything you’ll ever need for your Angular projects
+                            <p class="fw-light small-text mb-0">Everything you'll ever need for your Angular projects
                             </p>
                         </div>
                     </a>
@@ -180,7 +180,7 @@
                         Activity</a>
                     <a class="dropdown-item"><i
                             class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ</a> --}}
-                    <a class="dropdown-item" href="{{ route('admin.logout') }}"><i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>Sign
+                    <a class="dropdown-item" href="{{ route('logout') }}"><i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>Sign
                         Out</a>
                 </div>
             </li>

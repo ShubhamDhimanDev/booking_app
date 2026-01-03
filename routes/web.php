@@ -4,13 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayuController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\TestRazorpayRefundController;
 use App\Http\Controllers\TransactionsController;
-use App\Http\Middleware\IsAdmin;
-use App\Http\Middleware\LinkedWithGoogleMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,13 +28,6 @@ Route::middleware('auth')->group(function () {
   Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
   Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-  Route::middleware([IsAdmin::class, LinkedWithGoogleMiddleware::class])->group(function(){
-    // Route::resource('/events', EventController::class)
-    //   ->middleware(['role:admin'])
-    //   ->except(['show']);
-    // Route::resource('/bookings', BookingController::class)->only(['index', 'destroy']);
-  });
-
   // Transactions for regular users
   Route::get('/user/transactions', [TransactionsController::class, 'index'])->name('transactions.index');
   // Bookings for regular users (bookers)
@@ -53,11 +44,16 @@ Route::post('/verify-payment', [PaymentController::class, 'verifyPayment']);
 Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->name('events.show.public');
 Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->name('bookings.store');
 
-Route::get('/test', [TestController::class, 'index'])->name('test.index');
-
 Route::get('/payu/payment', [PayuController::class, 'paymentForm'])->name('payu.paymentForm');
 Route::post('/payu/success', [PayuController::class, 'paymentSuccess'])->name('payu.success');
 Route::post('/payu/failure', [PayuController::class, 'paymentFailure'])->name('payu.failure');
 
-// require __DIR__ . '/auth.php';
+Route::get('/test', [TestController::class, 'index'])->name('test.index');
+Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
+
+Route::get('/test/razorpay-refund', [TestRazorpayRefundController::class, 'index']);
+Route::post('/test/razorpay-refund', [TestRazorpayRefundController::class, 'refund'])
+    ->name('razorpay.refund');
+
+require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';

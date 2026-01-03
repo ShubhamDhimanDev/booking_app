@@ -1,4 +1,4 @@
-@extends('admin.layout.app')
+@extends('layouts.app')
 
 @section('title', 'Add New Event')
 
@@ -50,27 +50,6 @@
                     @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
-                {{-- Duration --}}
-                <div class="mb-3">
-                    <label class="form-label">Duration</label>
-                    <select
-                        name="duration"
-                        class="form-select @error('duration') is-invalid @enderror"
-                    >
-                        <option value="">-- Select duration --</option>
-
-                        @foreach([15, 30, 45, 60, 90, 120] as $min)
-                            <option value="{{ $min }}"
-                                {{ old('duration') == $min ? 'selected' : '' }}>
-                                {{ $min }} minutes
-                            </option>
-                        @endforeach
-                    </select>
-
-                    @error('duration')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
 
                 {{-- Slug --}}
                 <div class="mb-3">
@@ -122,6 +101,8 @@
                     @enderror
                 </div>
 
+
+
                 {{-- Available Dates --}}
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -166,6 +147,28 @@
                         @endforeach
                     </div>
                     <div class="form-text">Select which weekdays this event is available on. Leave empty for all days.</div>
+                </div>
+
+                {{-- Duration --}}
+                <div class="mb-3">
+                    <label class="form-label">Duration</label>
+                    <select
+                        name="duration"
+                        class="form-select @error('duration') is-invalid @enderror"
+                    >
+                        <option value="">-- Select duration --</option>
+
+                        @foreach([15, 30, 45, 60, 90, 120] as $min)
+                            <option value="{{ $min }}"
+                                {{ old('duration') == $min ? 'selected' : '' }}>
+                                {{ $min }} minutes
+                            </option>
+                        @endforeach
+                    </select>
+
+                    @error('duration')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 {{-- Exclusions: custom date/time exclusions --}}
@@ -304,10 +307,60 @@
         `;
         customTimesList.appendChild(row);
         row.querySelector('.remove-custom').addEventListener('click', () => row.remove());
+
+        // Auto-fill end time when start time changes, based on selected duration
+        const startInput = row.querySelector(`input[name="custom_timeslots[${idx}][start]"]`);
+        const endInput = row.querySelector(`input[name="custom_timeslots[${idx}][end]"]`);
+        const durationSelect = document.querySelector('select[name="duration"]');
+
+        function fillEndFromStart() {
+            const dur = parseInt(durationSelect?.value || 0, 10);
+            if (!dur) return; // duration required first (already enforced by UI)
+            const val = startInput.value || '';
+            if (!val || !/^\d{2}:\d{2}$/.test(val)) return;
+            const [hh, mm] = val.split(':').map(Number);
+            const base = new Date(2000, 0, 1, hh, mm, 0, 0);
+            const end = new Date(base.getTime() + dur * 60000);
+            const eh = String(end.getHours()).padStart(2, '0');
+            const em = String(end.getMinutes()).padStart(2, '0');
+            endInput.value = `${eh}:${em}`;
+            validateCustomTimesUI();
+        }
+
+        function fillStartFromEnd() {
+            const dur = parseInt(durationSelect?.value || 0, 10);
+            if (!dur) return;
+            const val = endInput.value || '';
+            if (!val || !(/^\d{2}:\d{2}$/.test(val))) return;
+            const [hh, mm] = val.split(':').map(Number);
+            const base = new Date(2000, 0, 1, hh, mm, 0, 0);
+            const start = new Date(base.getTime() - dur * 60000);
+            const sh = String(start.getHours()).padStart(2, '0');
+            const sm = String(start.getMinutes()).padStart(2, '0');
+            startInput.value = `${sh}:${sm}`;
+            validateCustomTimesUI();
+        }
+
+        startInput.addEventListener('change', fillEndFromStart);
+        endInput.addEventListener('change', fillStartFromEnd);
+        // On duration change, recompute based on whichever field is set (prefer start)
+        durationSelect?.addEventListener('change', () => {
+            if (startInput.value) fillEndFromStart();
+            else if (endInput.value) fillStartFromEnd();
+        });
         return row;
     }
 
-    addCustomTime.addEventListener('click', () => createCustomTimeRow());
+    // Require duration before adding any custom timeslot rows
+    addCustomTime.addEventListener('click', () => {
+        const durationSelect = document.querySelector('select[name="duration"]');
+        const durationVal = parseInt(durationSelect?.value || 0, 10);
+        if (!durationVal) {
+            alert('Please select a Duration first before adding custom timeslots.');
+            return;
+        }
+        createCustomTimeRow();
+    });
 
     // Prefill from old input (if present) - old format: array of objects
     try {
@@ -327,6 +380,13 @@
     }
 
     function validateCustomTimesUI() {
+        const durationSelect = document.querySelector('select[name="duration"]');
+        const durationLimit = parseInt(durationSelect?.value || 0, 10);
+        // If no duration selected, advise user to select one (needed to validate slot length)
+        if (!durationLimit) {
+            // do not spam alerts on every keystroke; only block with visual cue
+            return false;
+        }
         const rows = Array.from(document.querySelectorAll('#customTimesList .form-control'));
         // gather pairs by row (each row has two inputs)
         const pairs = [];
@@ -351,6 +411,15 @@
                 if (pairs[i-1].row) pairs[i-1].row.classList.add('is-invalid');
             }
         }
+        // Max slot duration validation
+        for (let i=0; i<pairs.length; i++) {
+            if (pairs[i].e <= pairs[i].s) { ok = false; if (pairs[i].row) pairs[i].row.classList.add('is-invalid'); continue; }
+            const slotLen = pairs[i].e - pairs[i].s; // minutes
+            if (slotLen > durationLimit) {
+                ok = false;
+                if (pairs[i].row) pairs[i].row.classList.add('is-invalid');
+            }
+        }
         return ok;
     }
 
@@ -366,9 +435,16 @@
         const form = document.querySelector('form[action="{{ route('admin.events.store') }}"]');
         if (!form) return;
         form.addEventListener('submit', function(e){
+            const durationSelect = document.querySelector('select[name="duration"]');
+            const durationVal = parseInt(durationSelect?.value || 0, 10);
+            if (!durationVal) {
+                e.preventDefault();
+                alert('Please select a Duration before saving when using custom timeslots.');
+                return;
+            }
             if (! validateCustomTimesUI()) {
                 e.preventDefault();
-                alert('Custom timeslots must not overlap and each must have end after start. Please fix highlighted rows.');
+                alert('Custom timeslots must not overlap, must end after start, and must not exceed the selected Duration. Please fix highlighted rows.');
             }
         });
     });
@@ -481,6 +557,8 @@
                 renderTimesCheckboxesCreate(container, selected);
                 container.querySelectorAll('.slot-checkbox').forEach(cb => cb.name = container.previousElementSibling.querySelector('input[type="date"]').name.replace(/date/, 'times[]'));
             });
+            // revalidate custom times when duration changes
+            validateCustomTimesUI();
         });
     });
 
