@@ -9,6 +9,7 @@ use Notification;
 use App\Models\Booking;
 use App\Models\Payment as PaymentModel;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\BookingController;
 
 class PaymentController extends Controller
 {
@@ -50,64 +51,79 @@ class PaymentController extends Controller
 
         try {
             $gateway = $gatewayManager->getActiveGateway();
+            $gatewayName = $gateway->getName();
+
+            // Verify payment signature with the gateway
             $signatureStatus = $gateway->verifyPayment($request->all());
 
             if ($signatureStatus && $bookingId) {
                 $booking = Booking::find($bookingId);
-                if ($booking) {
-                    $already = PaymentModel::where('booking_id', $booking->id)->where('status', 'success')->exists();
-                    if ($already) {
-                        return response()->json(['success' => true, 'message' => 'already_processed']);
+                if (!$booking) {
+                    Log::error('Booking not found for ID: ' . $bookingId);
+                    return response()->json(['success' => false, 'message' => 'booking_not_found'], 404);
+                }
+
+                $already = PaymentModel::where('booking_id', $booking->id)->where('status', 'success')->exists();
+                if ($already) {
+                    return response()->json(['success' => true, 'message' => 'already_processed']);
+                }
+
+                try {
+                    // Extract transaction ID based on gateway
+                    // Razorpay: razorpay_payment_id, PayU: txnid
+                    $transactionId = $request->razorpay_payment_id ?? $request->txnid ?? $request->order_id ?? null;
+
+                    if (!$transactionId) {
+                        Log::warning('No transaction ID found in verify-payment request for booking: ' . $bookingId);
                     }
 
+                    PaymentModel::create([
+                        'user_id' => $booking->user_id,
+                        'booking_id' => $booking->id,
+                        'provider' => $gatewayName,
+                        'transaction_id' => $transactionId,
+                        'status' => 'success',
+                        'amount' => $request->amount ?? 0,
+                        'currency' => 'INR',
+                        'metadata' => json_encode($request->all()),
+                    ]);
+
+                    $booking->update(['status' => 'confirmed']);
+
+                    // Create google calendar event and update booking
                     try {
-                        PaymentModel::create([
-                            'user_id' => $booking->user_id,
-                            'booking_id' => $booking->id,
-                            'provider' => $gateway->getName(),
-                            'transaction_id' => $request->order_id ?? $request->txnid ?? null,
-                            'status' => 'success',
-                            'amount' => $request->amount ?? 0,
-                            'currency' => 'INR',
-                            'metadata' => json_encode($request->all()),
+                        $bookingController = app(BookingController::class);
+                        $calendarEvent = $bookingController->createGoogleEvent(
+                            $booking->event,
+                            $booking->booked_at_date,
+                            $booking->booked_at_time,
+                            $booking->booker_name,
+                            $booking->booker_email
+                        );
+
+                        $booking->update([
+                            'calendar_id' => $calendarEvent['calendar_id'] ?? null,
+                            'calendar_link' => $calendarEvent['calendar_link'] ?? null,
+                            'meet_link' => $calendarEvent['meet_link'] ?? null,
+                            'status' => 'confirmed',
                         ]);
 
-                        $booking->update(['status' => 'confirmed']);
-
-                        // Create google calendar event and update booking
-                        try {
-                            $bookingController = app(BookingCtrl::class);
-                            $calendarEvent = $bookingController->createGoogleEvent(
-                                $booking->event,
-                                $booking->booked_at_date,
-                                $booking->booked_at_time,
-                                $booking->booker_name,
-                                $booking->booker_email
-                            );
-
-                            $booking->update([
-                                'calendar_id' => $calendarEvent['calendar_id'] ?? null,
-                                'calendar_link' => $calendarEvent['calendar_link'] ?? null,
-                                'meet_link' => $calendarEvent['meet_link'] ?? null,
-                                'status' => 'confirmed',
-                            ]);
-
-                            // Notify owner and booker
-                            $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                            Notification::route('mail', [$booking->booker_email => $booking->booker_name])
-                                ->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                        } catch (Exception $e) {
-                            Log::error('Finalize booking google event failed: ' . $e->getMessage());
-                        }
+                        // Notify owner and booker
+                        $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
+                        Notification::route('mail', [$booking->booker_email => $booking->booker_name])
+                            ->notify(new \App\Notifications\BookingCreatedNotification($booking));
                     } catch (Exception $e) {
-                        Log::error('Persist payment failed: ' . $e->getMessage());
-                        return response()->json(['success' => false, 'message' => 'payment_persist_failed'], 500);
+                        Log::error('Finalize booking google event failed: ' . $e->getMessage(), ['booking_id' => $bookingId, 'exception' => $e]);
+                        // Don't fail the payment verification if calendar event creation fails
                     }
+                } catch (Exception $e) {
+                    Log::error('Persist payment failed: ' . $e->getMessage(), ['booking_id' => $bookingId, 'exception' => $e]);
+                    return response()->json(['success' => false, 'message' => 'payment_persist_failed', 'error' => $e->getMessage()], 500);
                 }
             }
 
         } catch (Exception $e) {
-            Log::error('verifyPayment error: ' . $e->getMessage());
+            Log::error('verifyPayment error: ' . $e->getMessage(), ['booking_id' => $bookingId, 'exception' => $e]);
             $signatureStatus = false;
         }
 

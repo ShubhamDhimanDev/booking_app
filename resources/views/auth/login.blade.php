@@ -1,11 +1,11 @@
-<!-- resources/views/admin/auth/login.blade.php -->
+<!-- resources/views/auth/login.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Star Admin2 — Admin Login</title>
+    <title>MeetFlow - Login</title>
 
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/feather/feather.css') }}">
@@ -22,6 +22,7 @@
     <!-- endinject -->
     <link rel="shortcut icon" href="{{ asset('admins/assets/images/favicon.ico') }}" />
     <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
+    <link rel="stylesheet" href="{{ asset('admins/assets/css/theme-overrides.css') }}">
   </head>
   <body>
     <div class="container-scroller">
@@ -32,7 +33,7 @@
               <div class="card shadow-sm">
                 <div class="card-body">
                   <div class="text-center mb-3">
-                    <img src="{{ asset('admins/assets/images/AC-Logo_1-8.png') }}" alt="logo" style="max-height: 60px;">
+                    <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" style="max-height: 60px;">
                   </div>
 
                   <h4 class="text-center mb-1">Hello! let's get started</h4>
@@ -54,7 +55,7 @@
                   @endif
 
                   {{-- main form --}}
-                  <form method="POST" action="{{ route('admin.login') }}">
+                  <form method="POST" action="{{ route('login') }}">
                     @csrf
 
                     <div class="mb-3">
@@ -112,6 +113,12 @@
                     </div>
 
                   </form>
+
+                  <div class="text-center mt-3">
+                    <a href="{{ route('password.request') }}">Forgot password?</a>
+                    <span class="text-muted mx-2">|</span>
+                    <a href="{{ route('register') }}">Create an account</a>
+                  </div>
                 </div>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use Carbon\Carbon;
 use Laravel\Sanctum\HasApiTokens;
@@ -11,8 +11,10 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Notifications\QueuedVerifyEmail;
+use App\Notifications\QueuedResetPassword;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
   use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
@@ -110,5 +112,26 @@ class User extends Authenticatable
       $google_uid ? ['google_uid' => $google_uid] : []
     );
     $this->save();
+  }
+
+  /**
+   * Send the email verification notification (queued).
+   *
+   * @return void
+   */
+  public function sendEmailVerificationNotification()
+  {
+    $this->notify(new QueuedVerifyEmail);
+  }
+
+  /**
+   * Send the password reset notification (queued).
+   *
+   * @param  string  $token
+   * @return void
+   */
+  public function sendPasswordResetNotification($token)
+  {
+    $this->notify(new QueuedResetPassword($token));
   }
 }

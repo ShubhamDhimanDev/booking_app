@@ -1,4 +1,4 @@
-@extends('admin.layout.app')
+@extends('layouts.app')
 
 @section('title', 'Edit Event')
 
@@ -52,27 +52,6 @@
                     @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
-                {{-- Duration --}}
-                <div class="mb-3">
-                    <label class="form-label">Duration</label>
-                    <select
-                        name="duration"
-                        class="form-select @error('duration') is-invalid @enderror"
-                    >
-                        <option value="">-- Select duration --</option>
-
-                        @foreach([15, 30, 45, 60, 90, 120] as $min)
-                            <option value="{{ $min }}"
-                                {{ old('duration', $event->duration) == $min ? 'selected' : '' }}>
-                                {{ $min }} minutes
-                            </option>
-                        @endforeach
-                    </select>
-
-                    @error('duration')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
 
                 {{-- Slug --}}
                 <div class="mb-3">
@@ -174,6 +153,28 @@
                     <div class="form-text">Select which weekdays this event is available on. Leave empty for all days.</div>
                 </div>
 
+                {{-- Duration --}}
+                <div class="mb-3">
+                    <label class="form-label">Duration</label>
+                    <select
+                        name="duration"
+                        class="form-select @error('duration') is-invalid @enderror"
+                    >
+                        <option value="">-- Select duration --</option>
+
+                        @foreach([15, 30, 45, 60, 90, 120] as $min)
+                            <option value="{{ $min }}"
+                                {{ old('duration', $event->duration) == $min ? 'selected' : '' }}>
+                                {{ $min }} minutes
+                            </option>
+                        @endforeach
+                    </select>
+
+                    @error('duration')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
                     {{-- Custom Timeslots (apply to all selected dates) --}}
                     <div id="customTimesList" class="mb-2"></div>
                     <button type="button" id="addCustomTime" class="btn btn-outline-secondary btn-sm">+ Add Timeslot</button>
@@ -218,11 +219,19 @@
     const fromDate = document.querySelector('input[name="available_from_date"]');
     const toDate   = document.querySelector('input[name="available_to_date"]');
 
-    const today = new Date().toISOString().split("T")[0];
-    fromDate.setAttribute("min", today);
+    // In edit: min should be the originally selected available_from_date
+    const originalFrom = "{{ \Carbon\Carbon::parse($event->available_from_date)->toDateString() }}";
+    fromDate.setAttribute("min", originalFrom);
+    // Ensure available_to_date cannot be before the chosen fromDate (or originalFrom)
+    toDate.setAttribute("min", fromDate.value || originalFrom);
 
     fromDate.addEventListener("change", () => {
-        toDate.setAttribute("min", fromDate.value);
+        // Prevent selecting a start date earlier than the original configured date
+        if (fromDate.value && fromDate.value < originalFrom) {
+            alert("Start date cannot be earlier than the original start date.");
+            fromDate.value = originalFrom;
+        }
+        toDate.setAttribute("min", fromDate.value || originalFrom);
     });
 
     toDate.addEventListener("change", () => {
@@ -300,10 +309,60 @@
         `;
         customTimesList.appendChild(row);
         row.querySelector('.remove-custom').addEventListener('click', () => row.remove());
+
+        // Auto-fill end time when start time changes, based on selected duration
+        const startInput = row.querySelector(`input[name="custom_timeslots[${idx}][start]"]`);
+        const endInput = row.querySelector(`input[name="custom_timeslots[${idx}][end]"]`);
+        const durationSelect = document.querySelector('select[name="duration"]');
+
+        function fillEndFromStart() {
+            const dur = parseInt(durationSelect?.value || 0, 10);
+            if (!dur) return; // duration required first (already enforced by UI)
+            const val = startInput.value || '';
+            if (!val || !/^\d{2}:\d{2}$/.test(val)) return;
+            const [hh, mm] = val.split(':').map(Number);
+            const base = new Date(2000, 0, 1, hh, mm, 0, 0);
+            const end = new Date(base.getTime() + dur * 60000);
+            const eh = String(end.getHours()).padStart(2, '0');
+            const em = String(end.getMinutes()).padStart(2, '0');
+            endInput.value = `${eh}:${em}`;
+            validateCustomTimesUI();
+        }
+
+        function fillStartFromEnd() {
+            const dur = parseInt(durationSelect?.value || 0, 10);
+            if (!dur) return;
+            const val = endInput.value || '';
+            if (!val || !(/^\d{2}:\d{2}$/.test(val))) return;
+            const [hh, mm] = val.split(':').map(Number);
+            const base = new Date(2000, 0, 1, hh, mm, 0, 0);
+            const start = new Date(base.getTime() - dur * 60000);
+            const sh = String(start.getHours()).padStart(2, '0');
+            const sm = String(start.getMinutes()).padStart(2, '0');
+            startInput.value = `${sh}:${sm}`;
+            validateCustomTimesUI();
+        }
+
+        startInput.addEventListener('change', fillEndFromStart);
+        endInput.addEventListener('change', fillStartFromEnd);
+        // On duration change, recompute based on whichever field is set (prefer start)
+        durationSelect?.addEventListener('change', () => {
+            if (startInput.value) fillEndFromStart();
+            else if (endInput.value) fillStartFromEnd();
+        });
         return row;
     }
 
-    addCustomTime.addEventListener('click', () => createCustomTimeRowEdit());
+    // Require duration before adding any custom timeslot rows
+    addCustomTime.addEventListener('click', () => {
+        const durationSelect = document.querySelector('select[name="duration"]');
+        const durationVal = parseInt(durationSelect?.value || 0, 10);
+        if (!durationVal) {
+            alert('Please select a Duration first before adding custom timeslots.');
+            return;
+        }
+        createCustomTimeRowEdit();
+    });
 
     // prefill custom timeslots from old input (validation) or server
     // helper to parse HH:MM into minutes for sorting
@@ -328,6 +387,11 @@
     }
 
     function validateCustomTimesUI() {
+        const durationSelect = document.querySelector('select[name="duration"]');
+        const durationLimit = parseInt(durationSelect?.value || 0, 10);
+        if (!durationLimit) {
+            return false;
+        }
         const rows = Array.from(document.querySelectorAll('#customTimesList .form-control'));
         const pairs = [];
         for (let i = 0; i < rows.length; i += 2) {
@@ -349,6 +413,15 @@
                 if (pairs[i-1].row) pairs[i-1].row.classList.add('is-invalid');
             }
         }
+        // Max slot duration validation against selected duration
+        for (let i=0; i<pairs.length; i++) {
+            if (pairs[i].e <= pairs[i].s) { ok = false; if (pairs[i].row) pairs[i].row.classList.add('is-invalid'); continue; }
+            const slotLen = pairs[i].e - pairs[i].s;
+            if (slotLen > durationLimit) {
+                ok = false;
+                if (pairs[i].row) pairs[i].row.classList.add('is-invalid');
+            }
+        }
         return ok;
     }
 
@@ -362,9 +435,16 @@
         const form = document.querySelector('form[action="{{ route('admin.events.update', $event->id) }}"]');
         if (!form) return;
         form.addEventListener('submit', function(e){
+            const durationSelect = document.querySelector('select[name="duration"]');
+            const durationVal = parseInt(durationSelect?.value || 0, 10);
+            if (!durationVal) {
+                e.preventDefault();
+                alert('Please select a Duration before saving when using custom timeslots.');
+                return;
+            }
             if (! validateCustomTimesUI()) {
                 e.preventDefault();
-                alert('Custom timeslots must not overlap and each must have end after start. Please fix highlighted rows.');
+                alert('Custom timeslots must not overlap, must end after start, and must not exceed the selected Duration. Please fix highlighted rows.');
             }
         });
     });

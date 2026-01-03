@@ -5,7 +5,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>@yield('title')</title>
+    <title>@yield('title', 'MeetFlow')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/feather/feather.css') }}">
@@ -15,8 +15,7 @@
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/typicons/typicons.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/simple-line-icons/css/simple-line-icons.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet"
-        href="{{ asset('admins/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css') }}">
     <!-- endinject -->
     <!-- Plugin css for this page -->
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/datatables.net-bs4/dataTables.bootstrap4.css') }}">
@@ -25,13 +24,13 @@
     <!-- inject:css -->
     <link rel="stylesheet" href="{{ asset('admins/assets/css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('admins/assets/vendors/select2/select2.min.css') }}">
-    <link rel="stylesheet"
-        href="{{ asset('admins/assets/vendors/select2-bootstrap-theme/select2-bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/select2-bootstrap-theme/select2-bootstrap.min.css') }}">
     <!-- endinject -->
     <link rel="shortcut icon" href="{{ asset('admins/assets/images/favicon.ico') }}" />
 
     <!-- Dark theme overrides loaded from dark-overrides.css -->
     <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
+    <link rel="stylesheet" href="{{ asset('admins/assets/css/theme-overrides.css') }}">
     <style>
         .form-check .form-check-input {
             margin: 1px 5px;
@@ -44,11 +43,11 @@
 <body class="with-welcome-text">
     <div class="container-scroller">
         <!-- partial:partials/_navbar.html -->
-        @include('admin.layout.navbar')
+        @include('layouts.navbar')
         <!-- partial -->
         <div class="container-fluid page-body-wrapper">
             <!-- partial:partials/_sidebar.html -->
-            @include('admin.layout.sidebar')
+            @include('layouts.sidebar')
             <!-- partial -->
             <div class="main-panel">
                 <div class="content-wrapper">

@@ -1,4 +1,4 @@
-@extends('admin.layout.app')
+@extends('layouts.app')
 
 @section('title', 'Payment Gateway Settings')
 
@@ -82,6 +82,18 @@
                             name="payu_merchant_key"
                             value="{{ old('payu_merchant_key', $settings['payu']['merchant_key'] ?? '') }}"
                             placeholder="Enter PayU Merchant Key"
+                            class="form-control"
+                        >
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="payu_merchant_id" class="form-label">Merchant ID</label>
+                        <input
+                            type="text"
+                            id="payu_merchant_id"
+                            name="payu_merchant_id"
+                            value="{{ old('payu_merchant_id', $settings['payu']['merchant_id'] ?? '') }}"
+                            placeholder="Enter PayU Merchant ID"
                             class="form-control"
                         >
                     </div>

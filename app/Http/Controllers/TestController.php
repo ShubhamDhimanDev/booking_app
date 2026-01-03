@@ -98,4 +98,9 @@ class TestController extends Controller
       }
     }
   }
+
+  public function welcome()
+  {
+    return view('welcome');
+  }
 }
