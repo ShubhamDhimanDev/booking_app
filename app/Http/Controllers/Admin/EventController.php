@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Http\Middleware\LinkedWithGoogleMiddleware;
+use App\Models\Booking;
 
 class EventController extends Controller
 {
@@ -23,10 +24,11 @@ class EventController extends Controller
    */
   public function index()
   {
+ 
     /** @var mixed */
     $user = auth()->user();
     $events = $user->events()->latest()->get();
-
+    
     return view('admin.events.index', compact('events'));
   }
 
@@ -134,6 +136,25 @@ class EventController extends Controller
     foreach ($confirmedBookings as $date => $collection) {
       $bookedSlots[$date] = $collection->pluck('booked_at_time')->values()->all();
     }
+    
+    // NEW: Also get all confirmed bookings from OTHER events by the same owner
+    $ownerOtherBookings = Booking::whereHas('event', function($q) use ($event) {
+      $q->where('user_id', $event->user_id)
+        ->where('id', '!=', $event->id); // exclude current event
+    })
+    ->where('status', 'confirmed')
+    ->get()
+    ->groupBy('booked_at_date');
+    
+    // Merge owner's other bookings into bookedSlots
+foreach ($ownerOtherBookings as $date => $collection) {
+  $times = $collection->pluck('booked_at_time')->values()->all();
+  if (isset($bookedSlots[$date])) {
+    $bookedSlots[$date] = array_unique(array_merge($bookedSlots[$date], $times));
+  } else {
+    $bookedSlots[$date] = $times;
+  }
+}
 
     // Build availableSlots (dates that have at least one free timeslot)
     $startDate = Carbon::parse($event->available_from_date);
