@@ -35,7 +35,8 @@ class BookingController extends Controller
     $bookings = Booking::whereHas('event', function ($q) use ($user) {
         $q->where('user_id', $user->id);
     })
-    ->with('event')
+    ->with(['event', 'booker'])
+    ->where('user_id', '!=', NULL)
     ->orderBy('booked_at_date', 'asc')
     ->paginate(10);
 
@@ -62,6 +63,7 @@ class BookingController extends Controller
      */
     public function userIndex()
     {
+    
     /** @var \App\Models\User */
     $user = auth()->user();
 
@@ -153,6 +155,8 @@ class BookingController extends Controller
     $bookerName = $validated['booker_name'];
     $bookedDate = $validated['booked_at_date'];
     $bookedTime = $validated['booked_at_time'];
+    $phone      = $request->phone;
+    $dob         = $validated['dob'];
 
     // Server-side availability checks
     // 1) date within event range
@@ -204,6 +208,19 @@ class BookingController extends Controller
     if ($exists) {
       return response()->json(['error' => 'Selected timeslot is already booked. Please choose another slot.'], 409);
     }
+    
+    // 6) NEW: Check if the event owner has ANY confirmed booking at this date/time across all their events
+$ownerHasBooking = Booking::whereHas('event', function($q) use ($event) {
+      $q->where('user_id', $event->user_id);
+    })
+    ->where('booked_at_date', $bookedDate)
+    ->where('booked_at_time', $bookedTime)
+    ->where('status', 'confirmed')
+    ->exists();
+
+if ($ownerHasBooking) {
+  return response()->json(['error' => 'The event owner is not available at this time.  Please choose another slot.'], 409);
+}
 
     /** @var \App\Models\User|null */
     $user = User::where('email', $bookerEmail)->first();
@@ -214,6 +231,8 @@ class BookingController extends Controller
       $user = User::create([
         'name' => $bookerName,
         'email' => $bookerEmail,
+        'dob' => $dob,
+        'phone' => $phone,
         'password' => bcrypt($randomPassword),
       ]);
 
