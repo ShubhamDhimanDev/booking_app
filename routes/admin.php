@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\BookingController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\LinkedWithGoogleMiddleware;
@@ -38,6 +39,9 @@ Route::prefix('')->name('admin.')->group(function(){
             Route::get('/payment-gateway', 'edit')->name('edit');
             Route::put('/payment-gateway', 'update')->name('update');
         });
+
+        // Promo Codes
+        Route::resource('/promo-codes', PromoCodeController::class);
     });
   });
 

@@ -3,10 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 use Exception;
 use Spatie\Permission\Models\Role;
