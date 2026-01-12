@@ -45,4 +45,9 @@ class Booking extends Model
   {
     return $this->hasOne(Payment::class);
   }
+
+  public function booker()
+  {
+      return $this->belongsTo(User::class, 'user_id');
+  }
 }
