@@ -1,0 +1,332 @@
+@extends('layouts.user')
+
+@section('title', 'Complete Payment - MeetFlow')
+
+@push('styles')
+<style>
+    .amount-display {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .verifying-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        display: none;
+        backdrop-filter: blur(4px);
+    }
+    .verifying-overlay.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .spinner {
+        border: 4px solid rgba(99, 102, 241, 0.2);
+        border-top: 4px solid #6366f1;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+@endpush
+
+@section('content')
+{!! \App\Services\TrackingService::getEventScript('AddPaymentInfo', [
+    'content_name' => $booking->event->title,
+    'content_ids' => [$booking->event->id],
+    'value' => $booking->event->price ?? 500,
+    'currency' => 'INR'
+]) !!}
+
+<div class="mb-6">
+    <a href="{{ route('user.bookings.index') }}" class="inline-flex items-center gap-2 text-primary hover:text-indigo-700 font-semibold text-sm transition-colors">
+        <span class="material-icons-round text-lg">arrow_back</span>
+        Back to Bookings
+    </a>
+</div>
+
+<div class="text-center mb-10 pb-8 border-b border-slate-200 dark:border-slate-700">
+    @if($booking->event->user->avatar ?? false)
+    <img src="{{ $booking->event->user->avatar }}" alt="Host" class="w-16 h-16 rounded-full mx-auto mb-4 ring-4 ring-primary/20">
+    @else
+    <div class="w-16 h-16 rounded-full mx-auto mb-4 ring-4 ring-primary/20 bg-primary text-white flex items-center justify-center font-bold text-xl">
+        {{ strtoupper(substr($booking->event->user->name, 0, 1)) }}
+    </div>
+    @endif
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">{{ $booking->event->user->name }}</p>
+    <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">{{ $booking->event->title }}</h1>
+    <div class="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400">
+        <span class="material-icons-round text-sm">schedule</span>
+        <span class="text-sm">{{ $booking->event->duration }} minutes</span>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    {{-- LEFT COLUMN - Booking Details --}}
+    <div class="space-y-6">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
+                <div class="bg-primary/10 p-2 rounded-xl">
+                    <span class="material-icons-round text-primary">event_note</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Booking Details</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Your event information</p>
+                </div>
+            </div>
+
+            {{-- User Information --}}
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-600 rounded-2xl p-4 mb-4">
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Booking For</p>
+                <p class="text-base font-semibold text-slate-900 dark:text-white mb-1">{{ $booking->booker_name }}</p>
+                <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <span class="material-icons-round text-xs">email</span>
+                    <span>{{ $booking->booker_email }}</span>
+                </div>
+                @if($booking->booker && $booking->booker->phone)
+                <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mt-1">
+                    <span class="material-icons-round text-xs">phone</span>
+                    <span>{{ $booking->booker->phone }}</span>
+                </div>
+                @endif
+            </div>
+
+            {{-- Event Date & Time --}}
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-700 dark:to-slate-600 rounded-2xl p-4 mb-4">
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Scheduled Time</p>
+                <div class="flex items-center gap-2 text-slate-900 dark:text-white mb-2">
+                    <span class="material-icons-round text-lg text-primary">calendar_today</span>
+                    <span class="font-semibold">{{ \Carbon\Carbon::parse($booking->booked_at_date)->format('l, F j, Y') }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-900 dark:text-white">
+                    <span class="material-icons-round text-lg text-primary">access_time</span>
+                    <span class="font-semibold">{{ \Carbon\Carbon::parse($booking->booked_at_time, 'UTC')->format('g:i A') }}</span>
+                </div>
+            </div>
+
+            {{-- Event Description --}}
+            @if($booking->event->description)
+            <div class="mt-6">
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">About This Event</p>
+                <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {!! nl2br(e($booking->event->description)) !!}
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- RIGHT COLUMN - Payment --}}
+    <div>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 sticky top-24">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
+                <div class="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-xl">
+                    <span class="material-icons-round text-emerald-600 dark:text-emerald-400">payments</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Complete Payment</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Secure checkout</p>
+                </div>
+            </div>
+
+            <div class="text-center py-8 mb-6">
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-3">Amount to Pay</p>
+                <div class="amount-display">₹{{ $booking->event->price ?? 500 }}</div>
+            </div>
+
+            <div id="payment-error" class="hidden mb-4 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500">
+                <div class="flex items-start gap-3 text-red-700 dark:text-red-400">
+                    <span class="material-icons-round text-xl">error</span>
+                    <p class="text-sm font-medium"></p>
+                </div>
+            </div>
+
+            @if($booking->status === 'confirmed')
+                <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500">
+                    <div class="flex items-start gap-3 text-emerald-700 dark:text-emerald-400">
+                        <span class="material-icons-round text-xl">check_circle</span>
+                        <p class="text-sm font-medium">This booking has already been confirmed and paid.</p>
+                    </div>
+                </div>
+            @else
+                <button
+                    id="payBtn"
+                    class="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-primary to-indigo-700 hover:from-indigo-700 hover:to-primary text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/25 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <span class="material-icons-round">lock</span>
+                    <span>Pay ₹{{ $booking->event->price ?? 500 }}</span>
+                </button>
+
+                <div class="flex items-center justify-center gap-2 mt-4 text-xs text-slate-500 dark:text-slate-400">
+                    <span class="material-icons-round text-sm">security</span>
+                    <span>Secure payment powered by Razorpay/PayU</span>
+                </div>
+            @endif
+
+            <div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-primary text-lg">info</span>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        After payment, you'll receive a confirmation email with meeting details and access link.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- VERIFY MODAL --}}
+<div id="verifyingOverlay" class="verifying-overlay">
+    <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl text-center max-w-sm mx-4 shadow-2xl">
+        <div class="spinner mx-auto mb-4"></div>
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Verifying Payment</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Please do not close this window.</p>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://secure.payu.in/js/web/checkout.js"></script>
+<script>
+const payBtn = document.getElementById('payBtn');
+const errorBox = document.getElementById('payment-error');
+const errorText = errorBox?.querySelector('p');
+const overlay = document.getElementById('verifyingOverlay');
+
+payBtn?.addEventListener('click', async function () {
+  payBtn.disabled = true;
+  errorBox.classList.add('hidden');
+
+  try {
+    const resp = await fetch('/create-order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      },
+      body: JSON.stringify({
+        amount: {{ $booking->event->price ?? 500 }},
+        booking_id: {{ $booking->id }},
+        product_info: '{{ $booking->event->title }}',
+        first_name: '{{ $booking->booker_name }}',
+        email: '{{ $booking->booker_email }}'
+      })
+    });
+
+    const data = await resp.json();
+
+    // Check which gateway is active
+    if (data.gateway === 'payu') {
+      handlePayUPayment(data);
+    } else {
+      handleRazorpayPayment(data);
+    }
+
+  } catch (err) {
+    errorText.textContent = err.message || 'Payment failed. Please try again.';
+    errorBox.classList.remove('hidden');
+    payBtn.disabled = false;
+  }
+});
+
+// Razorpay Handler
+async function handleRazorpayPayment(data) {
+  const options = {
+    key: data.key,
+    amount: data.amount * 100,
+    currency: 'INR',
+    name: '{{ $booking->event->title }}',
+    description: 'Payment for booking #{{ $booking->id }}',
+    order_id: data.order_id,
+    prefill: {
+      name: '{{ $booking->booker_name }}',
+      email: '{{ $booking->booker_email }}'
+    },
+    handler: async function (response) {
+      overlay.classList.add('show');
+
+      const verify = await fetch('/verify-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        },
+        body: JSON.stringify({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+          booking_id: {{ $booking->id }},
+          amount: data.amount
+        })
+      });
+
+      const res = await verify.json();
+      if (res.success) {
+        window.location.href = '/payment/thankyou/{{ $booking->id }}';
+      } else {
+        overlay.classList.remove('show');
+        throw new Error(res.message || 'Verification failed');
+      }
+    },
+    modal: {
+      ondismiss: function() {
+        payBtn.disabled = false;
+      }
+    },
+    theme: { color: '#6366f1' }
+  };
+
+  new Razorpay(options).open();
+}
+
+// PayU Handler
+function handlePayUPayment(data) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = data.payu_url;
+
+  // Add all PayU parameters as hidden inputs
+  Object.keys(data).forEach(key => {
+    if (key !== 'gateway' && key !== 'payu_url' && key !== 'success') {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = data[key];
+      form.appendChild(input);
+    }
+  });
+
+  // Add booking_id for callback
+  const bookingInput = document.createElement('input');
+  bookingInput.type = 'hidden';
+  bookingInput.name = 'booking_id';
+  bookingInput.value = '{{ $booking->id }}';
+  form.appendChild(bookingInput);
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
+// Track page view
+if (typeof fbq === 'function') {
+    fbq('trackCustom', 'ViewPaymentPage', {
+        booking_id: '{{ $booking->id }}',
+        amount: {{ $booking->event->price ?? 500 }}
+    });
+}
+</script>
+@endpush

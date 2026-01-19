@@ -80,6 +80,7 @@ class StoreBookingRequest extends FormRequest
       'booker_email' => 'required|email',
       'booked_at_date' => $dateRules,
       'booked_at_time' => $timeRules,
+      'dob' => 'nullable|date',
     ];
   }
 }
