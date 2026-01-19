@@ -1,4 +1,4 @@
-@extends('layouts.booking')
+@extends('layouts.app')
 
 @section('title', 'Booking Confirmed - ' . $booking->event->title)
 

@@ -1,128 +1,220 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="scroll-smooth {{ App\Services\ThemeService::isDarkModeEnabled() ? 'dark' : 'light' }}">
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>@yield('title', 'MeetFlow')</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <!-- plugins:css -->
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/feather/feather.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/ti-icons/css/themify-icons.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/font-awesome/css/font-awesome.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/typicons/typicons.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/simple-line-icons/css/simple-line-icons.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css') }}">
-    <!-- endinject -->
-    <!-- Plugin css for this page -->
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/datatables.net-bs4/dataTables.bootstrap4.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('admins/assets/js/select.dataTables.min.css') }}">
-    <!-- End plugin css for this page -->
-    <!-- inject:css -->
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/select2/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/select2-bootstrap-theme/select2-bootstrap.min.css') }}">
-    <!-- endinject -->
-    <link rel="shortcut icon" href="{{ asset('admins/assets/images/favicon.ico') }}" />
+    <title>@yield('title', config('app.name'))</title>
 
-    <!-- Dark theme overrides loaded from dark-overrides.css -->
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/theme-overrides.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                }
+            }
+        }
+    </script>
+
+    @stack('head-scripts')
+
     <style>
-        .form-check .form-check-input {
-            margin: 1px 5px;
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.5rem;
+            min-width: 12rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            z-index: 100;
+        }
+        .dark .profile-dropdown {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .profile-dropdown.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
-
+    @yield('additional-styles')
     @stack('styles')
-    @stack('head')
 </head>
+<body class="@auth bg-background-light dark:bg-background-dark @else bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 @endauth min-h-screen antialiased text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
-<body class="with-welcome-text">
-    <div class="container-scroller">
-        <!-- partial:partials/_navbar.html -->
-        @include('layouts.navbar')
-        <!-- partial -->
-        <div class="container-fluid page-body-wrapper">
-            <!-- partial:partials/_sidebar.html -->
-            @include('layouts.sidebar')
-            <!-- partial -->
-            <div class="main-panel">
-                <div class="content-wrapper">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            @if ($errors->any())
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <strong>Error:</strong> Please fix the following issues:
-                                    <ul class="mb-0">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
+    @stack('body-scripts')
+
+    <!-- Modern Header -->
+    <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 shadow-sm">
+        <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center space-x-3 group">
+                    <div class="w-11 h-11 bg-gradient-to-br from-primary to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-xl group-hover:shadow-primary/40 transition-all">
+                        <span class="material-icons-round text-white text-xl">event_available</span>
+                    </div>
+                    <span class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{{ config('app.name') }}</span>
+                </a>
+
+                @auth
+                {{-- Authenticated User Navigation --}}
+                <div class="flex items-center gap-6">
+                    <div class="hidden md:flex gap-6">
+                        <a class="text-sm font-medium {{ request()->routeIs('user.bookings.*') ? 'font-semibold text-primary border-b-2 border-primary pb-1' : 'text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary' }} transition-colors"
+                           href="{{ route('user.bookings.index') }}">My Bookings</a>
+                        <a class="text-sm font-medium {{ request()->routeIs('transactions.*') ? 'font-semibold text-primary border-b-2 border-primary pb-1' : 'text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary' }} transition-colors"
+                           href="{{ route('transactions.index') }}">Transactions</a>
+                    </div>
+                    <div class="relative flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-700">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-semibold text-slate-900 dark:text-white">{{ auth()->user()->name }}</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Member</p>
+                        </div>
+                        <button onclick="toggleProfileDropdown()" class="relative focus:outline-none">
+                            @if(auth()->user()->avatar)
+                            <img alt="Profile" class="h-9 w-9 rounded-full ring-2 ring-primary/20 cursor-pointer hover:ring-4 transition-all" src="{{ auth()->user()->avatar }}" />
+                            @else
+                            <div class="h-9 w-9 rounded-full ring-2 ring-primary/20 bg-primary text-white flex items-center justify-center font-bold text-sm cursor-pointer hover:ring-4 transition-all">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </div>
                             @endif
-
-                            @if (session('alert_message'))
-                                <div class="alert alert-{{ session('alert_type', 'info') }} alert-dismissible fade show"
-                                    role="alert">
-                                    <strong>{{ ucfirst(session('alert_type', 'Info')) }}: </strong>
-                                    {{ session('alert_message') }}
-
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                        aria-label="Close"></button>
-                                </div>
-                            @endif
-                            @yield('content')
+                        </button>
+                        <div id="profileDropdown" class="profile-dropdown">
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200">
+                                <span class="material-icons-round text-lg text-primary">person</span>
+                                <span class="text-sm font-medium">Profile</span>
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200 border-t border-slate-100 dark:border-slate-700">
+                                    <span class="material-icons-round text-lg text-red-500">logout</span>
+                                    <span class="text-sm font-medium">Logout</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
-                <!-- content-wrapper ends -->
-                <!-- partial:partials/_footer.html -->
-                <footer class="footer">
-                    <div class="d-sm-flex justify-content-center justify-content-sm-between">
-                        <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Visit <a
-                                href="#" target="_blank">Booking Portal</a></span>
-                        <span class="float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Copyright ©
-                            {{ date('Y') }}. All rights reserved.</span>
+                @else
+                {{-- Guest Navigation --}}
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:flex items-center space-x-3 @yield('badge-color', 'bg-blue-50 dark:bg-blue-900/30') px-4 py-2 rounded-full border @yield('badge-border', 'border-blue-200 dark:border-blue-700')">
+                        <span class="material-icons-round @yield('badge-text-color', 'text-blue-600 dark:text-blue-400') text-lg">@yield('badge-icon', 'verified_user')</span>
+                        <span class="text-sm @yield('badge-text-color', 'text-blue-700 dark:text-blue-300') font-semibold">@yield('badge-text', 'Secure Booking')</span>
                     </div>
-                </footer>
-                <!-- partial -->
+                    <a href="{{ route('login') }}" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
+                        Login
+                    </a>
+                    <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
+                        <span class="material-icons-round text-sm">person_add</span>
+                        Sign Up
+                    </a>
+                </div>
+                @endauth
             </div>
-            <!-- main-panel ends -->
         </div>
-        <!-- page-body-wrapper ends -->
-    </div>
-    <!-- container-scroller -->
-    <!-- plugins:js -->
-    <script src="{{ asset('admins/assets/vendors/js/vendor.bundle.base.js') }}"></script>
-    <script src="{{ asset('admins/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js') }}"></script>
-    <!-- endinject -->
-    <!-- Plugin js for this page -->
-    <script src="{{ asset('admins/assets/vendors/chart.js/chart.umd.js') }}"></script>
-    <script src="{{ asset('admins/assets/vendors/progressbar.js/progressbar.min.js') }}"></script>
-    <!-- End plugin js for this page -->
-    <!-- inject:js -->
-    <script src="{{ asset('admins/assets/js/off-canvas.js') }}"></script>
-    <script src="{{ asset('admins/assets/js/template.js') }}"></script>
-    <script src="{{ asset('admins/assets/js/settings.js') }}"></script>
-    <script src="{{ asset('admins/assets/js/hoverable-collapse.js') }}"></script>
-    <script src="{{ asset('admins/assets/js/todolist.js') }}"></script>
-    <!-- endinject -->
-    <!-- Custom js for this page-->
-    <script src="{{ asset('admins/assets/js/jquery.cookie.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('admins/assets/js/dashboard.js') }}"></script>
-    <!-- <script src="{{ asset('admins/assets/js/Chart.roundedBarCharts.js') }}"></script> -->
-    <!-- End custom js for this page-->
+    </header>
 
-    <script src="{{ asset('admins/assets/vendors/select2/select2.min.js') }}"></script>
-    <script src="{{ asset('admins/assets/js/select2.js') }}"></script>
-    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+    @if(View::hasSection('loader'))
+        <!-- Loader -->
+        <div id="loader" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-2xl text-center border border-slate-200 dark:border-slate-700">
+                <div class="w-16 h-16 border-4 border-slate-200 dark:border-slate-700 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-lg font-bold text-slate-900 dark:text-white">@yield('loader-text', 'Please wait...')</p>
+            </div>
+        </div>
+    @endif
+
+    <!-- Main Content -->
+    <main class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 @auth py-10 @else py-8 sm:py-12 @endauth">
+        @yield('content')
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-700 @auth mt-20 @else mt-20 @endauth">
+        <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+                <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">© {{ date('Y') }} {{ config('app.name') }}@auth  Platform @endauth. All rights reserved.</p>
+                <div class="flex items-center space-x-6 text-sm">
+                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@auth Support @else Help @endauth</a>
+                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@guest Contact @endguest Privacy</a>
+                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@guest Privacy @else Terms @endauth</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {!! \App\Services\TrackingService::getBaseScript() !!}
+
+    @auth
+    <script>
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const button = event.target.closest('button[onclick="toggleProfileDropdown()"]');
+
+            if (!button && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+    @endauth
 
     @stack('scripts')
 </body>
-
 </html>

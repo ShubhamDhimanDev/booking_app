@@ -40,6 +40,7 @@ Route::get('/payment/{booking?}', [PaymentController::class, 'showPaymentPage'])
 Route::get('/payment/thankyou/{booking}', [PaymentController::class, 'thankYouPage'])->name('payment.thankyou');
 Route::post('/create-order', [PaymentController::class, 'createOrder']);
 Route::post('/verify-payment', [PaymentController::class, 'verifyPayment']);
+Route::post('/validate-promo', [PaymentController::class, 'validatePromoCode']);
 
 // Multi-page booking flow
 Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->name('events.show.public');

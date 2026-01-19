@@ -1,4 +1,4 @@
-@extends('layouts.booking')
+@extends('layouts.app')
 
 @section('title', 'Complete Payment - ' . config('app.name'))
 
@@ -299,8 +299,76 @@
                         <!-- Amount Display -->
                         <div class="bg-gradient-to-br from-primary/5 via-indigo-50 to-purple-50 dark:from-primary/20 dark:via-slate-700 dark:to-purple-900/20 rounded-2xl p-8 mb-6 text-center border-2 border-primary/20 dark:border-primary/30 shadow-inner">
                             <p class="text-xs font-bold text-primary dark:text-primary uppercase tracking-wider mb-3">Total Amount</p>
-                            <h3 class="text-5xl font-black amount-display mb-2">₹{{ $booking->event->price ?? 500 }}</h3>
+
+                            <!-- Original Price (shown when discount applied) -->
+                            <div id="originalPriceSection" class="hidden mb-2">
+                                <p class="text-2xl font-bold text-slate-400 dark:text-slate-500 line-through">₹<span id="originalPrice">{{ $booking->event->price ?? 500 }}</span></p>
+                            </div>
+
+                            <!-- Final Price -->
+                            <h3 class="text-5xl font-black amount-display mb-2">₹<span id="finalAmount">{{ $booking->event->price ?? 500 }}</span></h3>
+
+                            <!-- Discount Badge -->
+                            <div id="discountBadge" class="hidden mb-3">
+                                <span class="inline-flex items-center gap-1 bg-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                                    <span class="material-icons-round text-sm">local_offer</span>
+                                    <span id="discountText">Saved ₹0</span>
+                                </span>
+                            </div>
+
                             <p class="text-xs text-slate-600 dark:text-slate-400 font-medium bg-white/60 dark:bg-slate-800/60 px-3 py-1 rounded-full inline-block">Inclusive of all taxes</p>
+                        </div>
+
+                        <!-- Promo Code Section -->
+                        <div class="mb-6">
+                            <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl p-5 border border-amber-100 dark:border-amber-700">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center">
+                                        <span class="material-icons-round text-amber-600 dark:text-amber-400 mr-2 text-lg">discount</span>
+                                        Have a promo code?
+                                    </h3>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <div class="flex-1 relative">
+                                        <input
+                                            type="text"
+                                            id="promoCode"
+                                            placeholder="Enter code"
+                                            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-semibold uppercase placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                            maxlength="20"
+                                        >
+                                        <span class="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg">local_offer</span>
+                                    </div>
+                                    <button
+                                        id="applyPromoBtn"
+                                        class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        <span id="applyBtnText">Apply</span>
+                                        <span id="applyBtnSpinner" class="hidden">
+                                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
+                                    </button>
+                                </div>
+
+                                <!-- Success Message -->
+                                <div id="promoSuccess" class="hidden mt-3 flex items-start gap-2 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-lg p-3">
+                                    <span class="material-icons-round text-emerald-600 dark:text-emerald-400 text-lg">check_circle</span>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-emerald-700 dark:text-emerald-300" id="promoSuccessText"></p>
+                                        <button id="removePromoBtn" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline mt-1">Remove code</button>
+                                    </div>
+                                </div>
+
+                                <!-- Error Message -->
+                                <div id="promoError" class="hidden mt-3 flex items-start gap-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-3">
+                                    <span class="material-icons-round text-red-600 dark:text-red-400 text-lg">error</span>
+                                    <p class="text-sm font-semibold text-red-700 dark:text-red-300" id="promoErrorText"></p>
+                                </div>
+                            </div>
                         </div>
 
                         @if($booking->status == 'confirmed')
@@ -312,7 +380,7 @@
                             <!-- Pay Button -->
                             <button id="payBtn" class="w-full gradient-bg hover:opacity-95 text-white font-extrabold py-5 rounded-2xl transition-all duration-300 flex items-center justify-center space-x-3 mb-5 shadow-2xl shadow-primary/40 hover:shadow-3xl hover:shadow-primary/50 transform hover:-translate-y-1 hover:scale-[1.02] relative overflow-hidden group">
                                 <span class="material-icons-round text-xl">lock</span>
-                                <span class="text-xl">Pay ₹{{ $booking->event->price ?? 500 }}</span>
+                                <span class="text-xl">Pay ₹<span id="payBtnAmount">{{ $booking->event->price ?? 500 }}</span></span>
                             </button>
 
                             <!-- Security Badge -->
@@ -418,25 +486,174 @@
     const verifyingOverlay = document.getElementById('verifyingOverlay');
     const bookingId = {{ $booking->id }};
 
-    if (payBtn) {
-        payBtn.addEventListener('click', async function () {
-            payBtn.disabled = true;
-            errorBox.classList.add('hidden');
+    // Promo code state
+    let appliedPromoCode = null;
+    let originalAmount = {{ $booking->event->price ?? 500 }};
+    let discountedAmount = originalAmount;
+    let discountValue = 0;
+
+    // Promo Code Elements
+    const promoCodeInput = document.getElementById('promoCode');
+    const applyPromoBtn = document.getElementById('applyPromoBtn');
+    const removePromoBtn = document.getElementById('removePromoBtn');
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    const promoSuccessText = document.getElementById('promoSuccessText');
+    const promoErrorText = document.getElementById('promoErrorText');
+    const applyBtnText = document.getElementById('applyBtnText');
+    const applyBtnSpinner = document.getElementById('applyBtnSpinner');
+
+    // Amount display elements
+    const originalPriceSection = document.getElementById('originalPriceSection');
+    const originalPriceEl = document.getElementById('originalPrice');
+    const finalAmountEl = document.getElementById('finalAmount');
+    const payBtnAmountEl = document.getElementById('payBtnAmount');
+    const discountBadge = document.getElementById('discountBadge');
+    const discountText = document.getElementById('discountText');
+
+    // Apply Promo Code
+    if (applyPromoBtn) {
+        applyPromoBtn.addEventListener('click', async function() {
+            const code = promoCodeInput.value.trim().toUpperCase();
+
+            if (!code) {
+                showPromoError('Please enter a promo code');
+                return;
+            }
+
+            // Reset messages
+            promoSuccess.classList.add('hidden');
+            promoError.classList.add('hidden');
+
+            // Show loading state
+            applyPromoBtn.disabled = true;
+            applyBtnText.classList.add('hidden');
+            applyBtnSpinner.classList.remove('hidden');
 
             try {
-                const response = await fetch('/create-order', {
+                const response = await fetch('/validate-promo', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({
-                        amount: {{ $booking->event->price ?? 500 }},
+                        promo_code: code,
                         booking_id: bookingId,
-                        product_info: '{{ addslashes($booking->event->title) }}',
-                        first_name: '{{ addslashes($booking->booker_name) }}',
-                        email: '{{ $booking->booker_email }}'
+                        amount: originalAmount
                     })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    appliedPromoCode = code;
+                    discountedAmount = data.discounted_amount;
+                    discountValue = data.discount_value;
+
+                    updatePriceDisplay();
+                    showPromoSuccess(data.message);
+                    promoCodeInput.disabled = true;
+                } else {
+                    showPromoError(data.message || 'Invalid promo code');
+                }
+            } catch (error) {
+                showPromoError('Failed to validate promo code. Please try again.');
+            } finally {
+                applyPromoBtn.disabled = false;
+                applyBtnText.classList.remove('hidden');
+                applyBtnSpinner.classList.add('hidden');
+            }
+        });
+    }
+
+    // Remove Promo Code
+    if (removePromoBtn) {
+        removePromoBtn.addEventListener('click', function() {
+            appliedPromoCode = null;
+            discountedAmount = originalAmount;
+            discountValue = 0;
+
+            promoCodeInput.value = '';
+            promoCodeInput.disabled = false;
+            promoSuccess.classList.add('hidden');
+            promoError.classList.add('hidden');
+
+            updatePriceDisplay();
+        });
+    }
+
+    // Enter key support for promo code
+    if (promoCodeInput) {
+        promoCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyPromoBtn.click();
+            }
+        });
+    }
+
+    function updatePriceDisplay() {
+        if (discountValue > 0) {
+            // Show original price with strikethrough
+            originalPriceSection.classList.remove('hidden');
+            originalPriceEl.textContent = originalAmount;
+
+            // Update final amount
+            finalAmountEl.textContent = discountedAmount;
+            payBtnAmountEl.textContent = discountedAmount;
+
+            // Show discount badge
+            discountBadge.classList.remove('hidden');
+            discountText.textContent = `Saved ₹${discountValue}`;
+        } else {
+            // Hide discount UI
+            originalPriceSection.classList.add('hidden');
+            discountBadge.classList.add('hidden');
+
+            // Reset to original amount
+            finalAmountEl.textContent = originalAmount;
+            payBtnAmountEl.textContent = originalAmount;
+        }
+    }
+
+    function showPromoSuccess(message) {
+        promoSuccess.classList.remove('hidden');
+        promoSuccessText.textContent = message;
+        promoError.classList.add('hidden');
+    }
+
+    function showPromoError(message) {
+        promoError.classList.remove('hidden');
+        promoErrorText.textContent = message;
+        promoSuccess.classList.add('hidden');
+    }
+
+    if (payBtn) {
+        payBtn.addEventListener('click', async function () {
+            payBtn.disabled = true;
+            errorBox.classList.add('hidden');
+
+            try {
+                const requestBody = {
+                    amount: discountedAmount,
+                    booking_id: bookingId,
+                    product_info: '{{ addslashes($booking->event->title) }}',
+                    first_name: '{{ addslashes($booking->booker_name) }}',
+                    email: '{{ $booking->booker_email }}'
+                };
+
+                // Include promo code if applied
+                if (appliedPromoCode) {
+                    requestBody.promo_code = appliedPromoCode;
+                }
+
+                const response = await fetch('/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
@@ -459,7 +676,7 @@
     function handleRazorpayPayment(data) {
         const options = {
             key: data.key,
-            amount: data.amount * 100,
+            amount: discountedAmount * 100,
             currency: 'INR',
             name: '{{ addslashes($booking->event->title) }}',
             description: 'Booking #' + bookingId,
@@ -472,19 +689,26 @@
                 verifyingOverlay.classList.remove('hidden');
 
                 try {
+                    const verifyBody = {
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        booking_id: bookingId,
+                        amount: discountedAmount
+                    };
+
+                    // Include promo code if applied
+                    if (appliedPromoCode) {
+                        verifyBody.promo_code = appliedPromoCode;
+                    }
+
                     const verifyResponse = await fetch('/verify-payment', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                            booking_id: bookingId,
-                            amount: data.amount
-                        })
+                        body: JSON.stringify(verifyBody)
                     });
 
                     const result = await verifyResponse.json();
@@ -537,6 +761,15 @@
         bookingInput.value = bookingId;
         form.appendChild(bookingInput);
 
+        // Add promo code if applied
+        if (appliedPromoCode) {
+            const promoInput = document.createElement('input');
+            promoInput.type = 'hidden';
+            promoInput.name = 'udf2';
+            promoInput.value = appliedPromoCode;
+            form.appendChild(promoInput);
+        }
+
         document.body.appendChild(form);
         form.submit();
     }
@@ -545,7 +778,7 @@
     if (typeof fbq === 'function') {
         fbq('trackCustom', 'ViewPaymentPage', {
             booking_id: bookingId,
-            amount: {{ $booking->event->price ?? 500 }}
+            amount: originalAmount
         });
     }
     </script>

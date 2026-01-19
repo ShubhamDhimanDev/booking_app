@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.app')
 
 @section('title', 'My Bookings - MeetFlow')
 
@@ -175,7 +175,7 @@
     function filterBookings(status) {
         const bookingCards = document.querySelectorAll('.booking-card');
         const filterButtons = document.querySelectorAll('.filter-btn');
-        
+
         // Update button states
         filterButtons.forEach(btn => {
             if (btn.dataset.filter === status) {
@@ -186,7 +186,7 @@
                 btn.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400', 'border', 'border-slate-200', 'dark:border-slate-700');
             }
         });
-        
+
         // Filter cards with animation
         bookingCards.forEach(card => {
             if (status === 'all' || card.dataset.status === status) {
