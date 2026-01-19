@@ -1,4 +1,4 @@
-@extends('layouts.booking')
+@extends('layouts.app')
 
 @section('title', $event->user->name . ' | ' . $event->title . ' - Enter Details')
 

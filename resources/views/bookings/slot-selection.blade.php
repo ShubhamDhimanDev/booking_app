@@ -1,4 +1,4 @@
-@extends('layouts.booking')
+@extends('layouts.app')
 
 @section('title', "{$event->user->name} | {$event->title} Meeting")
 
@@ -23,6 +23,7 @@
 
 {{-- Custom styles --}}
 @section('additional-styles')
+<style>
     /* Reset and override style.css for this modern design */
     .schedule .date,
     .schedule .time-slot {
@@ -163,6 +164,7 @@
         box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
         transform: scale(1.05);
     }
+</style>
 @endsection
 
 @section('content')
