@@ -38,6 +38,7 @@
     </style>
 
     @stack('styles')
+    @stack('head')
 </head>
 
 <body class="with-welcome-text">

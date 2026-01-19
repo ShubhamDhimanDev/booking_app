@@ -20,6 +20,8 @@ class PaymentController extends Controller
 
         try {
             $gateway = $gatewayManager->getActiveGateway();
+            $gatewayName = $gateway->getName();
+
             $paymentData = [
                 'amount' => $amount,
                 'receipt' => 'order_' . time(),
@@ -31,6 +33,10 @@ class PaymentController extends Controller
             ];
 
             $response = $gateway->initiatePayment($paymentData);
+
+            // Add gateway name to response for frontend to determine which handler to use
+            $response['gateway'] = strtolower($gatewayName);
+
             return response()->json($response);
         } catch (Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
@@ -132,7 +138,7 @@ class PaymentController extends Controller
 
     public function showPaymentPage(Request $request, $booking)
     {
-        $bookingModel = Booking::with('event.user')->findOrFail($booking);
+        $bookingModel = Booking::with(['event.user', 'booker', 'payment'])->findOrFail($booking);
 
         return view('payments.show', [
             'booking' => $bookingModel,
@@ -141,7 +147,7 @@ class PaymentController extends Controller
 
     public function thankYouPage($booking)
     {
-        $bookingModel = Booking::with('event.user')->findOrFail($booking);
+        $bookingModel = Booking::with(['event.user', 'booker', 'payment'])->findOrFail($booking);
 
         return view('payments.thankyou', [
             'booking' => $bookingModel,

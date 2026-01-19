@@ -139,8 +139,3 @@ class PromoCodeController extends Controller
             ->with('success', 'Promo code deleted successfully.');
     }
 }
-    public function destroy($id)
-    {
-        //
-    }
-}

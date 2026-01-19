@@ -1,60 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
+    <script>
+        // Detect system theme preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (e.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $event->user->name }} | {{ $event->title }} Meeting</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
     <link rel="stylesheet" href="{{ asset('style.css') }}">
 </head>
 
-<body>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen antialiased transition-colors duration-300" style="font-family: 'Plus Jakarta Sans', sans-serif;">
 
-    <div id="loader" style="display: none;">
-        Please wait...
-    </div>
-
-    <div class="container">
-        <div class="info">
-            <h4>{{ $event->user->name }}</h4>
-            <h2>{{ $event->title }}</h2>
-            <div class="meta">⏱️ {{ $event->duration }} minutes</div>
-            <p>{!! $event->description !!}</p>
-        </div>
-
-        <div class="schedule" id="step1">
-            <div class="calendar-header">
-                <button id="prevMonth">←</button>
-                <h3 id="monthLabel"></h3>
-                <button id="nextMonth">→</button>
-            </div>
-
-            <div class="calendar" id="calendar"></div>
-            <div class="time-slots" id="timeSlots"></div>
-            <div class="timezone">🌍 India Standard Time (IST)</div>
-
-            <div class="confirm-panel" id="confirmPanel">
-                <p id="confirmText"></p>
-                <button class="btn-confirm" id="proceedDetails">Confirm Meeting</button>
-            </div>
-        </div>
-
-        <div class="schedule details-form" id="step2">
-            <h3>Enter Your Details</h3>
-            <input type="text" id="name" value="{{ auth()->user() ? auth()->user()->name : '' }}" placeholder="Full Name" required>
-            <input type="email" id="email" value="{{ auth()->user() ? auth()->user()->email : '' }}" placeholder="Email Address" required>
-            <input type="tel" id="phone" value="{{ auth()->user() ? auth()->user()->phone : '' }}" placeholder="Phone Number" required>
-            <textarea id="notes" rows="3" placeholder="Any specific agenda or notes?"></textarea>
-            <button class="btn-submit" id="submitDetails">Schedule Meeting</button>
-        </div>
-
-        <div class="schedule confirmation" id="step3">
-            <h3>🎉 Meeting Scheduled!</h3>
-            <p id="summary"></p>
-            <p>You'll receive your web conferencing details shortly via email.</p>
-            <p>Or <a href="{{ route('login') }}">login here</a></p>
+    <div id="loader" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-2xl text-center border border-slate-200 dark:border-slate-700">
+            <div class="w-16 h-16 border-4 border-slate-200 dark:border-slate-700 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-lg font-bold text-slate-900 dark:text-white">Please wait...</p>
         </div>
     </div>
+
+    <div class="container max-w-6xl mx-auto px-4 py-8 sm:py-12">
+        <div class="info bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-700 p-6 sm:p-8 mb-8 transition-all duration-300">
+            <h4 class="text-sm font-semibold text-primary dark:text-primary uppercase tracking-wider mb-2">{{ $event->user->name }}</h4>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-4">{{ $event->title }}</h2>
+            <div class="meta inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 px-4 py-2 rounded-full text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">
+                <span>⏱️</span>
+                <span>{{ $event->duration }} minutes</span>
+            </div>
+            <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{!! $event->description !!}</p>
+        </div>
+
+        <div class="schedule bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-700 p-6 sm:p-8 transition-all duration-300" id="step1">
+            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span class="material-icons-round text-primary text-3xl">event</span>
+                Select Date & Time
+            </h3>
+
+            <div class="calendar-header flex items-center justify-between mb-6 bg-slate-50 dark:bg-slate-700/50 p-4 rounded-2xl">
+                <button id="prevMonth" class="w-11 h-11 rounded-xl bg-white dark:bg-slate-600 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-700 dark:text-slate-300 font-bold transition-all flex items-center justify-center shadow-sm hover:shadow-md">
+                    <span class="material-icons-round">chevron_left</span>
+                </button>
+                <h3 id="monthLabel" class="text-xl font-extrabold text-slate-900 dark:text-white"></h3>
+                <button id="nextMonth" class="w-11 h-11 rounded-xl bg-white dark:bg-slate-600 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-700 dark:text-slate-300 font-bold transition-all flex items-center justify-center shadow-sm hover:shadow-md">
+                    <span class="material-icons-round">chevron_right</span>
+                </button>
+            </div>
+
+            <div class="calendar grid grid-cols-7 gap-2 mb-6" id="calendar"></div>
+            <div class="time-slots grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6" id="timeSlots"></div>
+            <div class="flex justify-center">
+                <div class="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-700/50 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600">
+                    <span class="material-icons-round text-lg">public</span>
+                    <span>India Standard Time (IST)</span>
+                </div>
+            </div>
+
+            <div class="confirm-panel hidden mt-8 bg-gradient-to-br from-primary/5 via-indigo-50 to-purple-50 dark:from-primary/20 dark:via-slate-700 dark:to-purple-900/20 rounded-2xl p-6 border-2 border-primary/20 dark:border-primary/30 shadow-lg" id="confirmPanel">
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <span class="material-icons-round text-primary text-2xl">check_circle</span>
+                    <p id="confirmText" class="text-slate-900 dark:text-white font-bold text-center text-lg"></p>
+                </div>
+                <button class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-indigo-700 hover:opacity-95 text-white font-extrabold py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40" id="proceedDetails">
+                    <span class="material-icons-round">arrow_forward</span>
+                    Confirm & Continue
+                </button>
+            </div>
+        </div>
+
+        <div class="schedule details-form hidden bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-700 p-6 sm:p-8 transition-all duration-300" id="step2">
+            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span class="material-icons-round text-primary text-3xl">badge</span>
+                Enter Your Details
+            </h3>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                        <span class="flex items-center gap-2">
+                            <span class="material-icons-round text-primary text-sm">person</span>
+                            Full Name *
+                        </span>
+                    </label>
+                    <input type="text" id="name" value="{{ auth()->user() ? auth()->user()->name : '' }}" placeholder="Enter your full name" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                        <span class="flex items-center gap-2">
+                            <span class="material-icons-round text-primary text-sm">email</span>
+                            Email Address *
+                        </span>
+                    </label>
+                    <input type="email" id="email" value="{{ auth()->user() ? auth()->user()->email : '' }}" placeholder="your@email.com" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                        <span class="flex items-center gap-2">
+                            <span class="material-icons-round text-primary text-sm">phone</span>
+                            Phone Number
+                        </span>
+                    </label>
+                    <input type="tel" id="phone" value="{{ auth()->user() ? auth()->user()->phone : '' }}" placeholder="+91 XXXXXXXXXX" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                        <span class="flex items-center gap-2">
+                            <span class="material-icons-round text-primary text-sm">notes</span>
+                            Additional Notes
+                        </span>
+                    </label>
+                    <textarea id="notes" rows="3" placeholder="Any specific agenda or requirements?" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"></textarea>
+                </div>
+                <button class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-indigo-700 hover:opacity-95 text-white font-extrabold py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40" id="submitDetails">
+                    <span class="material-icons-round">payment</span>
+                    Continue to Payment
+                </button>
+            </div>
+        </div>
+
+        <div class="schedule confirmation hidden bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-700 p-6 sm:p-8 text-center transition-all duration-300" id="step3">
+            <div class="w-24 h-24 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30">
+                <span class="material-icons-round text-white" style="font-size: 64px;">check_circle</span>
+            </div>
+            <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white mb-4">Meeting Scheduled!</h3>
+            <p id="summary" class="text-lg text-slate-700 dark:text-slate-300 font-medium mb-4"></p>
+            <p class="text-slate-600 dark:text-slate-400 mb-4">You'll receive your web conferencing details shortly via email.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+                Or <a href="{{ route('login') }}" class="text-primary hover:underline font-semibold">login here</a>
+            </p>
+        </div>
+    </div>
+
+    <style>
+        /* Custom calendar styles with dark mode */
+        .day-name {
+            @apply text-xs font-bold text-slate-500 dark:text-slate-400 text-center py-2;
+        }
+
+        .date {
+            @apply aspect-square flex items-center justify-center rounded-xl text-sm font-bold cursor-pointer transition-all;
+            @apply text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600;
+            @apply hover:bg-primary hover:text-white hover:border-primary hover:shadow-md;
+        }
+
+        .date.active {
+            @apply bg-gradient-to-br from-primary to-indigo-700 text-white border-primary shadow-lg shadow-primary/30 scale-105;
+        }
+
+        .date.disabled {
+            @apply text-slate-300 dark:text-slate-600 bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700;
+            @apply cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-300 dark:hover:text-slate-600 hover:border-slate-100 dark:hover:border-slate-700 hover:shadow-none;
+        }
+
+        .time-slot {
+            @apply px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 text-sm font-bold text-slate-700 dark:text-slate-300;
+            @apply bg-white dark:bg-slate-700 cursor-pointer transition-all;
+            @apply hover:border-primary hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 hover:shadow-md;
+        }
+
+        .time-slot.selected {
+            @apply bg-gradient-to-br from-primary to-indigo-700 border-primary text-white shadow-lg shadow-primary/30 scale-105;
+        }
+    </style>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <!-- PayU Script -->
@@ -101,11 +243,11 @@
         const loader = document.getElementById('loader');
 
         function showLoader() {
-            loader.style.display = 'flex';
+            loader.classList.remove('hidden');
         }
 
         function hideLoader() {
-            loader.style.display = 'none';
+            loader.classList.add('hidden');
         }
 
         function renderCalendar(date) {
@@ -120,7 +262,7 @@
             const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
             dayNames.forEach(d => {
                 const div = document.createElement('div');
-                div.classList.add('day-name');
+                div.className = 'day-name';
                 div.textContent = d;
                 calendar.appendChild(div);
             });
@@ -129,13 +271,16 @@
             const lastDay = new Date(year, month + 1, 0);
             const startDay = (firstDay.getDay() + 6) % 7;
 
-            for (let i = 0; i < startDay; i++) calendar.appendChild(document.createElement('div'));
+            for (let i = 0; i < startDay; i++) {
+                const emptyDiv = document.createElement('div');
+                calendar.appendChild(emptyDiv);
+            }
 
             for (let i = 1; i <= lastDay.getDate(); i++) {
                 const dateObj = new Date(year, month, i);
                 const dateStr = formatLocalDate(dateObj);
                 const dateEl = document.createElement('div');
-                dateEl.classList.add('date');
+                dateEl.className = 'date';
                 dateEl.textContent = i;
 
                 const availableDate = availableDates.find(d => d.date === dateStr);
@@ -196,7 +341,7 @@
 
         function renderTimeSlots() {
             timeSlotsDiv.innerHTML = "";
-            confirmPanel.style.display = "none";
+            confirmPanel.classList.add('hidden');
             if (!selectedDate) return;
 
             const dateStr = formatLocalDate(selectedDate);
@@ -226,13 +371,13 @@
             daySlots.sort((a,b) => timeToMinutes(a.start) - timeToMinutes(b.start));
 
             if (daySlots.length === 0) {
-                timeSlotsDiv.textContent = "No slots available for this day.";
+                timeSlotsDiv.innerHTML = '<div class="col-span-full text-center text-slate-500 dark:text-slate-400 py-4">No slots available for this day.</div>';
                 return;
             }
 
             daySlots.forEach(slot => {
                 const t = document.createElement('div');
-                t.classList.add('time-slot');
+                t.className = 'time-slot';
 
                 let [hours, minutes] = slot.start.split(':').map(Number);
                 const ampm = hours >= 12 ? 'pm' : 'am';
@@ -249,7 +394,7 @@
             document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
             el.classList.add('selected');
             selectedTime = time;
-            confirmPanel.style.display = "block";
+            confirmPanel.classList.remove('hidden');
             confirmText.textContent = `You’ve selected ${selectedDate.toDateString()} at ${el.textContent}`;
         }
 
@@ -264,8 +409,8 @@
         });
 
         document.getElementById('proceedDetails').addEventListener('click', () => {
-            step1.style.display = 'none';
-            step2.style.display = 'block';
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
         });
 
         document.getElementById('submitDetails').addEventListener('click', async () => {
@@ -384,8 +529,8 @@
                     const result = await verifyResponse.json();
                     hideLoader();
                     if (result.success) {
-                        step2.style.display = 'none';
-                        step3.style.display = 'block';
+                        step2.classList.add('hidden');
+                        step3.classList.remove('hidden');
                         summary.textContent = `${name}, your meeting is scheduled for ${selectedDate.toDateString()} at ${selectedTime}. Payment successful!`;
                     } else alert('Payment verification failed. Please contact support.');
                 },

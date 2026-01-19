@@ -27,6 +27,7 @@ namespace App\Models{
  * @property int $event_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User|null $booker
  * @property-read \App\Models\Event $event
  * @property-read \App\Models\Payment|null $payment
  * @method static \Database\Factories\BookingFactory factory(...$parameters)
@@ -211,6 +212,47 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * App\Models\PromoCode
+ *
+ * @property int $id
+ * @property string $code
+ * @property string|null $description
+ * @property string $discount_type
+ * @property string $discount_value
+ * @property string|null $min_booking_amount
+ * @property string|null $max_discount_amount
+ * @property int|null $usage_limit
+ * @property int $usage_count
+ * @property \Illuminate\Support\Carbon|null $valid_from
+ * @property \Illuminate\Support\Carbon|null $valid_until
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode active()
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode query()
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode validNow()
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereDiscountType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereDiscountValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereMaxDiscountAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereMinBookingAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereUsageCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereUsageLimit($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereValidFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereValidUntil($value)
+ */
+	class PromoCode extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
  * App\Models\Setting
  *
  * @property int $id
@@ -231,6 +273,27 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Setting whereValue($value)
  */
 	class Setting extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * App\Models\SystemSetting
+ *
+ * @property int $id
+ * @property string $theme_layout
+ * @property bool $dark_mode
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting query()
+ * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting whereDarkMode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting whereThemeLayout($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting whereUpdatedAt($value)
+ */
+	class SystemSetting extends \Eloquent {}
 }
 
 namespace App\Models{

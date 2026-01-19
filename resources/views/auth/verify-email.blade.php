@@ -1,55 +1,40 @@
-<!-- resources/views/auth/verify-email.blade.php -->
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Verify Email</title>
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/theme-overrides.css') }}">
-    <link rel="shortcut icon" href="{{ asset('admins/assets/images/favicon.ico') }}" />
-  </head>
-  <body>
-    <div class="container-scroller">
-      <div class="container-fluid page-body-wrapper full-page-wrapper">
-        <div class="content-wrapper d-flex align-items-center auth px-0">
-          <div class="row w-100 mx-0 justify-content-center">
-            <div class="col-lg-5 col-md-6">
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <div class="text-center mb-3">
-                    <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" style="max-height: 60px;">
-                  </div>
-                  <h4 class="text-center mb-2">Verify your email</h4>
-                  <p class="text-center text-muted">We've sent a verification link to your email. Please click the link to verify your account.</p>
+﻿@extends('layouts.auth')
 
-                  @if(session('status') === 'verification-link-sent')
-                    <div class="alert alert-success">A new verification link has been sent to your email address.</div>
-                  @endif
+@section('title', 'Verify Email - MeetFlow')
 
-                  <form method="POST" action="{{ route('verification.send') }}" class="d-grid gap-2">
-                    @csrf
-                    <button type="submit" class="btn btn-primary">Resend Verification Email</button>
-                  </form>
+@section('content')
+<div class="mb-10">
+    <h2 class="font-display text-4xl font-semibold text-slate-900 dark:text-white mb-2">Verify Email</h2>
+    <p class="text-slate-500 dark:text-slate-400">Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you?</p>
+</div>
 
-                  <hr>
-                  <form method="POST" action="{{ route('logout') }}" class="d-grid gap-2 mt-2">
-                    @csrf
-                    <button type="submit" class="btn btn-outline-secondary">Logout</button>
-                  </form>
-
-                  <div class="text-center mt-3">
-                    <a href="{{ route('login') }}">Back to login</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+@if(session('status') === 'verification-link-sent')
+    <div class="mb-6 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300">
+        A new verification link has been sent to your email address.
     </div>
-    <script src="{{ asset('admins/assets/vendors/js/vendor.bundle.base.js') }}"></script>
-  </body>
-</html>
+@endif
+
+<div class="space-y-4">
+    <form action="{{ route('verification.send') }}" method="POST">
+        @csrf
+        <button
+            class="w-full bg-primary hover:bg-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-primary/25 transform active:scale-[0.98]"
+            type="submit">
+            Resend Verification Email
+        </button>
+    </form>
+
+    <form action="{{ route('logout') }}" method="POST">
+        @csrf
+        <button
+            class="w-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-3.5 px-4 rounded-xl transition-all"
+            type="submit">
+            Logout
+        </button>
+    </form>
+</div>
+
+<p class="mt-10 text-center text-slate-500 dark:text-slate-400">
+    <a class="font-semibold text-primary hover:underline" href="{{ route('login') }}">Back to login</a>
+</p>
+@endsection
