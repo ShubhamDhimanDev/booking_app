@@ -185,4 +185,8 @@
     'user_id' => auth()->id(),
     'total_transactions' => $payments->total() ?? 0
 ]) !!}
+{!! \App\Services\TrackingService::getGoogleEventScript('view_transactions', [
+    'user_id' => auth()->id(),
+    'total_transactions' => $payments->total() ?? 0
+]) !!}
 @endpush
