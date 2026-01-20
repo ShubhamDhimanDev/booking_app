@@ -198,7 +198,7 @@
                     >
                 </div>
 
-                <div>
+                {{-- <div>
                     <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                         <span class="flex items-center gap-2">
                             <span class="material-icons-round text-primary text-sm">cake</span>
@@ -211,7 +211,7 @@
                         value="{{ old('dob', auth()->user()->dob ?? '') }}"
                         class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     >
-                </div>
+                </div> --}}
 
                 <div>
                     <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">

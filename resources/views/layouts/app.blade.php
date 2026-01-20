@@ -107,6 +107,14 @@
                             @endif
                         </button>
                         <div id="profileDropdown" class="profile-dropdown">
+                            <a href="{{ route('user.bookings.index') }}" class="flex md:hidden items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200 {{ request()->routeIs('user.bookings.*') ? 'bg-primary/10 text-primary dark:bg-primary/20' : '' }}">
+                                <span class="material-icons-round text-lg {{ request()->routeIs('user.bookings.*') ? 'text-primary' : 'text-slate-500 dark:text-slate-400' }}">event_note</span>
+                                <span class="text-sm font-medium">My Bookings</span>
+                            </a>
+                            <a href="{{ route('transactions.index') }}" class="flex md:hidden items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200 {{ request()->routeIs('transactions.*') ? 'bg-primary/10 text-primary dark:bg-primary/20' : '' }} border-b border-slate-100 dark:border-slate-700">
+                                <span class="material-icons-round text-lg {{ request()->routeIs('transactions.*') ? 'text-primary' : 'text-slate-500 dark:text-slate-400' }}">receipt_long</span>
+                                <span class="text-sm font-medium">Transactions</span>
+                            </a>
                             <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200">
                                 <span class="material-icons-round text-lg text-primary">person</span>
                                 <span class="text-sm font-medium">Profile</span>
