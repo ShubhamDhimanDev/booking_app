@@ -19,6 +19,13 @@
         'value' => $booking->event->price ?? 500,
         'currency' => 'INR'
     ]) !!}
+    {!! \App\Services\TrackingService::getGoogleEventScript('view_payment_page', [
+        'event_name' => $booking->event->title,
+        'event_id' => $booking->event->id,
+        'booking_id' => $booking->id,
+        'value' => $booking->event->price ?? 500,
+        'currency' => 'INR'
+    ]) !!}
 @endpush
 
 @section('additional-styles')

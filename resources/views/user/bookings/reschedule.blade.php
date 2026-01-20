@@ -522,6 +522,11 @@
                 'booking_id' => $booking->id,
                 'event_id' => optional($booking->event)->id
             ]) !!}
+            {!! \App\Services\TrackingService::getGoogleInlineTrackingCode('booking_rescheduled', [
+                'event_name' => optional($booking->event)->title,
+                'booking_id' => $booking->id,
+                'event_id' => optional($booking->event)->id
+            ]) !!}
         });
 
         // Initial render

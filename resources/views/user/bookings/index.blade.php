@@ -105,6 +105,10 @@
     'user_id' => auth()->id(),
     'total_bookings' => $totalCount ?? 0
 ]) !!}
+{!! \App\Services\TrackingService::getGoogleEventScript('view_bookings', [
+    'user_id' => auth()->id(),
+    'total_bookings' => $totalCount ?? 0
+]) !!}
 <script>
     let currentFilter = 'all';
 

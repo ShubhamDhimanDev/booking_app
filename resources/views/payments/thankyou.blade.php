@@ -18,6 +18,17 @@
         'currency' => 'INR',
         'transaction_id' => $booking->payment->transaction_id ?? $booking->id
     ]) !!}
+    {!! \App\Services\TrackingService::getGoogleEventScript('purchase', [
+        'transaction_id' => $booking->payment->transaction_id ?? $booking->id,
+        'value' => $booking->payment->amount ?? $booking->event->price ?? 500,
+        'currency' => 'INR',
+        'items' => [[
+            'item_id' => $booking->event->id,
+            'item_name' => $booking->event->title,
+            'price' => $booking->payment->amount ?? $booking->event->price ?? 500,
+            'quantity' => 1
+        ]]
+    ]) !!}
 @endpush
 
 @section('additional-styles')

@@ -14,6 +14,7 @@
     @vite(['resources/css/app.css'])
 
     {!! \App\Services\TrackingService::getBaseScript() !!}
+    {!! \App\Services\TrackingService::getGoogleBaseScript() !!}
 
     @stack('head-scripts')
 
