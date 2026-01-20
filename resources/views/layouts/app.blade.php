@@ -11,31 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#6366f1',
-                        "background-light": "#f8fafc",
-                        "background-dark": "#0f172a",
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        display: ["Plus Jakarta Sans", "sans-serif"],
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    borderRadius: {
-                        DEFAULT: "0.75rem",
-                    },
-                }
-            }
-        }
-    </script>
+    @vite(['resources/css/app.css'])
 
     @stack('head-scripts')
 

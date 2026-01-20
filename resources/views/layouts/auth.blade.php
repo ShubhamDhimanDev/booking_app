@@ -12,29 +12,9 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#6366f1", // Indigo
-                        "background-light": "#faf9f6", // Soft Cream
-                        "background-dark": "#0f172a", // Dark Blue/Slate
-                        accent: "#b45309", // Warm Amber
-                    },
-                    fontFamily: {
-                        display: ["Playfair Display", "serif"],
-                        sans: ["Plus Jakarta Sans", "sans-serif"],
-                    },
-                    borderRadius: {
-                        DEFAULT: "0.75rem",
-                    },
-                },
-            },
-        };
-    </script>
+
+    @vite(['resources/css/app.css'])
+
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
