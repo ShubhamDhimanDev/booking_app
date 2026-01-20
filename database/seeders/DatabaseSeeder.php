@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
 
-        $this->call([\Database\Seeders\RoleAndAdminSeeder::class]);
+        $this->call([
+            \Database\Seeders\RoleAndAdminSeeder::class,
+            \Database\Seeders\TrackingSettingsSeeder::class,
+        ]);
     }
 }

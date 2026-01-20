@@ -36,6 +36,9 @@ Route::middleware('auth')->group(function () {
   Route::post('/user/bookings/{booking}/reschedule', [BookingController::class, 'reschedule'])->name('user.bookings.reschedule');
 });
 
+// Theme toggle API (for authenticated users)
+Route::post('/api/theme/toggle', [ProfileController::class, 'toggleTheme'])->middleware('auth')->name('theme.toggle');
+
 Route::get('/payment/{booking?}', [PaymentController::class, 'showPaymentPage'])->name('payment.page');
 Route::get('/payment/thankyou/{booking}', [PaymentController::class, 'thankYouPage'])->name('payment.thankyou');
 Route::post('/create-order', [PaymentController::class, 'createOrder']);

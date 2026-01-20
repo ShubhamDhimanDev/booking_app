@@ -17,9 +17,7 @@
 @section('loader-text', 'Please wait...')
 
 {{-- Add tracking scripts --}}
-@push('head-scripts')
-    {!! \App\Services\TrackingService::getBaseScript() !!}
-@endpush
+{{-- Base script loaded from layout --}}
 
 {{-- Custom styles --}}
 @section('additional-styles')

@@ -7,7 +7,6 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Admin\TrackingSettingsController;
-use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\BookingController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\LinkedWithGoogleMiddleware;
@@ -46,12 +45,6 @@ Route::prefix('')->name('admin.')->group(function(){
         Route::name('tracking.')->controller(TrackingSettingsController::class)->group(function(){
             Route::get('/tracking-settings', 'index')->name('index');
             Route::put('/tracking-settings', 'update')->name('update');
-        });
-
-        // System Settings (Theme & Dark Mode)
-        Route::name('system-settings.')->controller(SystemSettingsController::class)->group(function(){
-            Route::get('/system-settings', 'index')->name('index');
-            Route::put('/system-settings', 'update')->name('update');
         });
 
         // Promo Codes

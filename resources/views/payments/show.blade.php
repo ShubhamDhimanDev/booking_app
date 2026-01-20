@@ -12,9 +12,17 @@
 
 @push('head-scripts')
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    {!! \App\Services\TrackingService::getEventScript('AddPaymentInfo', [
+    {!! \App\Services\TrackingService::getEventScript('ViewPaymentPage', [
         'content_name' => $booking->event->title,
         'content_ids' => [$booking->event->id],
+        'booking_id' => $booking->id,
+        'value' => $booking->event->price ?? 500,
+        'currency' => 'INR'
+    ]) !!}
+    {!! \App\Services\TrackingService::getGoogleEventScript('view_payment_page', [
+        'event_name' => $booking->event->title,
+        'event_id' => $booking->event->id,
+        'booking_id' => $booking->id,
         'value' => $booking->event->price ?? 500,
         'currency' => 'INR'
     ]) !!}
@@ -773,14 +781,6 @@
 
         document.body.appendChild(form);
         form.submit();
-    }
-
-    // Track page view
-    if (typeof fbq === 'function') {
-        fbq('trackCustom', 'ViewPaymentPage', {
-            booking_id: bookingId,
-            amount: originalAmount
-        });
     }
     </script>
 @endpush
