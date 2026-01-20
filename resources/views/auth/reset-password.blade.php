@@ -1,76 +1,78 @@
-<!-- resources/views/auth/reset-password.blade.php -->
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Reset Password</title>
-    <link rel="stylesheet" href="{{ asset('admins/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/dark-overrides.css') }}">
-    <link rel="stylesheet" href="{{ asset('admins/assets/css/theme-overrides.css') }}">
-    <link rel="shortcut icon" href="{{ asset('admins/assets/images/favicon.ico') }}" />
-  </head>
-  <body>
-    <div class="container-scroller">
-      <div class="container-fluid page-body-wrapper full-page-wrapper">
-        <div class="content-wrapper d-flex align-items-center auth px-0">
-          <div class="row w-100 mx-0 justify-content-center">
-            <div class="col-lg-5 col-md-6">
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <div class="text-center mb-3">
-                    <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" style="max-height: 60px;">
-                  </div>
-                  <h4 class="text-center mb-1">Reset your password</h4>
-                  <p class="text-center text-muted mb-4">Enter your new password below.</p>
+﻿@extends('layouts.auth')
 
-                  @if($errors->any())
-                    <div class="alert alert-danger">
-                      <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                          <li>{{ $error }}</li>
-                        @endforeach
-                      </ul>
-                    </div>
-                  @endif
+@section('title', 'Reset Password - MeetFlow')
 
-                  <form method="POST" action="{{ route('password.store') }}">
-                    @csrf
-                    <input type="hidden" name="token" value="{{ $token }}">
+@section('content')
+<div class="mb-10">
+    <h2 class="font-display text-4xl font-semibold text-slate-900 dark:text-white mb-2">Reset Password</h2>
+    <p class="text-slate-500 dark:text-slate-400">Enter your new password below.</p>
+</div>
 
-                    <div class="mb-3">
-                      <label for="email" class="form-label">Email</label>
-                      <input type="email" id="email" name="email" class="form-control" value="{{ old('email', $email) }}" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="password" class="form-label">New Password</label>
-                      <input type="password" id="password" name="password" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="password_confirmation" class="form-label">Confirm Password</label>
-                      <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
-                    </div>
-
-                    <div class="d-grid">
-                      <button type="submit" class="btn btn-primary px-4">Reset Password</button>
-                    </div>
-                  </form>
-
-                  <div class="text-center mt-3">
-                    <a href="{{ route('login') }}">Back to login</a>
-                    <span class="text-muted mx-2">|</span>
-                    <a href="{{ route('password.request') }}">Forgot password?</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+@if($errors->any())
+    <div class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300">
+        <ul class="list-disc list-inside space-y-1">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
     </div>
-    <script src="{{ asset('admins/assets/vendors/js/vendor.bundle.base.js') }}"></script>
-  </body>
-</html>
+@endif
+
+<form action="{{ route('password.update') }}" method="POST" class="space-y-6">
+    @csrf
+    <input type="hidden" name="token" value="{{ $request->route('token') }}">
+    <input type="hidden" name="email" value="{{ $request->email }}">
+    
+    <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" for="password">New Password</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <span class="material-icons-outlined text-xl">lock</span>
+            </span>
+            <input
+                class="block w-full pl-10 pr-12 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                id="password" name="password" placeholder="" required type="password" />
+            <button class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                type="button" onclick="togglePassword('password')">
+                <span class="material-icons-outlined text-xl" id="password-icon">visibility</span>
+            </button>
+        </div>
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" for="password_confirmation">Confirm Password</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <span class="material-icons-outlined text-xl">lock</span>
+            </span>
+            <input
+                class="block w-full pl-10 pr-12 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                id="password_confirmation" name="password_confirmation" placeholder="" required type="password" />
+            <button class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                type="button" onclick="togglePassword('password_confirmation')">
+                <span class="material-icons-outlined text-xl" id="password_confirmation-icon">visibility</span>
+            </button>
+        </div>
+    </div>
+    <button
+        class="w-full bg-primary hover:bg-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-primary/25 transform active:scale-[0.98]"
+        type="submit">
+        Reset Password
+    </button>
+</form>
+@endsection
+
+@push('scripts')
+<script>
+function togglePassword(fieldId) {
+    const passwordInput = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '-icon');
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.textContent = 'visibility_off';
+    } else {
+        passwordInput.type = 'password';
+        icon.textContent = 'visibility';
+    }
+}
+</script>
+@endpush

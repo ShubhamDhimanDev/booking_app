@@ -139,6 +139,22 @@ body {
   color: #fff;
 }
 
+.time-slot.active {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.no-slots {
+  text-align: center;
+  color: #64748b;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.dark .no-slots {
+  color: #94a3b8;
+}
+
 .timezone {
   margin-top: 15px;
   font-size: 13px;
@@ -150,9 +166,8 @@ body {
 .confirm-panel,
 .details-form,
 .confirmation {
-  display: none;
   margin-top: 25px;
-  background: #f1f5f9;
+  /* background: #f1f5f9; */
   padding: 15px;
   border-radius: 8px;
   text-align: center;
@@ -262,7 +277,6 @@ textarea {
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
   font-size: 1.2rem;
-  display: none;
   align-items: center;
   justify-content: center;
   z-index: 9999;

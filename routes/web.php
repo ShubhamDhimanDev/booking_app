@@ -40,13 +40,12 @@ Route::get('/payment/{booking?}', [PaymentController::class, 'showPaymentPage'])
 Route::get('/payment/thankyou/{booking}', [PaymentController::class, 'thankYouPage'])->name('payment.thankyou');
 Route::post('/create-order', [PaymentController::class, 'createOrder']);
 Route::post('/verify-payment', [PaymentController::class, 'verifyPayment']);
+Route::post('/validate-promo', [PaymentController::class, 'validatePromoCode']);
 
+// Multi-page booking flow
 Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->name('events.show.public');
+Route::get('/e/{event:slug}/details', [BookingController::class, 'showDetailsForm'])->name('bookings.details');
 Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->name('bookings.store');
-
-Route::get('/payu/payment', [PayuController::class, 'paymentForm'])->name('payu.paymentForm');
-Route::post('/payu/success', [PayuController::class, 'paymentSuccess'])->name('payu.success');
-Route::post('/payu/failure', [PayuController::class, 'paymentFailure'])->name('payu.failure');
 
 Route::get('/test', [TestController::class, 'index'])->name('test.index');
 Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
