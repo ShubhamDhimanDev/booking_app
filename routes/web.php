@@ -47,10 +47,6 @@ Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->name('eve
 Route::get('/e/{event:slug}/details', [BookingController::class, 'showDetailsForm'])->name('bookings.details');
 Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->name('bookings.store');
 
-Route::get('/payu/payment', [PayuController::class, 'paymentForm'])->name('payu.paymentForm');
-Route::post('/payu/success', [PayuController::class, 'paymentSuccess'])->name('payu.success');
-Route::post('/payu/failure', [PayuController::class, 'paymentFailure'])->name('payu.failure');
-
 Route::get('/test', [TestController::class, 'index'])->name('test.index');
 Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
 

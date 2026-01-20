@@ -659,8 +659,6 @@
 
                 const data = await response.json();
 
-                console.log('Payment Gateway Data:', data);
-
                 if (data.gateway === 'payu') {
                     handlePayUPayment(data);
                 } else {
