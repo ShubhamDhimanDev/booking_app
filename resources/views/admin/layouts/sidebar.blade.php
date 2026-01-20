@@ -49,6 +49,22 @@
                   <span class="menu-title">Payment Gateways</span>
               </a>
           </li>
+
+          {{-- Tracking Settings --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.tracking.*') }}" href="{{ route('admin.tracking.index') }}">
+                  <i class="mdi mdi-chart-line menu-icon"></i>
+                  <span class="menu-title">Tracking Settings</span>
+              </a>
+          </li>
+
+          {{-- Promo Codes --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.promo-codes.*') }}" href="{{ route('admin.promo-codes.index') }}">
+                  <i class="mdi mdi-tag-multiple menu-icon"></i>
+                  <span class="menu-title">Promo Codes</span>
+              </a>
+          </li>
         @endhasanyrole
 
         @role('user')

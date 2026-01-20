@@ -59,20 +59,44 @@ class BookingController extends Controller
 
     /**
      * Show user booking list
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
      */
-    public function userIndex()
+    public function userIndex(Request $request)
     {
-    
+
     /** @var \App\Models\User */
     $user = auth()->user();
 
-    $bookings = Booking::where('user_id', $user->id)
+    $query = Booking::where('user_id', $user->id)
       ->with(['event.user', 'payment'])
-      ->latest()
-      ->get();
+      ->latest();
 
-    return view('user.bookings.index', compact('bookings'));
+    // Apply status filter if provided
+    if ($request->has('status') && $request->status !== 'all') {
+      $query->where('status', $request->status);
+    }
+
+    $bookings = $query->paginate(9);
+
+    // Handle AJAX requests
+    if ($request->ajax() || $request->wantsJson()) {
+      $html = view('user.bookings.partials.bookings-grid', compact('bookings'))->render();
+
+      return response()->json([
+        'html' => $html,
+        'current_page' => $bookings->currentPage(),
+        'last_page' => $bookings->lastPage(),
+        'total' => $bookings->total()
+      ]);
+    }
+
+    // Calculate status counts for filter buttons
+    $totalCount = Booking::where('user_id', $user->id)->count();
+    $confirmedCount = Booking::where('user_id', $user->id)->where('status', 'confirmed')->count();
+    $pendingCount = Booking::where('user_id', $user->id)->where('status', 'pending')->count();
+    $cancelledCount = Booking::where('user_id', $user->id)->where('status', 'cancelled')->count();
+
+    return view('user.bookings.index', compact('bookings', 'totalCount', 'confirmedCount', 'pendingCount', 'cancelledCount'));
     }
 
     /**
@@ -143,9 +167,35 @@ class BookingController extends Controller
 
 
   /**
+   * Show the details form after slot selection
+   * @param Event $event
+   * @param Request $request
+   * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+   */
+  public function showDetailsForm(Event $event, Request $request)
+  {
+    $date = $request->query('date');
+    $time = $request->query('time');
+
+    // Validate that date and time are provided
+    if (!$date || !$time) {
+      return redirect()->route('events.show.public', $event->slug)
+        ->withErrors(['error' => 'Please select a date and time first.']);
+    }
+
+    // Basic date/time validation
+    if (!\Carbon\Carbon::hasFormat($date, 'Y-m-d') || !\Carbon\Carbon::hasFormat($time, 'H:i')) {
+      return redirect()->route('events.show.public', $event->slug)
+        ->withErrors(['error' => 'Invalid date or time format.']);
+    }
+
+    return view('bookings.details', compact('event', 'date', 'time'));
+  }
+
+  /**
    * @param StoreBookingRequest $request
    * @param Event $event
-   * @return \Illuminate\Http\JsonResponse
+   * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
    */
   public function store(StoreBookingRequest $request, Event $event)
   {
@@ -156,7 +206,7 @@ class BookingController extends Controller
     $bookedDate = $validated['booked_at_date'];
     $bookedTime = $validated['booked_at_time'];
     $phone      = $request->phone;
-    $dob         = $validated['dob'];
+    // $dob         = $validated['dob'];
 
     // Server-side availability checks
     // 1) date within event range
@@ -208,7 +258,7 @@ class BookingController extends Controller
     if ($exists) {
       return response()->json(['error' => 'Selected timeslot is already booked. Please choose another slot.'], 409);
     }
-    
+
     // 6) NEW: Check if the event owner has ANY confirmed booking at this date/time across all their events
 $ownerHasBooking = Booking::whereHas('event', function($q) use ($event) {
       $q->where('user_id', $event->user_id);
@@ -231,7 +281,7 @@ if ($ownerHasBooking) {
       $user = User::create([
         'name' => $bookerName,
         'email' => $bookerEmail,
-        'dob' => $dob,
+        // 'dob' => $dob,
         'phone' => $phone,
         'password' => bcrypt($randomPassword),
       ]);
@@ -254,14 +304,15 @@ if ($ownerHasBooking) {
     $booking = $event->bookings()->create([
       'booker_name' => $bookerName,
       'booker_email' => $bookerEmail,
+      'phone' => $phone,
       'booked_at_date' => $request->validated('booked_at_date'),
       'booked_at_time' => $request->validated('booked_at_time'),
       'user_id' => $user->id,
       'status' => 'pending',
     ]);
 
-    return response()->json(['id' => $booking->id]);
-
+    // Redirect to payment page instead of returning JSON
+    return redirect()->route('payment.page', $booking->id);
   }
 
   /**
@@ -325,12 +376,7 @@ if ($ownerHasBooking) {
         abort(403);
     }
 
-    if ($booking->status !== 'confirmed' && ! $booking->payment) {
-        return redirect()->back()->with([
-            'alert_type' => 'error',
-            'alert_message' => 'Only confirmed (paid) bookings can be rescheduled.'
-        ]);
-    }
+
 
     // 🔹 Store old schedule
     $oldDate = $booking->booked_at_date;
@@ -362,11 +408,11 @@ if ($ownerHasBooking) {
         }
     }
 
-    // update booking
+    // update booking - only confirm if payment exists
     $booking->update([
         'booked_at_date' => $payload['booked_at_date'],
         'booked_at_time' => $payload['booked_at_time'],
-        'status' => 'confirmed',
+        'status' => $booking->payment ? 'confirmed' : 'pending',
     ]);
 
     // recreate google event
@@ -406,7 +452,15 @@ if ($ownerHasBooking) {
     Notification::route('mail', [$booking->booker_email => $booking->booker_name])
         ->notify($notification);
 
-    return redirect()->back()->with([
+    // Check if payment is required
+    if (!$booking->payment && $booking->event && $booking->event->price > 0) {
+        return redirect()->route('payment.page', $booking->id)->with([
+            'alert_type' => 'info',
+            'alert_message' => 'Booking rescheduled. Please complete payment to confirm.'
+        ]);
+    }
+
+    return redirect()->route('user.bookings.index')->with([
         'alert_type' => 'success',
         'alert_message' => 'Booking rescheduled successfully.'
     ]);

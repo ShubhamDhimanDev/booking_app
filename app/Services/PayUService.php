@@ -43,6 +43,7 @@ class PayUService implements PaymentGatewayInterface
             $email = $data['email'] ?? '';
             $phone = $data['phone'] ?? '';
             $txnId = $data['txn_id'] ?? 'Txn' . uniqid();
+            $bookingId = $data['booking_id'] ?? null;
 
             // UDF fields (optional)
             $udf1 = $data['udf1'] ?? '';
@@ -51,10 +52,13 @@ class PayUService implements PaymentGatewayInterface
             $udf4 = $data['udf4'] ?? '';
             $udf5 = $data['udf5'] ?? '';
 
-            // Generate hash as per PayU documentation
+            // Generate hash as per PayU official documentation
+            // Formula: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT)
             $hashSequence = $this->merchantKey . '|' . $txnId . '|' . $amount . '|' . $productInfo . '|' .
                            $firstName . '|' . $email . '|' . $udf1 . '|' . $udf2 . '|' .
                            $udf3 . '|' . $udf4 . '|' . $udf5 . '||||||' . $this->merchantSalt;
+
+            // Generate hash and convert to lowercase as per PayU documentation
             $hash = strtolower(hash('sha512', $hashSequence));
 
             $payuUrl = $this->environment === 'production'
@@ -64,16 +68,17 @@ class PayUService implements PaymentGatewayInterface
             return [
                 'gateway' => 'payu',
                 'success' => true,
-                'txn_id' => $txnId,
+                'txnid' => $txnId,
                 'amount' => $amount,
-                'merchant_key' => $this->merchantKey,
+                'key' => $this->merchantKey,
                 'merchant_id' => $this->merchantId,
                 'hash' => $hash,
                 'payu_url' => $payuUrl,
-                'product_info' => $productInfo,
-                'first_name' => $firstName,
+                'productinfo' => $productInfo,
+                'firstname' => $firstName,
                 'email' => $email,
                 'phone' => $phone,
+                'surl' => route('payment.thankyou', ['booking' => $bookingId]),
                 'service_provider' => 'payu_paisa',
                 'udf1' => $udf1,
                 'udf2' => $udf2,

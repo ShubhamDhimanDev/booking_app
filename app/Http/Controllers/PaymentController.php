@@ -8,8 +8,10 @@ use Exception;
 use Notification;
 use App\Models\Booking;
 use App\Models\Payment as PaymentModel;
+use App\Models\PromoCode;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\BookingController;
+use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
@@ -20,6 +22,8 @@ class PaymentController extends Controller
 
         try {
             $gateway = $gatewayManager->getActiveGateway();
+            $gatewayName = $gateway->getName();
+
             $paymentData = [
                 'amount' => $amount,
                 'receipt' => 'order_' . time(),
@@ -28,9 +32,14 @@ class PaymentController extends Controller
                 'first_name' => $request->first_name ?? '',
                 'email' => $request->email ?? '',
                 'txn_id' => 'txn_' . time() . rand(1000, 9999),
+                'phone' => $request->phone ?? '',
             ];
 
             $response = $gateway->initiatePayment($paymentData);
+
+            // Add gateway name to response for frontend to determine which handler to use
+            $response['gateway'] = strtolower($gatewayName);
+
             return response()->json($response);
         } catch (Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
@@ -85,6 +94,7 @@ class PaymentController extends Controller
                         'status' => 'success',
                         'amount' => $request->amount ?? 0,
                         'currency' => 'INR',
+                        'promo_code' => $request->promo_code ?? null,
                         'metadata' => json_encode($request->all()),
                     ]);
 
@@ -132,7 +142,7 @@ class PaymentController extends Controller
 
     public function showPaymentPage(Request $request, $booking)
     {
-        $bookingModel = Booking::with('event.user')->findOrFail($booking);
+        $bookingModel = Booking::with(['event.user', 'booker', 'payment'])->findOrFail($booking);
 
         return view('payments.show', [
             'booking' => $bookingModel,
@@ -141,10 +151,116 @@ class PaymentController extends Controller
 
     public function thankYouPage($booking)
     {
-        $bookingModel = Booking::with('event.user')->findOrFail($booking);
+        $bookingModel = Booking::with(['event.user', 'booker', 'payment'])->findOrFail($booking);
 
         return view('payments.thankyou', [
             'booking' => $bookingModel,
+        ]);
+    }
+
+    public function validatePromoCode(Request $request)
+    {
+        $request->validate([
+            'promo_code' => 'required|string',
+            'booking_id' => 'required|exists:bookings,id',
+            'amount' => 'required|numeric|min:0'
+        ]);
+
+        $code = strtoupper($request->promo_code);
+        $bookingId = $request->booking_id;
+        $originalAmount = floatval($request->amount);
+
+        // Find the promo code
+        $promoCode = PromoCode::where('code', $code)->first();
+
+        if (!$promoCode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid promo code'
+            ], 404);
+        }
+
+        // Check if active
+        if (!$promoCode->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This promo code is no longer active'
+            ], 400);
+        }
+
+        // Check validity dates
+        $now = Carbon::now();
+
+        if ($promoCode->valid_from && $now->lt(Carbon::parse($promoCode->valid_from))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This promo code is not yet valid'
+            ], 400);
+        }
+
+        if ($promoCode->valid_until && $now->gt(Carbon::parse($promoCode->valid_until))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This promo code has expired'
+            ], 400);
+        }
+
+        // Check minimum booking amount
+        if ($promoCode->min_booking_amount && $originalAmount < $promoCode->min_booking_amount) {
+            return response()->json([
+                'success' => false,
+                'message' => "Minimum booking amount of ₹{$promoCode->min_booking_amount} required"
+            ], 400);
+        }
+
+        // Check usage limit
+        if ($promoCode->usage_limit) {
+            $usageCount = PaymentModel::where('promo_code', $code)
+                ->where('status', 'success')
+                ->count();
+
+            if ($usageCount >= $promoCode->usage_limit) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This promo code has reached its usage limit'
+                ], 400);
+            }
+        }
+
+        // Check if this booking already used a promo code
+        $booking = Booking::findOrFail($bookingId);
+        if ($booking->payment && $booking->payment->promo_code) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A promo code has already been applied to this booking'
+            ], 400);
+        }
+
+        // Calculate discount
+        $discountValue = 0;
+
+        if ($promoCode->discount_type === 'percentage') {
+            $discountValue = ($originalAmount * $promoCode->discount_value) / 100;
+
+            // Apply max discount cap if set
+            if ($promoCode->max_discount_amount && $discountValue > $promoCode->max_discount_amount) {
+                $discountValue = $promoCode->max_discount_amount;
+            }
+        } else {
+            // Fixed discount
+            $discountValue = min($promoCode->discount_value, $originalAmount);
+        }
+
+        $discountedAmount = max(0, $originalAmount - $discountValue);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Promo code applied successfully! You saved ₹{$discountValue}",
+            'promo_code' => $code,
+            'discount_type' => $promoCode->discount_type,
+            'discount_value' => round($discountValue, 2),
+            'original_amount' => round($originalAmount, 2),
+            'discounted_amount' => round($discountedAmount, 2)
         ]);
     }
 }

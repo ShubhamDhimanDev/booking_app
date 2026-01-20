@@ -6,11 +6,12 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Payment;
 
 class Booking extends Model
 {
-  use HasFactory;
+  use HasFactory, SoftDeletes;
 
   protected $guarded = [];
 
@@ -44,5 +45,10 @@ class Booking extends Model
   public function payment()
   {
     return $this->hasOne(Payment::class);
+  }
+
+  public function booker()
+  {
+      return $this->belongsTo(User::class, 'user_id');
   }
 }
