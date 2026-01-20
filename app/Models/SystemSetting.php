@@ -10,7 +10,7 @@ class SystemSetting extends Model
     use HasFactory;
 
     protected $fillable = [
-        'theme_layout',
+        'user_id',
         'dark_mode',
     ];
 
@@ -19,13 +19,29 @@ class SystemSetting extends Model
     ];
 
     /**
-     * Get the system settings instance
+     * Get the system settings for a user
      */
-    public static function getSettings()
+    public static function getSettings($userId = null)
     {
-        return static::first() ?? static::create([
-            'theme_layout' => 'modern',
+        if ($userId) {
+            return static::firstOrCreate(
+                ['user_id' => $userId],
+                ['dark_mode' => false]
+            );
+        }
+
+        // Default settings for non-authenticated users
+        return static::whereNull('user_id')->first() ?? static::create([
+            'user_id' => null,
             'dark_mode' => false,
         ]);
+    }
+
+    /**
+     * Relationship with User
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

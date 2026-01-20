@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use App\Models\SystemSetting;
+use App\Services\ThemeService;
 
 class ProfileController extends Controller
 {
@@ -73,5 +75,31 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Toggle theme (dark/light mode) for authenticated user
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function toggleTheme(Request $request)
+    {
+        $request->validate([
+            'dark_mode' => 'required|boolean',
+        ]);
+
+        $settings = SystemSetting::getSettings(auth()->id());
+        $settings->update([
+            'dark_mode' => $request->dark_mode,
+        ]);
+
+        // Clear theme cache
+        ThemeService::clearCache(auth()->id());
+
+        return response()->json([
+            'success' => true,
+            'dark_mode' => $request->dark_mode
+        ]);
     }
 }

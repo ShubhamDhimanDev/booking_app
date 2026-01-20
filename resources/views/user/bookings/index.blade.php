@@ -101,14 +101,15 @@
         }
     }
 </style>
+{!! \App\Services\TrackingService::getEventScript('ViewBookings', [
+    'user_id' => auth()->id(),
+    'total_bookings' => $totalCount ?? 0
+]) !!}
+{!! \App\Services\TrackingService::getGoogleEventScript('view_bookings', [
+    'user_id' => auth()->id(),
+    'total_bookings' => $totalCount ?? 0
+]) !!}
 <script>
-    // Track page view for bookings list
-    if (typeof fbq === 'function') {
-        fbq('trackCustom', 'ViewBookings', {
-            user_id: '{{ auth()->id() }}'
-        });
-    }
-
     let currentFilter = 'all';
 
     // AJAX Filter bookings functionality

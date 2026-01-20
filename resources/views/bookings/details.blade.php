@@ -11,10 +11,15 @@
 @section('badge-text', 'Secure Booking')
 
 @push('head-scripts')
-    {!! \App\Services\TrackingService::getBaseScript() !!}
     {!! \App\Services\TrackingService::getEventScript('InitiateCheckout', [
         'content_name' => $event->title,
         'content_ids' => [$event->id],
+        'value' => $event->price,
+        'currency' => 'INR'
+    ]) !!}
+    {!! \App\Services\TrackingService::getGoogleEventScript('begin_checkout', [
+        'event_name' => $event->title,
+        'event_id' => $event->id,
         'value' => $event->price,
         'currency' => 'INR'
     ]) !!}

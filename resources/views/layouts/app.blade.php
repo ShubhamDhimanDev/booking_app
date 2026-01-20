@@ -13,6 +13,9 @@
 
     @vite(['resources/css/app.css'])
 
+    {!! \App\Services\TrackingService::getBaseScript() !!}
+    {!! \App\Services\TrackingService::getGoogleBaseScript() !!}
+
     @stack('head-scripts')
 
     <style>
@@ -64,6 +67,12 @@
                 transform: translateY(0);
             }
         }
+        /* Hide mobile-only dropdown items on desktop */
+        @media (min-width: 768px) {
+            .profile-dropdown .md\:hidden {
+                display: none !important;
+            }
+        }
     </style>
     @yield('additional-styles')
     @stack('styles')
@@ -111,7 +120,7 @@
                                 <span class="material-icons-round text-lg {{ request()->routeIs('user.bookings.*') ? 'text-primary' : 'text-slate-500 dark:text-slate-400' }}">event_note</span>
                                 <span class="text-sm font-medium">My Bookings</span>
                             </a>
-                            <a href="{{ route('transactions.index') }}" class="flex md:hidden items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200 {{ request()->routeIs('transactions.*') ? 'bg-primary/10 text-primary dark:bg-primary/20' : '' }} border-b border-slate-100 dark:border-slate-700">
+                            <a href="{{ route('transactions.index') }}" class="flex md:hidden items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200 {{ request()->routeIs('transactions.*') ? 'bg-primary/10 text-primary dark:bg-primary/20' : '' }} border-b md:border-b-0 border-slate-100 dark:border-slate-700">
                                 <span class="material-icons-round text-lg {{ request()->routeIs('transactions.*') ? 'text-primary' : 'text-slate-500 dark:text-slate-400' }}">receipt_long</span>
                                 <span class="text-sm font-medium">Transactions</span>
                             </a>
@@ -164,6 +173,12 @@
         @yield('content')
     </main>
 
+    <!-- Floating Theme Toggle Button -->
+    <button id="themeToggle" style="bottom: 30px; right: 30px;"
+            class="fixed w-14 h-14 bg-white dark:bg-slate-800 rounded-full shadow-lg hover:shadow-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all duration-300 hover:scale-110 z-50 group">
+        <span id="themeIcon" class="material-icons-round text-amber-500 dark:text-slate-300 transition-all duration-300 group-hover:rotate-180 text-2xl"></span>
+    </button>
+
     <!-- Footer -->
     <footer class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-700 @auth mt-20 @else mt-20 @endauth">
         <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -177,8 +192,6 @@
             </div>
         </div>
     </footer>
-
-    {!! \App\Services\TrackingService::getBaseScript() !!}
 
     @auth
     <script>
@@ -198,6 +211,94 @@
         });
     </script>
     @endauth
+
+    <script>
+        // Theme Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const htmlElement = document.documentElement;
+            const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+
+            if (!themeToggle || !themeIcon) {
+                console.error('Theme toggle elements not found');
+                return;
+            }
+
+            // Initialize theme on page load
+            function initializeTheme() {
+                let isDark = false;
+
+                if (isAuthenticated) {
+                    // For authenticated users, check server-rendered class
+                    isDark = htmlElement.classList.contains('dark');
+                } else {
+                    // For guests, check localStorage
+                    const savedTheme = localStorage.getItem('theme');
+                    isDark = savedTheme === 'dark';
+
+                    // Apply the saved theme
+                    if (isDark) {
+                        htmlElement.classList.add('dark');
+                        htmlElement.classList.remove('light');
+                    } else {
+                        htmlElement.classList.add('light');
+                        htmlElement.classList.remove('dark');
+                    }
+                }
+
+                updateIcon(isDark);
+            }
+
+            // Update the icon based on theme
+            function updateIcon(isDark) {
+                themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            }
+
+            // Toggle theme
+            async function toggleTheme() {
+                const isDark = htmlElement.classList.contains('dark');
+                const newTheme = isDark ? 'light' : 'dark';
+
+                // Toggle classes with smooth transition
+                if (isDark) {
+                    htmlElement.classList.remove('dark');
+                    htmlElement.classList.add('light');
+                } else {
+                    htmlElement.classList.remove('light');
+                    htmlElement.classList.add('dark');
+                }
+
+                updateIcon(!isDark);
+
+                // Save preference
+                if (isAuthenticated) {
+                    // Save to server for authenticated users
+                    try {
+                        await fetch('{{ route('theme.toggle') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ dark_mode: !isDark })
+                        });
+                    } catch (error) {
+                        console.error('Failed to save theme preference:', error);
+                    }
+                } else {
+                    // Save to localStorage for guests
+                    localStorage.setItem('theme', newTheme);
+                }
+            }
+
+            // Event listener
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Initialize on load
+            initializeTheme();
+        });
+    </script>
 
     @stack('scripts')
 </body>
