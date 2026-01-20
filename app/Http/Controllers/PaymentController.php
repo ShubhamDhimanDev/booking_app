@@ -32,6 +32,7 @@ class PaymentController extends Controller
                 'first_name' => $request->first_name ?? '',
                 'email' => $request->email ?? '',
                 'txn_id' => 'txn_' . time() . rand(1000, 9999),
+                'phone' => $request->phone ?? '',
             ];
 
             $response = $gateway->initiatePayment($paymentData);
@@ -189,7 +190,7 @@ class PaymentController extends Controller
 
         // Check validity dates
         $now = Carbon::now();
-        
+
         if ($promoCode->valid_from && $now->lt(Carbon::parse($promoCode->valid_from))) {
             return response()->json([
                 'success' => false,
@@ -217,7 +218,7 @@ class PaymentController extends Controller
             $usageCount = PaymentModel::where('promo_code', $code)
                 ->where('status', 'success')
                 ->count();
-                
+
             if ($usageCount >= $promoCode->usage_limit) {
                 return response()->json([
                     'success' => false,
@@ -237,10 +238,10 @@ class PaymentController extends Controller
 
         // Calculate discount
         $discountValue = 0;
-        
+
         if ($promoCode->discount_type === 'percentage') {
             $discountValue = ($originalAmount * $promoCode->discount_value) / 100;
-            
+
             // Apply max discount cap if set
             if ($promoCode->max_discount_amount && $discountValue > $promoCode->max_discount_amount) {
                 $discountValue = $promoCode->max_discount_amount;

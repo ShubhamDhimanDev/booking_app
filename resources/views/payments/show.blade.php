@@ -243,14 +243,14 @@
                                     <p class="font-bold text-slate-900 dark:text-white truncate">{{ $booking->booker_email }}</p>
                                 </div>
                             </div>
-                            @if($booking->booker && $booking->booker->phone)
+                            @if($booking->phone)
                             <div class="flex items-center space-x-4 booking-detail-card bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl">
                                 <div class="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
                                     <span class="material-icons-round text-emerald-600 dark:text-emerald-400 text-lg">phone</span>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Phone</p>
-                                    <p class="font-bold text-slate-900 dark:text-white">{{ $booking->booker->phone }}</p>
+                                    <p class="font-bold text-slate-900 dark:text-white">{{ $booking->phone }}</p>
                                 </div>
                             </div>
                             @endif
@@ -639,7 +639,8 @@
                     booking_id: bookingId,
                     product_info: '{{ addslashes($booking->event->title) }}',
                     first_name: '{{ addslashes($booking->booker_name) }}',
-                    email: '{{ $booking->booker_email }}'
+                    email: '{{ $booking->booker_email }}',
+                    phone: '{{ $booking->phone }}'
                 };
 
                 // Include promo code if applied
@@ -657,6 +658,8 @@
                 });
 
                 const data = await response.json();
+
+                console.log('Payment Gateway Data:', data);
 
                 if (data.gateway === 'payu') {
                     handlePayUPayment(data);
