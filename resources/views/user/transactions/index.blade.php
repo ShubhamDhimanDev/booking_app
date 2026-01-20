@@ -18,7 +18,7 @@
         <table class="w-full">
             <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Transaction ID</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Booking</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Amount</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Provider</th>
@@ -29,7 +29,7 @@
             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                 @forelse($payments as $p)
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">#{{ $p->id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">{{ $p->transaction_id }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center gap-2">
                             <span class="material-icons-round text-primary text-sm">event</span>
@@ -89,6 +89,12 @@
             </tbody>
         </table>
     </div>
+
+    @if($payments->hasPages())
+    <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
+        {{ $payments->links('pagination::tailwind') }}
+    </div>
+    @endif
 </div>
 @endsection
 

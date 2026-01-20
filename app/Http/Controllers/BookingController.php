@@ -59,20 +59,44 @@ class BookingController extends Controller
 
     /**
      * Show user booking list
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
      */
-    public function userIndex()
+    public function userIndex(Request $request)
     {
 
     /** @var \App\Models\User */
     $user = auth()->user();
 
-    $bookings = Booking::where('user_id', $user->id)
+    $query = Booking::where('user_id', $user->id)
       ->with(['event.user', 'payment'])
-      ->latest()
-      ->get();
+      ->latest();
 
-    return view('user.bookings.index', compact('bookings'));
+    // Apply status filter if provided
+    if ($request->has('status') && $request->status !== 'all') {
+      $query->where('status', $request->status);
+    }
+
+    $bookings = $query->paginate(9);
+
+    // Handle AJAX requests
+    if ($request->ajax() || $request->wantsJson()) {
+      $html = view('user.bookings.partials.bookings-grid', compact('bookings'))->render();
+
+      return response()->json([
+        'html' => $html,
+        'current_page' => $bookings->currentPage(),
+        'last_page' => $bookings->lastPage(),
+        'total' => $bookings->total()
+      ]);
+    }
+
+    // Calculate status counts for filter buttons
+    $totalCount = Booking::where('user_id', $user->id)->count();
+    $confirmedCount = Booking::where('user_id', $user->id)->where('status', 'confirmed')->count();
+    $pendingCount = Booking::where('user_id', $user->id)->where('status', 'pending')->count();
+    $cancelledCount = Booking::where('user_id', $user->id)->where('status', 'cancelled')->count();
+
+    return view('user.bookings.index', compact('bookings', 'totalCount', 'confirmedCount', 'pendingCount', 'cancelledCount'));
     }
 
     /**

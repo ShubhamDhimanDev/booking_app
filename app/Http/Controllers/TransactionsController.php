@@ -10,7 +10,7 @@ class TransactionsController extends Controller
     {
         $user = auth()->user();
 
-        $payments = Payment::where('user_id', $user->id)->latest()->get();
+        $payments = Payment::where('user_id', $user->id)->latest()->paginate(10);
 
         return view('user.transactions.index', compact('payments'));
     }
