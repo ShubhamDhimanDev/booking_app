@@ -181,12 +181,8 @@
 @endsection
 
 @push('scripts')
-<script>
-// Track page view for transactions
-if (typeof fbq === 'function') {
-    fbq('trackCustom', 'ViewTransactions', {
-        user_id: '{{ auth()->id() }}'
-    });
-}
-</script>
+{!! \App\Services\TrackingService::getEventScript('ViewTransactions', [
+    'user_id' => auth()->id(),
+    'total_transactions' => $payments->total() ?? 0
+]) !!}
 @endpush

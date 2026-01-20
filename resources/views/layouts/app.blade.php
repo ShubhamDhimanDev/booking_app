@@ -13,6 +13,8 @@
 
     @vite(['resources/css/app.css'])
 
+    {!! \App\Services\TrackingService::getBaseScript() !!}
+
     @stack('head-scripts')
 
     <style>
@@ -177,8 +179,6 @@
             </div>
         </div>
     </footer>
-
-    {!! \App\Services\TrackingService::getBaseScript() !!}
 
     @auth
     <script>

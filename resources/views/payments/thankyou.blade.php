@@ -11,7 +11,6 @@
 @section('badge-text', 'Booking Confirmed')
 
 @push('head-scripts')
-    {!! \App\Services\TrackingService::getBaseScript() !!}
     {!! \App\Services\TrackingService::getEventScript('Purchase', [
         'content_name' => $booking->event->title,
         'content_ids' => [$booking->event->id],

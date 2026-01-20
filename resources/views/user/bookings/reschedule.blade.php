@@ -517,12 +517,11 @@
 
         // Track reschedule attempt
         rescheduleForm.addEventListener('submit', function() {
-            if (typeof fbq === 'function') {
-                fbq('trackCustom', 'BookingRescheduled', {
-                    event_name: '{{ optional($booking->event)->title }}',
-                    booking_id: '{{ $booking->id }}'
-                });
-            }
+            {!! \App\Services\TrackingService::getInlineTrackingCode('BookingRescheduled', [
+                'event_name' => optional($booking->event)->title,
+                'booking_id' => $booking->id,
+                'event_id' => optional($booking->event)->id
+            ]) !!}
         });
 
         // Initial render
