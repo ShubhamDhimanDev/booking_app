@@ -1,20 +1,31 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+namespace Database\Seeders;
 
-return new class extends Migration
+use Illuminate\Database\Seeder;
+use App\Models\Setting;
+
+class TrackingSettingsSeeder extends Seeder
 {
     /**
-     * Run the migrations.
+     * Run the database seeds.
      *
      * @return void
      */
-    public function up()
+    public function run()
     {
-        // Seed default Google tracking settings
-        $settings = [
+        // Meta Pixel tracking settings
+        $metaSettings = [
+            ['key' => 'meta_pixel_enabled', 'value' => '0', 'is_encrypted' => false],
+            ['key' => 'meta_pixel_id', 'value' => '', 'is_encrypted' => false],
+            ['key' => 'meta_event_page_view', 'value' => '1', 'is_encrypted' => false],
+            ['key' => 'meta_event_initiate_checkout', 'value' => '1', 'is_encrypted' => false],
+            ['key' => 'meta_event_add_payment_info', 'value' => '1', 'is_encrypted' => false],
+            ['key' => 'meta_event_purchase', 'value' => '1', 'is_encrypted' => false],
+        ];
+
+        // Google Analytics tracking settings
+        $googleSettings = [
             ['key' => 'google_analytics_enabled', 'value' => '0', 'is_encrypted' => false],
             ['key' => 'google_analytics_id', 'value' => '', 'is_encrypted' => false],
             ['key' => 'google_event_page_view', 'value' => '1', 'is_encrypted' => false],
@@ -27,33 +38,13 @@ return new class extends Migration
             ['key' => 'google_event_view_payment_page', 'value' => '1', 'is_encrypted' => false],
         ];
 
-        foreach ($settings as $setting) {
-            \App\Models\Setting::firstOrCreate(
+        $allSettings = array_merge($metaSettings, $googleSettings);
+
+        foreach ($allSettings as $setting) {
+            Setting::firstOrCreate(
                 ['key' => $setting['key']],
                 ['value' => $setting['value'], 'is_encrypted' => $setting['is_encrypted']]
             );
         }
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        // Remove Google tracking settings
-        \App\Models\Setting::whereIn('key', [
-            'google_analytics_enabled',
-            'google_analytics_id',
-            'google_event_page_view',
-            'google_event_begin_checkout',
-            'google_event_add_payment_info',
-            'google_event_purchase',
-            'google_event_view_bookings',
-            'google_event_booking_rescheduled',
-            'google_event_view_transactions',
-            'google_event_view_payment_page',
-        ])->delete();
-    }
-};
+}

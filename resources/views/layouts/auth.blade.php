@@ -100,6 +100,75 @@
         </div>
     </div>
 
+    <!-- Floating Theme Toggle Button -->
+    <button id="themeToggle" style="bottom: 30px; right: 30px;"
+            class="fixed w-14 h-14 bg-white dark:bg-slate-800 rounded-full shadow-lg hover:shadow-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all duration-300 hover:scale-110 z-50 group">
+        <span id="themeIcon" class="material-icons-outlined text-amber-500 dark:text-slate-300 transition-all duration-300 group-hover:rotate-180 text-2xl"></span>
+    </button>
+
+    <script>
+        // Theme Toggle Functionality for Auth Pages (Guest only)
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const htmlElement = document.documentElement;
+
+            if (!themeToggle || !themeIcon) {
+                console.error('Theme toggle elements not found');
+                return;
+            }
+
+            // Initialize theme on page load
+            function initializeTheme() {
+                // Check localStorage for guests
+                const savedTheme = localStorage.getItem('theme');
+                const isDark = savedTheme === 'dark';
+
+                // Apply the saved theme
+                if (isDark) {
+                    htmlElement.classList.add('dark');
+                    htmlElement.classList.remove('light');
+                } else {
+                    htmlElement.classList.add('light');
+                    htmlElement.classList.remove('dark');
+                }
+
+                updateIcon(isDark);
+            }
+
+            // Update the icon based on theme
+            function updateIcon(isDark) {
+                themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            }
+
+            // Toggle theme
+            function toggleTheme() {
+                const isDark = htmlElement.classList.contains('dark');
+                const newTheme = isDark ? 'light' : 'dark';
+
+                // Toggle classes with smooth transition
+                if (isDark) {
+                    htmlElement.classList.remove('dark');
+                    htmlElement.classList.add('light');
+                } else {
+                    htmlElement.classList.remove('light');
+                    htmlElement.classList.add('dark');
+                }
+
+                updateIcon(!isDark);
+
+                // Save to localStorage for guests
+                localStorage.setItem('theme', newTheme);
+            }
+
+            // Event listener
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Initialize on load
+            initializeTheme();
+        });
+    </script>
+
     @stack('scripts')
 </body>
 

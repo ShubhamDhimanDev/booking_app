@@ -6,10 +6,10 @@
             </button>
         </div>
         <div>
-            <a class="navbar-brand brand-logo" href="index.html">
+            <a class="navbar-brand brand-logo" href="{{ route('admin.dashboard') }}">
                 <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" />
             </a>
-            <a class="navbar-brand brand-logo-mini" href="index.html">
+            <a class="navbar-brand brand-logo-mini" href="{{ route('admin.dashboard') }}">
                 <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" />
             </a>
         </div>
@@ -155,7 +155,7 @@
                     </a>
                 </div>
             </li> --}}
-            <li class="nav-item dropdown d-none d-lg-block user-dropdown">
+            <li class="nav-item dropdown user-dropdown">
                 <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown"
                     aria-expanded="false">
                     <img class="img-xs rounded-circle" src="{{ asset('admins/assets/images/faces/face8.jpg') }}"

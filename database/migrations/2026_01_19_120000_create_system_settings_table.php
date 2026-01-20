@@ -20,13 +20,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Insert default settings
-        DB::table('system_settings')->insert([
-            'theme_layout' => 'modern',
-            'dark_mode' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Default data insertion removed - will be handled by later migration
     }
 
     /**
