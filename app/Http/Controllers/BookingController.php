@@ -280,6 +280,7 @@ if ($ownerHasBooking) {
     $booking = $event->bookings()->create([
       'booker_name' => $bookerName,
       'booker_email' => $bookerEmail,
+      'phone' => $phone,
       'booked_at_date' => $request->validated('booked_at_date'),
       'booked_at_time' => $request->validated('booked_at_time'),
       'user_id' => $user->id,
