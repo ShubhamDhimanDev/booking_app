@@ -88,6 +88,25 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     }
 
     /**
+     * Generate inline tracking code (for use in JS event handlers)
+     */
+    public static function getInlineTrackingCode(string $eventName, array $params = []): string
+    {
+        if (!self::isMetaPixelEnabled() || !self::isEventEnabled($eventName)) {
+            return '';
+        }
+
+        $pixelId = self::getMetaPixelId();
+        if (!$pixelId) {
+            return '';
+        }
+
+        $paramsJson = !empty($params) ? json_encode($params) : '{}';
+
+        return "if(typeof fbq === 'function'){fbq('track', '{$eventName}', {$paramsJson});}";
+    }
+
+    /**
      * Get all available tracking events
      */
     public static function getAvailableEvents(): array
@@ -99,6 +118,8 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
             'purchase' => 'Purchase',
             'viewbookings' => 'ViewBookings',
             'bookingrescheduled' => 'BookingRescheduled',
+            'viewtransactions' => 'ViewTransactions',
+            'viewpaymentpage' => 'ViewPaymentPage',
         ];
     }
 }

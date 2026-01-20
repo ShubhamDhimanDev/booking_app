@@ -11,7 +11,6 @@
 @section('badge-text', 'Secure Booking')
 
 @push('head-scripts')
-    {!! \App\Services\TrackingService::getBaseScript() !!}
     {!! \App\Services\TrackingService::getEventScript('InitiateCheckout', [
         'content_name' => $event->title,
         'content_ids' => [$event->id],
