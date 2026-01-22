@@ -34,6 +34,15 @@ class StoreEventRequest extends FormRequest
       'exclusions.*.exclude_all' => 'nullable|boolean',
       'exclusions.*.times' => 'nullable|array',
       'exclusions.*.times.*' => 'date_format:H:i',
+
+      // Refund settings
+      'refund_enabled' => 'nullable|boolean',
+      'refund_policy_type' => 'nullable|in:flexible,moderate,strict,custom',
+      'min_cancellation_hours' => 'nullable|integer|min:0',
+      'deduct_gateway_charges' => 'nullable|boolean',
+      'refund_rules' => 'nullable|array',
+      'refund_rules.*.hours' => 'required_with:refund_rules|integer|min:0',
+      'refund_rules.*.percentage' => 'required_with:refund_rules|integer|min:0|max:100',
     ];
   }
 

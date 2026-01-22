@@ -65,35 +65,41 @@
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                {{-- Primary Action Button --}}
                 @if ($b->status === 'confirmed' && $b->meet_link)
                     <a href="{{ $b->meet_link }}" target="_blank"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-2xl text-sm font-bold transition-all shadow-lg shadow-primary/20 hover:bg-indigo-700">
+                        class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-primary text-white rounded-2xl text-sm font-bold transition-all shadow-lg shadow-primary/20 hover:bg-indigo-700">
                         <span class="material-icons-round text-lg">videocam</span>
                         Join Meeting
                     </a>
                 @elseif(!$b->payment && $b->status === 'pending' && optional($b->event)->price > 0)
                     <a href="{{ route('payment.page', $b->id) }}"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-2xl text-sm font-bold transition-all shadow-lg shadow-cyan-500/20">
+                        class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-2xl text-sm font-bold transition-all shadow-lg shadow-cyan-500/20">
                         <span class="material-icons-round text-lg">payments</span>
                         Pay Now
                     </a>
-                @else
-                    <div
-                        class="flex items-center justify-center px-4 py-2.5 bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 rounded-2xl text-sm font-bold">
-                        <span class="material-icons-round text-lg">event_busy</span>
-                    </div>
                 @endif
+
+                {{-- Secondary Actions (Reschedule & Cancel) --}}
                 @if ($b->status === 'confirmed' || $b->status === 'pending')
-                    <a href="{{ route('user.bookings.reschedule.form', $b->id) }}"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-600 dark:text-slate-300 rounded-2xl text-sm font-bold transition-all">
-                        <span class="material-icons-round text-lg">sync</span>
-                        Reschedule
-                    </a>
-                @else
-                    <div
-                        class="flex items-center justify-center px-4 py-2.5 bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 rounded-2xl text-sm font-bold">
-                        N/A
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="{{ route('user.bookings.reschedule.form', $b->id) }}"
+                            class="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all">
+                            <span class="material-icons-round text-base">sync</span>
+                            Reschedule
+                        </a>
+                        @if($b->canCancel())
+                            <button onclick="openCancelModal({{ $b->id }}, '{{ addslashes($b->event->title ?? 'Event') }}')"
+                                class="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-500 hover:text-white text-red-600 dark:text-red-400 rounded-xl text-xs font-bold transition-all">
+                                <span class="material-icons-round text-base">cancel</span>
+                                Cancel
+                            </button>
+                        @else
+                            <div class="flex items-center justify-center px-3 py-2 bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 rounded-xl text-xs font-bold cursor-not-allowed">
+                                <span class="material-icons-round text-base">block</span>
+                            </div>
+                        @endif
                     </div>
                 @endif
             </div>

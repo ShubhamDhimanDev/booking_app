@@ -15,6 +15,10 @@ class Booking extends Model
 
   protected $guarded = [];
 
+  protected $casts = [
+    'cancelled_at' => 'datetime',
+  ];
+
   /**
    * Format booked_at_time in hours and minutes only (H:i)
    *
@@ -50,5 +54,94 @@ class Booking extends Model
   public function booker()
   {
       return $this->belongsTo(User::class, 'user_id');
+  }
+
+  /**
+   * User who cancelled this booking
+   *
+   * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+   */
+  public function cancelledBy()
+  {
+      return $this->belongsTo(User::class, 'cancelled_by');
+  }
+
+  /**
+   * Refund associated with this booking (if any)
+   *
+   * @return \Illuminate\Database\Eloquent\Relations\HasOne
+   */
+  public function refund()
+  {
+      return $this->hasOne(\App\Models\Refund::class);
+  }
+
+  /**
+   * Check if this booking can be cancelled
+   *
+   * @return bool
+   */
+  public function canCancel()
+  {
+      return $this->event && $this->event->canBeCancelled($this);
+  }
+
+  /**
+   * Get the refund amount for this booking
+   *
+   * @return array ['percentage' => int, 'amount' => float, 'gateway_charges' => float]
+   */
+  public function getRefundAmount()
+  {
+      if (!$this->event) {
+          return ['percentage' => 0, 'amount' => 0, 'gateway_charges' => 0];
+      }
+
+      return $this->event->calculateRefundAmount($this);
+  }
+
+  /**
+   * Cancel this booking
+   *
+   * @param string $reason
+   * @param int $userId - ID of user who cancelled (booker or admin)
+   * @return bool
+   */
+  public function cancel($reason, $userId)
+  {
+      if (!$this->canCancel()) {
+          return false;
+      }
+
+      // Update booking status
+      $this->update([
+          'status' => 'declined',
+          'cancelled_at' => now(),
+          'cancelled_by' => $userId,
+          'cancellation_reason' => $reason,
+          'refund_status' => 'pending',
+      ]);
+
+      return true;
+  }
+
+  /**
+   * Check if booking is cancelled
+   *
+   * @return bool
+   */
+  public function isCancelled()
+  {
+      return !is_null($this->cancelled_at);
+  }
+
+  /**
+   * Check if refund is applicable for this booking
+   *
+   * @return bool
+   */
+  public function isRefundApplicable()
+  {
+      return $this->isCancelled() && $this->refund_status !== 'not_applicable';
   }
 }

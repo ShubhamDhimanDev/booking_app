@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Admin\TrackingSettingsController;
+use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\BookingController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\LinkedWithGoogleMiddleware;
@@ -30,6 +31,15 @@ Route::prefix('')->name('admin.')->group(function(){
         Route::resource('/events', EventController::class)->except(['show']);
 
         Route::resource('/bookings', BookingController::class)->only(['index', 'destroy']);
+        Route::post('/bookings/{booking}/cancel', [BookingController::class, 'adminCancelBooking'])->name('bookings.cancel');
+
+        // Refunds Management
+        Route::prefix('/refunds')->name('refunds.')->controller(RefundController::class)->group(function(){
+            Route::get('/', 'index')->name('index');
+            Route::get('/{refund}', 'show')->name('show');
+            Route::post('/{refund}/retry', 'retry')->name('retry');
+            Route::get('/export', 'export')->name('export');
+        });
 
         Route::prefix('/payments')->controller(PaymentController::class)->group(function(){
             Route::get('/history', 'paymentHistory')->name('payments.history');

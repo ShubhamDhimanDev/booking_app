@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
   Route::get('/user/bookings', [BookingController::class, 'userIndex'])->name('user.bookings.index');
   Route::get('/user/bookings/{booking}/reschedule', [BookingController::class, 'showRescheduleForm'])->name('user.bookings.reschedule.form');
   Route::post('/user/bookings/{booking}/reschedule', [BookingController::class, 'reschedule'])->name('user.bookings.reschedule');
+  Route::post('/user/bookings/{booking}/cancel', [BookingController::class, 'cancelBooking'])->name('user.bookings.cancel');
 });
 
 // Theme toggle API (for authenticated users)

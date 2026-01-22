@@ -197,6 +197,78 @@
                     <div class="form-text">Add reminders like "2 hours before" or "1 day before". Set a value and unit. You may add multiple reminders.</div>
                 </div>
 
+                {{-- Refund Settings --}}
+                <div class="mb-4 border-top pt-4">
+                    <h5 class="mb-3">Refund Settings</h5>
+
+                    {{-- Enable Refunds --}}
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="refund_enabled" id="refundEnabled" class="form-check-input" value="1" {{ old('refund_enabled') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="refundEnabled">
+                                Allow cancellations and refunds for this event
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="refundOptions" style="display: {{ old('refund_enabled') ? 'block' : 'none' }};">
+
+                        {{-- Refund Policy Type --}}
+                        <div class="mb-3">
+                            <label class="form-label">Refund Policy</label>
+                            <div class="form-check">
+                                <input type="radio" name="refund_policy_type" id="policyFlexible" value="flexible" class="form-check-input" {{ old('refund_policy_type', 'flexible') == 'flexible' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="policyFlexible">
+                                    <strong>Flexible</strong> - 100% refund if cancelled 7+ days before, 50% if 2-7 days before
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" name="refund_policy_type" id="policyModerate" value="moderate" class="form-check-input" {{ old('refund_policy_type') == 'moderate' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="policyModerate">
+                                    <strong>Moderate</strong> - 100% refund if cancelled 48+ hours before, 50% if 24-48 hours before
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" name="refund_policy_type" id="policyStrict" value="strict" class="form-check-input" {{ old('refund_policy_type') == 'strict' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="policyStrict">
+                                    <strong>Strict</strong> - 100% refund only if cancelled 72+ hours before
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" name="refund_policy_type" id="policyCustom" value="custom" class="form-check-input" {{ old('refund_policy_type') == 'custom' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="policyCustom">
+                                    <strong>Custom</strong> - Define your own rules
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Custom Refund Rules --}}
+                        <div class="mb-3" id="customRefundRules" style="display: {{ old('refund_policy_type') == 'custom' ? 'block' : 'none' }};">
+                            <label class="form-label">Custom Refund Rules</label>
+                            <div id="refundRulesList" class="mb-2"></div>
+                            <button type="button" id="addRefundRule" class="btn btn-outline-secondary btn-sm">+ Add Rule</button>
+                            <div class="form-text">Define refund percentages based on hours before event. E.g., "100% if 48+ hours, 50% if 24+ hours"</div>
+                        </div>
+
+                        {{-- Minimum Cancellation Hours --}}
+                        <div class="mb-3">
+                            <label class="form-label">Minimum Notice Required (hours)</label>
+                            <input type="number" name="min_cancellation_hours" class="form-control" value="{{ old('min_cancellation_hours', 0) }}" min="0">
+                            <div class="form-text">Minimum hours before event that cancellation is allowed. Set to 0 for no minimum.</div>
+                        </div>
+
+                        {{-- Deduct Gateway Charges --}}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="deduct_gateway_charges" id="deductCharges" class="form-check-input" value="1" {{ old('deduct_gateway_charges') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="deductCharges">
+                                    Deduct payment gateway charges from refund amount
+                                </label>
+                                <div class="form-text">If enabled, gateway processing fees will be deducted from the refund.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
 
                 {{-- Submit --}}
@@ -711,6 +783,57 @@
         if (oldReminders && Object.keys(oldReminders).length > 0) {
             const list = Array.isArray(oldReminders) ? oldReminders : Object.values(oldReminders);
             list.forEach(r => createReminderRow({ value: r.value ?? r.offset_minutes ?? '', unit: r.unit ?? (r.offset_minutes ? 'minutes' : 'minutes'), name: r.name ?? '', enabled: typeof r.enabled !== 'undefined' ? r.enabled : true }));
+        }
+    } catch (e) {
+        // ignore
+    }
+
+    // ======================
+    // Refund Settings UI
+    // ======================
+    const refundEnabled = document.getElementById('refundEnabled');
+    const refundOptions = document.getElementById('refundOptions');
+    const policyCustom = document.getElementById('policyCustom');
+    const customRefundRules = document.getElementById('customRefundRules');
+    const refundRulesList = document.getElementById('refundRulesList');
+    const addRefundRule = document.getElementById('addRefundRule');
+
+    // Toggle refund options visibility
+    refundEnabled.addEventListener('change', () => {
+        refundOptions.style.display = refundEnabled.checked ? 'block' : 'none';
+    });
+
+    // Toggle custom rules visibility
+    document.querySelectorAll('input[name="refund_policy_type"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            customRefundRules.style.display = policyCustom.checked ? 'block' : 'none';
+        });
+    });
+
+    function createRefundRuleRow(data = {}) {
+        const idx = Date.now() + Math.floor(Math.random()*1000);
+        const row = document.createElement('div');
+        row.className = 'd-flex gap-2 align-items-center mb-2';
+        row.innerHTML = `
+            <input type="number" min="0" name="refund_rules[${idx}][hours]" class="form-control form-control-sm" placeholder="Hours" value="${data.hours ?? ''}" style="max-width:100px" required>
+            <span>hours before:</span>
+            <input type="number" min="0" max="100" name="refund_rules[${idx}][percentage]" class="form-control form-control-sm" placeholder="%" value="${data.percentage ?? ''}" style="max-width:80px" required>
+            <span>% refund</span>
+            <button type="button" class="btn btn-sm btn-danger ms-auto remove-refund-rule">Remove</button>
+        `;
+        refundRulesList.appendChild(row);
+        row.querySelector('.remove-refund-rule').addEventListener('click', () => row.remove());
+        return row;
+    }
+
+    addRefundRule.addEventListener('click', () => createRefundRuleRow());
+
+    // Prefill custom rules from old input
+    try {
+        const oldRules = @json(old('refund_rules', []));
+        if (oldRules && Object.keys(oldRules).length > 0) {
+            const list = Array.isArray(oldRules) ? oldRules : Object.values(oldRules);
+            list.forEach(r => createRefundRuleRow({ hours: r.hours ?? '', percentage: r.percentage ?? '' }));
         }
     } catch (e) {
         // ignore

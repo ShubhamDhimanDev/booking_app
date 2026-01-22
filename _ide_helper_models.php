@@ -23,6 +23,11 @@ namespace App\Models{
  * @property string|null $calendar_link
  * @property string|null $meet_link
  * @property string $status
+ * @property \Illuminate\Support\Carbon|null $cancelled_at
+ * @property int|null $cancelled_by
+ * @property string|null $cancellation_reason
+ * @property string $refund_status
+ * @property string $refund_amount
  * @property string $booked_at_date
  * @property string $booked_at_time
  * @property int $event_id
@@ -30,8 +35,10 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\User|null $booker
+ * @property-read \App\Models\User|null $cancelledBy
  * @property-read \App\Models\Event $event
  * @property-read \App\Models\Payment|null $payment
+ * @property-read \App\Models\Refund|null $refund
  * @method static \Database\Factories\BookingFactory factory(...$parameters)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newQuery()
@@ -43,12 +50,17 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBookerName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCalendarId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCalendarLink($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCancellationReason($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCancelledAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCancelledBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereEventId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereMeetLink($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereRefundAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereRefundStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereUserId($value)
@@ -92,6 +104,11 @@ namespace App\Models{
  * @property string $slug
  * @property string|null $color
  * @property string $price
+ * @property bool $refund_enabled
+ * @property string $refund_policy_type
+ * @property int $min_cancellation_hours Minimum hours before event to cancel
+ * @property array|null $refund_rules Custom refund rules: [{hours: 48, percentage: 100}]
+ * @property bool $deduct_gateway_charges
  * @property int $duration
  * @property string $available_from_date
  * @property string $available_to_date
@@ -118,10 +135,15 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereColor($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereCustomTimeslots($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereDeductGatewayCharges($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereDuration($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereMinCancellationHours($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event wherePrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereRefundEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereRefundPolicyType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereRefundRules($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereUpdatedAt($value)
@@ -258,6 +280,55 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereValidUntil($value)
  */
 	class PromoCode extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * App\Models\Refund
+ *
+ * @property int $id
+ * @property int $booking_id
+ * @property int $payment_id
+ * @property string $amount
+ * @property string $gateway_charges
+ * @property string $net_refund_amount
+ * @property string $status
+ * @property string $gateway razorpay or payu
+ * @property string|null $gateway_refund_id Gateway refund transaction ID
+ * @property string $initiated_by
+ * @property int|null $initiated_by_user_id
+ * @property string|null $failure_reason
+ * @property array|null $gateway_response
+ * @property \Illuminate\Support\Carbon|null $processed_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Booking $booking
+ * @property-read \App\Models\User|null $initiatedBy
+ * @property-read \App\Models\Payment $payment
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund completed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund failed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund pending()
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereBookingId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereFailureReason($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereGateway($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereGatewayCharges($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereGatewayRefundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereGatewayResponse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereInitiatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereInitiatedByUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereNetRefundAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund wherePaymentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereProcessedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund whereUpdatedAt($value)
+ */
+	class Refund extends \Eloquent {}
 }
 
 namespace App\Models{
