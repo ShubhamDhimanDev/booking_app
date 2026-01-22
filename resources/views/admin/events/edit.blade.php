@@ -71,21 +71,6 @@
                     @enderror
                 </div>
 
-                {{-- Color --}}
-                <div class="mb-3">
-                    <label class="form-label">Color</label>
-                    <input
-                        type="color"
-                        name="color"
-                        class="form-control form-control-color @error('color') is-invalid @enderror"
-                        value="{{ old('color', $event->color) }}"
-                        title="Choose color"
-                    >
-                    @error('color')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
                 {{-- Price --}}
                 <div class="mb-3">
                     <label class="form-label">Price (INR)</label>
