@@ -18,7 +18,6 @@ class UpdateEventRequest extends FormRequest
       'description' => 'nullable|string',
       'price' => 'required|numeric|min:0',
       'slug' => 'required|alpha_dash|unique:events,slug,' . $this->event->id,
-      'color' => 'regex:/^#([a-f0-9]{6}|[a-f0-9]{3})$/i',
       'available_from_date' => 'required|date',
       'available_to_date' => 'required|date|after_or_equal:available_from_date',
       'available_from_time' => 'nullable|date_format:H:i',
