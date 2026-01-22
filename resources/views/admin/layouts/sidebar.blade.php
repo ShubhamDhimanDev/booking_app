@@ -33,7 +33,15 @@
               </a>
           </li>
 
-          {{-- Bookings --}}
+          {{-- Refunds --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.refunds.*') }}" href="{{ route('admin.refunds.index') }}">
+                  <i class="mdi mdi-cash-refund menu-icon"></i>
+                  <span class="menu-title">Refunds</span>
+              </a>
+          </li>
+
+          {{-- Payments --}}
           <li class="nav-item">
               <a class="nav-link {{ request()->routeIs('admin.payments.*') }}" href="{{ route('admin.payments.history') }}">
                   <i class="mdi mdi-credit-card menu-icon"></i>

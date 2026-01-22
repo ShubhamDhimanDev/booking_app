@@ -175,27 +175,105 @@
                     @enderror
                 </div>
 
-                    {{-- Custom Timeslots (apply to all selected dates) --}}
+                {{-- Custom Timeslots (apply to all selected dates) --}}
+                <div class="mb-3">
+                    <label class="form-label">Custom Timeslots (applies to every selected date)</label>
                     <div id="customTimesList" class="mb-2"></div>
                     <button type="button" id="addCustomTime" class="btn btn-outline-secondary btn-sm">+ Add Timeslot</button>
                     <div class="form-text">Create specific timeslots (start/end). These will be applied to every date in the range. Leave empty to use automatic slots generated from Duration.</div>
+                </div>
 
-                    {{-- Exclusions: custom date/time exclusions --}}
+                {{-- Exclusions: custom date/time exclusions --}}
+                <div class="mb-3">
+                    <label class="form-label">Excluded Dates / Times</label>
+                    <div id="exclusionsList" class="mb-2"></div>
+                    <button type="button" id="addExclusion" class="btn btn-outline-secondary btn-sm">+ Add Exclusion</button>
+                    <div class="form-text">Add specific dates to exclude or exclude particular timeslots on that date. Leave empty to not exclude.</div>
+                </div>
+
+                {{-- Reminders: admin-configurable reminders per event --}}
+                <div class="mb-3">
+                    <label class="form-label">Reminders</label>
+                    <input type="hidden" name="reminders_present" value="1">
+                    <div id="remindersList" class="mb-2"></div>
+                    <button type="button" id="addReminder" class="btn btn-outline-secondary btn-sm">+ Add Reminder</button>
+                    <div class="form-text">Add reminders like "2 hours before" or "1 day before". Set a value and unit. You may add multiple reminders.</div>
+                </div>
+
+                <div class="mb-4 border-top pt-4">
+                    <h5 class="mb-3">Refund Settings</h5>
+
+                    {{-- Enable Refunds --}}
                     <div class="mb-3">
-                        <label class="form-label">Excluded Dates / Times</label>
-                        <div id="exclusionsList" class="mb-2"></div>
-                        <button type="button" id="addExclusion" class="btn btn-outline-secondary btn-sm">+ Add Exclusion</button>
-                        <div class="form-text">Add specific dates to exclude or exclude particular timeslots on that date. Leave empty to not exclude.</div>
+                        <div class="form-check">
+                            <input type="checkbox" name="refund_enabled" id="refundEnabled" class="form-check-input" value="1" {{ old('refund_enabled', $event->refund_enabled) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="refundEnabled">
+                                Allow cancellations and refunds for this event
+                            </label>
+                        </div>
                     </div>
 
-                        {{-- Reminders: admin-configurable reminders per event --}}
+                    <div id="refundOptions" style="display: {{ old('refund_enabled', $event->refund_enabled) ? 'block' : 'none' }};">
+
+
+                                {{-- Refund Policy Type --}}
                         <div class="mb-3">
-                            <label class="form-label">Reminders</label>
-                            <input type="hidden" name="reminders_present" value="1">
-                            <div id="remindersList" class="mb-2"></div>
-                            <button type="button" id="addReminder" class="btn btn-outline-secondary btn-sm">+ Add Reminder</button>
-                            <div class="form-text">Add reminders like "2 hours before" or "1 day before". Set a value and unit. You may add multiple reminders.</div>
+                            <label class="form-label">Refund Policy</label>
+                            <div class="form-check">
+                                        <input type="radio" name="refund_policy_type" id="policyFlexible" value="flexible" class="form-check-input" {{ old('refund_policy_type', $event->refund_policy_type ?? 'flexible') == 'flexible' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="policyFlexible">
+                                            <strong>Flexible</strong> - 100% refund if cancelled 7+ days before, 50% if 2-7 days before
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" name="refund_policy_type" id="policyModerate" value="moderate" class="form-check-input" {{ old('refund_policy_type', $event->refund_policy_type) == 'moderate' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="policyModerate">
+                                            <strong>Moderate</strong> - 100% refund if cancelled 48+ hours before, 50% if 24-48 hours before
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" name="refund_policy_type" id="policyStrict" value="strict" class="form-check-input" {{ old('refund_policy_type', $event->refund_policy_type) == 'strict' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="policyStrict">
+                                            <strong>Strict</strong> - 100% refund only if cancelled 72+ hours before
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" name="refund_policy_type" id="policyCustom" value="custom" class="form-check-input" {{ old('refund_policy_type', $event->refund_policy_type) == 'custom' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="policyCustom">
+                                            <strong>Custom</strong> - Define your own rules
+                                        </label>
+                            </div>
                         </div>
+
+                        {{-- Custom Refund Rules --}}
+                        <div class="mb-3" id="customRefundRules" style="display: {{ old('refund_policy_type', $event->refund_policy_type) == 'custom' ? 'block' : 'none' }};">
+                            <label class="form-label">Custom Refund Rules</label>
+                            <div id="refundRulesList" class="mb-2"></div>
+                            <button type="button" id="addRefundRule" class="btn btn-outline-secondary btn-sm">+ Add Rule</button>
+                            <div class="form-text">Define refund percentages based on hours before event. E.g., "100% if 48+ hours, 50% if 24+ hours"</div>
+                        </div>
+
+                        {{-- Minimum Cancellation Hours --}}
+                        <div class="mb-3">
+                            <label class="form-label">Minimum Notice Required (hours)</label>
+                            <input type="number" name="min_cancellation_hours" class="form-control" value="{{ old('min_cancellation_hours', $event->min_cancellation_hours ?? 0) }}" min="0">
+                            <div class="form-text">Minimum hours before event that cancellation is allowed. Set to 0 for no minimum.</div>
+                        </div>
+
+                        {{-- Deduct Gateway Charges --}}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="deduct_gateway_charges" id="deductCharges" class="form-check-input" value="1" {{ old('deduct_gateway_charges', $event->deduct_gateway_charges) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="deductCharges">
+                                    Deduct payment gateway charges from refund amount
+                                </label>
+                                <div class="form-text">If enabled, gateway processing fees will be deducted from the refund.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
                 {{-- Submit --}}
                 <button type="submit" class="btn btn-primary px-4">
                     Update Event
@@ -617,6 +695,52 @@
             });
         });
     });
+
+    // ======================
+    // Refund Settings UI (edit)
+    // ======================
+    const refundEnabled = document.getElementById('refundEnabled');
+    const refundOptions = document.getElementById('refundOptions');
+    const policyCustom = document.getElementById('policyCustom');
+    const customRefundRules = document.getElementById('customRefundRules');
+    const refundRulesList = document.getElementById('refundRulesList');
+    const addRefundRule = document.getElementById('addRefundRule');
+
+    // Toggle refund options visibility
+    refundEnabled.addEventListener('change', () => {
+        refundOptions.style.display = refundEnabled.checked ? 'block' : 'none';
+    });
+
+    // Toggle custom rules visibility
+    document.querySelectorAll('input[name="refund_policy_type"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            customRefundRules.style.display = policyCustom.checked ? 'block' : 'none';
+        });
+    });
+
+    function createRefundRuleRowEdit(data = {}) {
+        const idx = Date.now() + Math.floor(Math.random()*1000);
+        const row = document.createElement('div');
+        row.className = 'd-flex gap-2 align-items-center mb-2';
+        row.innerHTML = `
+            <input type="number" min="0" name="refund_rules[${idx}][hours]" class="form-control form-control-sm" placeholder="Hours" value="${data.hours ?? ''}" style="max-width:100px" required>
+            <span>hours before:</span>
+            <input type="number" min="0" max="100" name="refund_rules[${idx}][percentage]" class="form-control form-control-sm" placeholder="%" value="${data.percentage ?? ''}" style="max-width:80px" required>
+            <span>% refund</span>
+            <button type="button" class="btn btn-sm btn-danger ms-auto remove-refund-rule">Remove</button>
+        `;
+        refundRulesList.appendChild(row);
+        row.querySelector('.remove-refund-rule').addEventListener('click', () => row.remove());
+        return row;
+    }
+
+    addRefundRule.addEventListener('click', () => createRefundRuleRowEdit());
+
+    // Prefill existing custom rules from event
+    const existingRules = @json($event->refund_rules ?? []);
+    if (Array.isArray(existingRules) && existingRules.length > 0) {
+        existingRules.forEach(r => createRefundRuleRowEdit({ hours: r.hours ?? '', percentage: r.percentage ?? '' }));
+    }
 
 </script>
 @endpush
