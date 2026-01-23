@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Mail;
 
 use App\Services\PaymentGatewayManager;
 use App\Http\Controllers\Controller;
+use App\Models\Refund;
+use App\Jobs\ProcessRefundJob;
 
 class BookingController extends Controller
 {
@@ -576,5 +578,197 @@ if ($ownerHasBooking) {
     $client->setAccessToken($event->user->google_auth_metadata['token']);
     $service = new \Google\Service\Calendar($client);
     return $service->events->delete('primary', $booking->calendar_id);
+  }
+
+  /**
+   * Cancel a booking (user-initiated)
+   *
+   * @param Request $request
+   * @param Booking $booking
+   * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+   */
+  public function cancelBooking(Request $request, Booking $booking)
+  {
+    /** @var \App\Models\User */
+    $user = auth()->user();
+
+    // Authorize: only the booking owner can cancel
+    if ($booking->user_id !== $user->id) {
+      abort(403, 'Unauthorized action.');
+    }
+
+    // Load event relationship
+    $booking->load('event', 'payment');
+
+    // Check if booking can be cancelled
+    if (!$booking->canCancel()) {
+      return back()->with([
+        'alert_type' => 'error',
+        'alert_message' => 'This booking cannot be cancelled. Either refunds are not enabled, the booking is already cancelled, or the minimum cancellation notice has passed.',
+      ]);
+    }
+
+    // Validate cancellation reason
+    $request->validate([
+      'reason' => 'required|string|max:500',
+    ]);
+
+    // Calculate refund amount BEFORE cancelling (status changes from confirmed to declined)
+    $refundDetails = $booking->getRefundAmount();
+
+    // Cancel the booking
+    $success = $booking->cancel($request->reason, $user->id);
+
+    if (!$success) {
+      return back()->with([
+        'alert_type' => 'error',
+        'alert_message' => 'Failed to cancel booking. Please try again.',
+      ]);
+    }
+
+    // Reload payment relationship (cancel() method may have refreshed the model)
+    $booking->load('payment');
+
+    // Create refund record if there's a payment and refund is applicable
+    if ($booking->payment && $refundDetails['amount'] > 0) {
+
+      $refund = Refund::create([
+        'booking_id' => $booking->id,
+        'payment_id' => $booking->payment->id,
+        'amount' => $refundDetails['amount'],
+        'gateway_charges' => 0, // Will be calculated by job
+        'net_refund_amount' => $refundDetails['amount'],
+        'status' => 'pending',
+        'gateway' => $booking->payment->provider,
+        'initiated_by' => 'user',
+        'initiated_by_user_id' => $user->id,
+      ]);
+
+      // Dispatch refund processing job
+      ProcessRefundJob::dispatch($refund);
+
+      $message = "Booking cancelled successfully. Your refund of ₹" . number_format($refundDetails['amount'], 2) . " ({$refundDetails['percentage']}%) is being processed and will be credited within 5-7 business days.";
+    } else {
+      $message = "Booking cancelled successfully.";
+    }
+
+    // Delete Google Calendar event if exists
+    if ($booking->calendar_id && $booking->event && $booking->event->user) {
+      try {
+        $this->deleteGoogleEvent($booking->event, $booking);
+      } catch (Exception $e) {
+        Log::error('Failed to delete Google Calendar event', [
+          'booking_id' => $booking->id,
+          'error' => $e->getMessage(),
+        ]);
+      }
+    }
+
+    return back()->with([
+      'alert_type' => 'success',
+      'alert_message' => $message,
+    ]);
+  }
+
+  /**
+   * Admin cancel booking (for admin use)
+   *
+   * @param Request $request
+   * @param Booking $booking
+   * @return \Illuminate\Http\RedirectResponse
+   */
+  public function adminCancelBooking(Request $request, Booking $booking)
+  {
+    /** @var \App\Models\User */
+    $admin = auth()->user();
+
+    // Load event relationship
+    $booking->load('event', 'payment', 'booker');
+
+    // Validate cancellation reason
+    $request->validate([
+      'reason' => 'required|string|max:500',
+      'force' => 'nullable|boolean', // Allow admin to force cancel even if canCancel() returns false
+    ]);
+
+    $force = $request->input('force', false);
+
+    // Check if booking can be cancelled (admin can override)
+    if (!$force && !$booking->canCancel()) {
+      return back()->with([
+        'alert_type' => 'warning',
+        'alert_message' => 'This booking does not meet the standard cancellation criteria. Use "Force Cancel" to proceed.',
+      ]);
+    }
+
+    // Calculate refund amount BEFORE cancelling (admin can issue full refund regardless of policy)
+    $refundDetails = $booking->getRefundAmount();
+
+    // Cancel the booking
+    if ($force || $booking->canCancel()) {
+      // Directly update if forcing
+      $booking->update([
+        'status' => 'declined',
+        'cancelled_at' => now(),
+        'cancelled_by' => $admin->id,
+        'cancellation_reason' => $request->reason,
+        'refund_status' => 'pending',
+      ]);
+    } else {
+      $success = $booking->cancel($request->reason, $admin->id);
+      if (!$success) {
+        return back()->with([
+          'alert_type' => 'error',
+          'alert_message' => 'Failed to cancel booking.',
+        ]);
+      }
+    }
+    $refundAmount = $force && $request->has('refund_percentage')
+      ? ($booking->payment->amount * $request->refund_percentage) / 100
+      : $refundDetails['amount'];
+
+    // Create refund record if there's a payment and refund is requested
+    if ($booking->payment && $refundAmount > 0) {
+      $refund = Refund::create([
+        'booking_id' => $booking->id,
+        'payment_id' => $booking->payment->id,
+        'amount' => $refundAmount,
+        'gateway_charges' => 0,
+        'net_refund_amount' => $refundAmount,
+        'status' => 'pending',
+        'gateway' => $booking->payment->provider,
+        'initiated_by' => 'admin',
+        'initiated_by_user_id' => $admin->id,
+      ]);
+
+      // Dispatch refund processing job
+      ProcessRefundJob::dispatch($refund);
+
+      $message = "Booking cancelled by admin. Refund of ₹" . number_format($refundAmount, 2) . " is being processed.";
+    } else {
+      $message = "Booking cancelled by admin.";
+    }
+
+    // Notify booker
+    if ($booking->booker) {
+      $booking->booker->notify(new BookingDeclinedNotification($booking));
+    }
+
+    // Delete Google Calendar event
+    if ($booking->calendar_id && $booking->event && $booking->event->user) {
+      try {
+        $this->deleteGoogleEvent($booking->event, $booking);
+      } catch (Exception $e) {
+        Log::error('Admin: Failed to delete Google Calendar event', [
+          'booking_id' => $booking->id,
+          'error' => $e->getMessage(),
+        ]);
+      }
+    }
+
+    return back()->with([
+      'alert_type' => 'success',
+      'alert_message' => $message,
+    ]);
   }
 }

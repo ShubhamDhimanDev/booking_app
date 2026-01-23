@@ -53,13 +53,13 @@ class PayUService implements PaymentGatewayInterface
             $udf5 = $data['udf5'] ?? '';
 
             // Generate hash as per PayU official documentation
-            // Formula: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT)
+            // Formula v1: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT)
             $hashSequence = $this->merchantKey . '|' . $txnId . '|' . $amount . '|' . $productInfo . '|' .
                            $firstName . '|' . $email . '|' . $udf1 . '|' . $udf2 . '|' .
-                           $udf3 . '|' . $udf4 . '|' . $udf5 . '||||||' . $this->merchantSalt;
+                           $udf3 . '|' . $udf4 . '|' . $udf5 . '|||||||' . $this->merchantSalt;
 
-            // Generate hash and convert to lowercase as per PayU documentation
-            $hash = strtolower(hash('sha512', $hashSequence));
+            // Generate v1 and v2 hashes (PayU requires both in JSON format)
+            $hash_v1 = strtolower(hash('sha512', $hashSequence));
 
             $payuUrl = $this->environment === 'production'
                 ? 'https://secure.payu.in/_payment'
@@ -72,7 +72,7 @@ class PayUService implements PaymentGatewayInterface
                 'amount' => $amount,
                 'key' => $this->merchantKey,
                 'merchant_id' => $this->merchantId,
-                'hash' => $hash,
+                'hash' => $hash_v1,
                 'payu_url' => $payuUrl,
                 'productinfo' => $productInfo,
                 'firstname' => $firstName,
