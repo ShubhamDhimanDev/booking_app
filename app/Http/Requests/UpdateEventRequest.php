@@ -18,7 +18,6 @@ class UpdateEventRequest extends FormRequest
       'description' => 'nullable|string',
       'price' => 'required|numeric|min:0',
       'slug' => 'required|alpha_dash|unique:events,slug,' . $this->event->id,
-      'color' => 'regex:/^#([a-f0-9]{6}|[a-f0-9]{3})$/i',
       'available_from_date' => 'required|date',
       'available_to_date' => 'required|date|after_or_equal:available_from_date',
       'available_from_time' => 'nullable|date_format:H:i',
@@ -34,6 +33,15 @@ class UpdateEventRequest extends FormRequest
       'exclusions.*.exclude_all' => 'nullable|boolean',
       'exclusions.*.times' => 'nullable|array',
       'exclusions.*.times.*' => 'date_format:H:i',
+
+      // Refund settings
+      'refund_enabled' => 'nullable|boolean',
+      'refund_policy_type' => 'nullable|in:flexible,moderate,strict,custom',
+      'min_cancellation_hours' => 'nullable|integer|min:0',
+      'deduct_gateway_charges' => 'nullable|boolean',
+      'refund_rules' => 'nullable|array',
+      'refund_rules.*.hours' => 'required_with:refund_rules|integer|min:0',
+      'refund_rules.*.percentage' => 'required_with:refund_rules|integer|min:0|max:100',
     ];
   }
 
