@@ -52,6 +52,56 @@
         <div id="bookings-container" class="bookings-fade-in">
             @include('user.bookings.partials.bookings-grid', ['bookings' => $bookings])
         </div>
+
+        <!-- Cancel Booking Modal -->
+        <div id="cancelModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl transform transition-all">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <span class="material-icons-round text-red-600 dark:text-red-400 text-3xl">cancel</span>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Cancel Booking</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Confirm cancellation</p>
+                    </div>
+                </div>
+
+                <form id="cancelForm" method="POST" action="">
+                    @csrf
+                    <div class="mb-6">
+                        <p class="text-slate-700 dark:text-slate-300 mb-4">
+                            Are you sure you want to cancel your booking for <strong id="cancelEventTitle"></strong>?
+                        </p>
+                        <div id="refundInfo" class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 mb-4 hidden">
+                            <p class="text-sm text-emerald-800 dark:text-emerald-300 font-semibold">
+                                <span class="material-icons-round text-base align-middle">info</span>
+                                Refund Policy
+                            </p>
+                            <p id="refundPolicyText" class="text-xs text-emerald-700 dark:text-emerald-400 mt-2"></p>
+                        </div>
+                        <div class="mb-4">
+                            <label for="cancellationReason" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                Reason for cancellation <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="cancellationReason" name="reason" rows="4" required
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                placeholder="Please provide a reason for cancelling this booking..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeCancelModal()"
+                            class="flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">
+                            Keep Booking
+                        </button>
+                        <button type="submit"
+                            class="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold transition-all shadow-lg shadow-red-500/20">
+                            Confirm Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 @endsection
 
 @push('scripts')
@@ -195,6 +245,53 @@
             const url = new URL(e.target.closest('a').href);
             const page = url.searchParams.get('page');
             loadBookings(page, currentFilter);
+        }
+    });
+
+    // Cancel modal functions
+    const bookingsData = @json($bookings->map(function($b) {
+        return [
+            'id' => $b->id,
+            'title' => optional($b->event)->title ?? 'Event',
+            'refund_policy' => optional($b->event)->getRefundPolicyDescription()
+        ];
+    }));
+
+    function openCancelModal(bookingId, eventTitle) {
+        const booking = bookingsData.find(b => b.id === bookingId);
+        const modal = document.getElementById('cancelModal');
+        const form = document.getElementById('cancelForm');
+        const titleEl = document.getElementById('cancelEventTitle');
+        const refundInfo = document.getElementById('refundInfo');
+        const refundPolicyText = document.getElementById('refundPolicyText');
+
+        form.action = `/user/bookings/${bookingId}/cancel`;
+        titleEl.textContent = eventTitle;
+
+        if (booking && booking.refund_policy) {
+            refundPolicyText.textContent = booking.refund_policy;
+            refundInfo.classList.remove('hidden');
+        } else {
+            refundInfo.classList.add('hidden');
+        }
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCancelModal() {
+        const modal = document.getElementById('cancelModal');
+        const form = document.getElementById('cancelForm');
+
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        form.reset();
+    }
+
+    // Close modal on outside click
+    document.getElementById('cancelModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeCancelModal();
         }
     });
 </script>
