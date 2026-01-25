@@ -43,7 +43,7 @@
                     <tr>
                         <td style="padding:40px 32px 16px;text-align:center;">
                             <div style="display:inline-block;background-color:rgba(34,197,94,0.1);border-radius:50%;padding:16px;">
-                                <span style="font-size:48px;">{{ asset('images/email-icons/check_circle.png') }}</span>
+                              <img src="{{ asset('images/email-icons/check_circle.png') }}" alt="Success Icon" style="width:48px; height:48px;">
                             </div>
                         </td>
                     </tr>
