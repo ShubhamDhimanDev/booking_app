@@ -42,6 +42,16 @@ class Booking extends Model
   }
 
   /**
+   * Tracking data for this booking (UTM parameters, click IDs).
+   *
+   * @return \Illuminate\Database\Eloquent\Relations\HasOne
+   */
+  public function tracking()
+  {
+    return $this->hasOne(BookingTracking::class);
+  }
+
+  /**
    * Payment associated with this booking (if any).
    *
    * @return \Illuminate\Database\Eloquent\Relations\HasOne

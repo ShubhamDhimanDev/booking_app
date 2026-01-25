@@ -18,6 +18,57 @@
         </div>
     @endif
 
+    {{-- Campaign Tracking Filters --}}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.bookings.index') }}" class="row g-3">
+                <div class="col-md-3">
+                    <label for="utm_source" class="form-label">Traffic Source</label>
+                    <select name="utm_source" id="utm_source" class="form-select">
+                        <option value="">All Sources</option>
+                        @foreach($utmSources as $source)
+                            <option value="{{ $source }}" {{ request('utm_source') == $source ? 'selected' : '' }}>
+                                {{ ucfirst($source) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="utm_medium" class="form-label">Medium</label>
+                    <select name="utm_medium" id="utm_medium" class="form-select">
+                        <option value="">All Mediums</option>
+                        @foreach($utmMediums as $medium)
+                            <option value="{{ $medium }}" {{ request('utm_medium') == $medium ? 'selected' : '' }}>
+                                {{ ucfirst($medium) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="utm_campaign" class="form-label">Campaign</label>
+                    <select name="utm_campaign" id="utm_campaign" class="form-select">
+                        <option value="">All Campaigns</option>
+                        @foreach($utmCampaigns as $campaign)
+                            <option value="{{ $campaign }}" {{ request('utm_campaign') == $campaign ? 'selected' : '' }}>
+                                {{ $campaign }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    @if(request()->hasAny(['utm_source', 'utm_medium', 'utm_campaign']))
+                        <a href="{{ route('admin.bookings.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body p-0">
 
