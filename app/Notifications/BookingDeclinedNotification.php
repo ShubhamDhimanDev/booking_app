@@ -53,7 +53,7 @@ class BookingDeclinedNotification extends Notification implements ShouldQueue
   {
     return (new MailMessage)
       ->subject('Booking Declined - ' . $this->event->title)
-      ->view('emails.tests.booking-declined', [
+      ->view('emails.booking-declined', [
         'organizerName' => $this->event->user->name,
         'eventTitle' => $this->event->title,
         'bookingDate' => $this->booked_at_date,

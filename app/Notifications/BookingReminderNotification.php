@@ -70,7 +70,7 @@ class BookingReminderNotification extends Notification implements ShouldQueue
     if ($notifiable instanceof AnonymousNotifiable) {
       return (new MailMessage)
         ->subject("Reminder: Your booking is {$when}")
-        ->view('emails.tests.booking-reminder', [
+        ->view('emails.booking-reminder', [
           'organizerName' => $this->booking->event->user->name,
           'eventTitle' => $this->booking->event->title,
           'bookingDate' => $this->booking->booked_at_date,
@@ -83,7 +83,7 @@ class BookingReminderNotification extends Notification implements ShouldQueue
 
     return (new MailMessage)
       ->subject("Reminder: Meeting with {$this->booking->booker_name} in {$when}")
-      ->view('emails.tests.booking-reminder', [
+      ->view('emails.booking-reminder', [
         'organizerName' => $notifiable->name,
         'eventTitle' => $this->booking->event->title,
         'bookingDate' => $this->booking->booked_at_date,

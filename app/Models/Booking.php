@@ -57,6 +57,37 @@ class Booking extends Model
   }
 
   /**
+   * Follow-up invite this booking was created from (if applicable)
+   *
+   * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+   */
+  public function followUpInvite()
+  {
+      return $this->belongsTo(FollowUpInvite::class, 'followup_invite_id');
+  }
+
+  /**
+   * Check if this is a follow-up booking
+   *
+   * @return bool
+   */
+  public function isFollowUp()
+  {
+      return $this->is_followup;
+  }
+
+  /**
+   * Check if this booking is completed (past date/time)
+   *
+   * @return bool
+   */
+  public function isCompleted()
+  {
+      $bookingDateTime = \Carbon\Carbon::parse($this->booked_at_date . ' ' . $this->booked_at_time);
+      return $bookingDateTime->isPast() && $this->status !== 'cancelled';
+  }
+
+  /**
    * User who cancelled this booking
    *
    * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

@@ -54,7 +54,7 @@ class RefundProcessedNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject('Refund Processed - ' . $eventName)
-            ->view('emails.tests.refund-processed', [
+            ->view('emails.refund-processed', [
                 'refundAmount' => $refundAmount,
                 'transactionId' => $this->refund->transaction_id ?? 'N/A',
                 'processedDate' => $this->refund->created_at->format('M d, Y'),

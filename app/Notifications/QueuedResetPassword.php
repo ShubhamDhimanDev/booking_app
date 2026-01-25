@@ -21,7 +21,7 @@ class QueuedResetPassword extends ResetPassword implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('Reset Password Notification')
-            ->view('emails.tests.reset-password', [
+            ->view('emails.reset-password', [
                 'resetUrl' => $url,
                 'expiresIn' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60) . ' minutes',
             ]);

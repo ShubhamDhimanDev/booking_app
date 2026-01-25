@@ -32,6 +32,7 @@ Route::prefix('')->name('admin.')->group(function(){
 
         Route::resource('/bookings', BookingController::class)->only(['index', 'destroy']);
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'adminCancelBooking'])->name('bookings.cancel');
+        Route::post('/bookings/{booking}/send-followup', [BookingController::class, 'sendFollowUpInvite'])->name('bookings.send-followup');
 
         // Refunds Management
         Route::prefix('/refunds')->name('refunds.')->controller(RefundController::class)->group(function(){
