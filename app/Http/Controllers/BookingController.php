@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Google\Client;
 use App\Models\Event;
 use App\Models\Booking;
+use App\Models\BookingTracking;
 use App\Models\FollowUpInvite;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\User;
@@ -31,20 +32,59 @@ class BookingController extends Controller
    * Shows all bookings
    * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
    */
-  public function index()
+  public function index(Request $request)
   {
     /** @var \App\Models\User */
     $user = auth()->user();
 
-    $bookings = Booking::whereHas('event', function ($q) use ($user) {
+    $query = Booking::whereHas('event', function ($q) use ($user) {
         $q->where('user_id', $user->id);
     })
-    ->with(['event', 'booker'])
-    ->where('user_id', '!=', NULL)
-    ->orderBy('booked_at_date', 'asc')
-    ->paginate(10);
+    ->with(['event', 'booker', 'tracking'])
+    ->where('user_id', '!=', NULL);
 
-    return view('admin.bookings.index', compact('bookings'));
+    // Apply UTM filters if provided (using relationship)
+    if ($request->filled('utm_source')) {
+      $query->whereHas('tracking', function ($q) use ($request) {
+        $q->where('utm_source', $request->utm_source);
+      });
+    }
+    if ($request->filled('utm_campaign')) {
+      $query->whereHas('tracking', function ($q) use ($request) {
+        $q->where('utm_campaign', $request->utm_campaign);
+      });
+    }
+    if ($request->filled('utm_medium')) {
+      $query->whereHas('tracking', function ($q) use ($request) {
+        $q->where('utm_medium', $request->utm_medium);
+      });
+    }
+
+    $bookings = $query->orderBy('booked_at_date', 'asc')->paginate(10);
+
+    // Get unique values for filter dropdowns from tracking table
+    $utmSources = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
+        $q->where('user_id', $user->id);
+    })
+    ->whereNotNull('utm_source')
+    ->distinct()
+    ->pluck('utm_source');
+
+    $utmCampaigns = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
+        $q->where('user_id', $user->id);
+    })
+    ->whereNotNull('utm_campaign')
+    ->distinct()
+    ->pluck('utm_campaign');
+
+    $utmMediums = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
+        $q->where('user_id', $user->id);
+    })
+    ->whereNotNull('utm_medium')
+    ->distinct()
+    ->pluck('utm_medium');
+
+    return view('admin.bookings.index', compact('bookings', 'utmSources', 'utmCampaigns', 'utmMediums'));
   }
 
   public function pay(Request $request, PaymentGatewayManager $gatewayManager)
@@ -327,6 +367,17 @@ if ($ownerHasBooking) {
       'status' => 'pending',
       'is_followup' => $followUpInvite ? true : false,
       'followup_invite_id' => $followUpInvite ? $followUpInvite->id : null,
+    ]);
+
+    // Create tracking record with UTM parameters from session
+    $booking->tracking()->create([
+      'utm_source' => session('tracking_utm_source'),
+      'utm_medium' => session('tracking_utm_medium'),
+      'utm_campaign' => session('tracking_utm_campaign'),
+      'utm_content' => session('tracking_utm_content'),
+      'utm_term' => session('tracking_utm_term'),
+      'fbclid' => session('tracking_fbclid'),
+      'gclid' => session('tracking_gclid'),
     ]);
 
     // Determine the price (custom price for follow-up, event price otherwise)

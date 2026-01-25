@@ -16,6 +16,7 @@ namespace App\Models{
  *
  * @property int $id
  * @property int|null $user_id
+ * @property int $is_followup
  * @property string $booker_name
  * @property string $booker_email
  * @property string|null $phone
@@ -34,6 +35,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property int|null $followup_invite_id
  * @property-read \App\Models\User|null $booker
  * @property-read \App\Models\User|null $cancelledBy
  * @property-read \App\Models\Event $event
@@ -57,7 +59,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereEventId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereFollowupInviteId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereIsFollowup($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereMeetLink($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking wherePhone($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereRefundAmount($value)
@@ -93,6 +97,18 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|BookingReminderLog whereUpdatedAt($value)
  */
 	class BookingReminderLog extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * App\Models\BookingTracking
+ *
+ * @property-read \App\Models\Booking $booking
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingTracking newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingTracking newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingTracking query()
+ */
+	class BookingTracking extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -207,6 +223,17 @@ namespace App\Models{
 /**
  * App\Models\FollowUpInvite
  *
+ * @property int $id
+ * @property int $booking_id
+ * @property int $event_id
+ * @property int $user_id
+ * @property string $custom_price
+ * @property string $token
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property \Illuminate\Support\Carbon|null $sent_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Booking $booking
  * @property-read \App\Models\Event $event
  * @property-read \App\Models\Booking|null $followUpBooking
@@ -214,6 +241,17 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereBookingId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereCustomPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereEventId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereSentAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereUserId($value)
  */
 	class FollowUpInvite extends \Eloquent {}
 }
