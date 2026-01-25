@@ -193,6 +193,35 @@
             </div>
         </div>
 
+        <!-- Follow-up Session Notice -->
+        @if(isset($isFollowUp) && $isFollowUp && isset($customPrice))
+        <div class="max-w-5xl mx-auto mb-6">
+            <div class="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border-2 border-emerald-200 dark:border-emerald-700 rounded-2xl p-6 shadow-lg">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500 dark:bg-emerald-600 flex items-center justify-center">
+                            <span class="material-icons-round text-white text-2xl">verified</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Follow-up Session</h3>
+                        <p class="text-slate-700 dark:text-slate-300 mb-3">You've been invited for a follow-up session based on your previous booking.</p>
+                        <div class="inline-flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full border border-emerald-200 dark:border-emerald-700">
+                            <span class="material-icons-round text-emerald-600 dark:text-emerald-400 text-lg">local_offer</span>
+                            <span class="font-bold text-slate-900 dark:text-white">
+                                @if($customPrice == 0)
+                                    <span class="text-emerald-600 dark:text-emerald-400">FREE Session!</span>
+                                @else
+                                    Special Price: ₹{{ number_format($customPrice, 2) }}
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Two Column Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
 
@@ -262,6 +291,9 @@
                 <form method="GET" action="{{ route('bookings.details', $event->slug) }}" id="slotForm">
                     <input type="hidden" name="date" id="selectedDate">
                     <input type="hidden" name="time" id="selectedTime">
+                    @if(isset($isFollowUp) && $isFollowUp && isset($invite))
+                        <input type="hidden" name="followup_token" value="{{ $invite->token }}">
+                    @endif
                     <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-indigo-700 hover:opacity-95 text-white font-extrabold py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02]">
                         <span class="material-icons-round">arrow_forward</span>
                         Next: Enter Details

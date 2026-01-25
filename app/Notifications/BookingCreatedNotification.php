@@ -48,7 +48,7 @@ class BookingCreatedNotification extends Notification implements ShouldQueue
     if ($notifiable instanceof AnonymousNotifiable) {
       return (new MailMessage)
         ->subject("Booking Confirmation - {$this->booking->event->title}")
-        ->view('emails.tests.booking-confirmation', [
+        ->view('emails.booking-confirmation', [
           'bookerName' => $this->booking->booker_name,
           'eventTitle' => $this->booking->event->title,
           'bookingDate' => $this->booking->booked_at_date,
@@ -62,7 +62,7 @@ class BookingCreatedNotification extends Notification implements ShouldQueue
     // For organizer (event owner)
     return (new MailMessage)
       ->subject("New Booking: {$this->booking->booker_name} - {$this->booking->event->title}")
-      ->view('emails.tests.booking-created-organizer', [
+      ->view('emails.booking-created-organizer', [
         'bookerName' => $this->booking->booker_name,
         'bookerEmail' => $this->booking->booker_email,
         'eventTitle' => $this->booking->event->title,

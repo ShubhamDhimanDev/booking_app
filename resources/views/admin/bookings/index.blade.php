@@ -34,6 +34,7 @@
                             <th>Meet Link</th>
                             <th>Calendar Link</th>
                             <th>Created At</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
 
@@ -105,10 +106,96 @@
 
                                 {{-- created at --}}
                                 <td>{{ $booking->created_at->format('d M Y H:i') }}</td>
+
+                                {{-- Actions --}}
+                                <td>
+                                    @if($booking->isCompleted() && !$booking->is_followup)
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#followUpModal{{ $booking->id }}">
+                                            <i class="fa fa-paper-plane"></i> Follow-up
+                                        </button>
+                                    @elseif($booking->is_followup)
+                                        <span class="badge bg-info">Follow-up Session</span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                             </tr>
+
+                            {{-- Follow-up Modal --}}
+                            @if($booking->isCompleted() && !$booking->is_followup)
+                            <div class="modal fade" id="followUpModal{{ $booking->id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content bg-dark border-secondary">
+                                        <div class="modal-header border-secondary">
+                                            <h5 class="modal-title text-white">
+                                                <i class="fa fa-paper-plane me-2"></i>Send Follow-up Invitation
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST" action="{{ route('admin.bookings.send-followup', $booking) }}">
+                                            @csrf
+                                            <div class="modal-body">
+                                                <div class="alert alert-info bg-info bg-opacity-10 border-info text-info mb-4">
+                                                    <i class="fa fa-info-circle me-2"></i>
+                                                    Send a follow-up session invitation to <strong>{{ $booking->booker_name }}</strong>
+                                                    ({{ $booking->booker_email }})
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label class="form-label text-white fw-semibold">
+                                                        <i class="fa fa-indian-rupee-sign me-2"></i>Session Price (₹) *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        name="custom_price"
+                                                        class="form-control bg-dark text-white border-secondary"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value="{{ $booking->event->price ?? 0 }}"
+                                                        required
+                                                        placeholder="Enter price">
+                                                    <small class="form-text text-muted">
+                                                        <i class="fa fa-lightbulb me-1"></i>Set to 0 for a free session
+                                                    </small>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-white fw-semibold">
+                                                        <i class="fa fa-calendar-days me-2"></i>Invitation Expiry (Days)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        name="expires_days"
+                                                        class="form-control bg-dark text-white border-secondary"
+                                                        min="1"
+                                                        max="90"
+                                                        value="30"
+                                                        placeholder="30">
+                                                    <small class="form-text text-muted">
+                                                        <i class="fa fa-clock me-1"></i>Default: 30 days
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-secondary">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    <i class="fa fa-times me-1"></i>Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fa fa-paper-plane"></i> Send Invitation
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
                         @empty
                         <tr>
-                            <td colspan="9" class="text-center py-4 text-muted">
+                            <td colspan="10" class="text-center py-4 text-muted">
                                 No bookings found.
                             </td>
                         </tr>

@@ -37,6 +37,7 @@ namespace App\Models{
  * @property-read \App\Models\User|null $booker
  * @property-read \App\Models\User|null $cancelledBy
  * @property-read \App\Models\Event $event
+ * @property-read \App\Models\FollowUpInvite|null $followUpInvite
  * @property-read \App\Models\Payment|null $payment
  * @property-read \App\Models\Refund|null $refund
  * @method static \Database\Factories\BookingFactory factory(...$parameters)
@@ -102,7 +103,6 @@ namespace App\Models{
  * @property string $title
  * @property string|null $description
  * @property string $slug
- * @property string|null $color
  * @property string $price
  * @property bool $refund_enabled
  * @property string $refund_policy_type
@@ -132,7 +132,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereAvailableFromDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereAvailableToDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereAvailableWeekDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Event whereColor($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereCustomTimeslots($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereDeductGatewayCharges($value)
@@ -202,6 +201,21 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|EventReminder whereUpdatedAt($value)
  */
 	class EventReminder extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * App\Models\FollowUpInvite
+ *
+ * @property-read \App\Models\Booking $booking
+ * @property-read \App\Models\Event $event
+ * @property-read \App\Models\Booking|null $followUpBooking
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite query()
+ */
+	class FollowUpInvite extends \Eloquent {}
 }
 
 namespace App\Models{

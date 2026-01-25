@@ -21,7 +21,7 @@ class QueuedVerifyEmail extends VerifyEmail implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('Verify Email Address')
-            ->view('emails.tests.verify-email', [
+            ->view('emails.verify-email', [
                 'verifyUrl' => $url,
                 'expiresIn' => config('auth.verification.expire', 60) . ' minutes',
             ]);
