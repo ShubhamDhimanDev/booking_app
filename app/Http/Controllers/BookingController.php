@@ -155,6 +155,15 @@ class BookingController extends Controller
       abort(403);
     }
 
+    // Check if booking has expired (date/time has passed)
+    $bookingDateTime = \Carbon\Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
+    if ($bookingDateTime->isPast()) {
+      return redirect()->route('user.bookings.index')->with([
+        'alert_type' => 'error',
+        'alert_message' => 'Cannot reschedule an expired booking. The scheduled date and time have already passed.'
+      ]);
+    }
+
     $booking->load(['event', 'payment']);
 
     // Build available slots for the event between its available_from_date and available_to_date
