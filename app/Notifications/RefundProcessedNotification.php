@@ -48,21 +48,20 @@ class RefundProcessedNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        $eventName = $this->booking->event->name ?? 'Event';
-        $refundAmount = number_format($this->refund->net_refund_amount, 2);
+        $eventName = $this->booking->event->title ?? 'Event';
+        $refundAmount = '₹' . number_format($this->refund->net_refund_amount, 2);
         $gateway = ucfirst($this->refund->gateway);
 
         return (new MailMessage)
             ->subject('Refund Processed - ' . $eventName)
-            ->greeting('Hello ' . $notifiable->name . ',')
-            ->line('Your refund for the cancelled booking has been processed successfully.')
-            ->line('**Event:** ' . $eventName)
-            ->line('**Booking Date:** ' . $this->booking->booked_at_date)
-            ->line('**Refund Amount:** ₹' . $refundAmount)
-            ->line('**Payment Gateway:** ' . $gateway)
-            ->line('The refund will be credited to your original payment method within 5-7 business days.')
-            ->action('View Booking', url('/user/bookings'))
-            ->line('If you have any questions, please contact support.');
+            ->view('emails.tests.refund-processed', [
+                'refundAmount' => $refundAmount,
+                'transactionId' => $this->refund->transaction_id ?? 'N/A',
+                'processedDate' => $this->refund->created_at->format('M d, Y'),
+                'refundMethod' => $gateway,
+                'eventTitle' => $eventName,
+                'transactionHistoryUrl' => url('/user/transactions'),
+            ]);
     }
 
     /**
