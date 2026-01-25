@@ -12,18 +12,21 @@
 
 @push('head-scripts')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $actualPrice = $customPrice ?? $booking->event->price ?? 500;
+    @endphp
     {!! \App\Services\TrackingService::getEventScript('ViewPaymentPage', [
         'content_name' => $booking->event->title,
         'content_ids' => [$booking->event->id],
         'booking_id' => $booking->id,
-        'value' => $booking->event->price ?? 500,
+        'value' => $actualPrice,
         'currency' => 'INR'
     ]) !!}
     {!! \App\Services\TrackingService::getGoogleEventScript('view_payment_page', [
         'event_name' => $booking->event->title,
         'event_id' => $booking->event->id,
         'booking_id' => $booking->id,
-        'value' => $booking->event->price ?? 500,
+        'value' => $actualPrice,
         'currency' => 'INR'
     ]) !!}
 @endpush
@@ -310,11 +313,14 @@
 
                             <!-- Original Price (shown when discount applied) -->
                             <div id="originalPriceSection" class="hidden mb-2">
-                                <p class="text-2xl font-bold text-slate-400 dark:text-slate-500 line-through">₹<span id="originalPrice">{{ $booking->event->price ?? 500 }}</span></p>
+                                <p class="text-2xl font-bold text-slate-400 dark:text-slate-500 line-through">₹<span id="originalPrice">{{ $actualPrice }}</span></p>
                             </div>
 
                             <!-- Final Price -->
-                            <h3 class="text-5xl font-black amount-display mb-2">₹<span id="finalAmount">{{ $booking->event->price ?? 500 }}</span></h3>
+                            <h3 class="text-5xl font-black amount-display mb-2">₹<span id="finalAmount">{{ $actualPrice }}</span></h3>
+                            @if($booking->is_followup)
+                                <p class="text-sm text-emerald-500 dark:text-emerald-400 font-semibold">Follow-up Session Price</p>
+                            @endif
 
                             <!-- Discount Badge -->
                             <div id="discountBadge" class="hidden mb-3">
@@ -388,7 +394,7 @@
                             <!-- Pay Button -->
                             <button id="payBtn" class="w-full gradient-bg hover:opacity-95 text-white font-extrabold py-5 rounded-2xl transition-all duration-300 flex items-center justify-center space-x-3 mb-5 shadow-2xl shadow-primary/40 hover:shadow-3xl hover:shadow-primary/50 transform hover:-translate-y-1 hover:scale-[1.02] relative overflow-hidden group">
                                 <span class="material-icons-round text-xl">lock</span>
-                                <span class="text-xl">Pay ₹<span id="payBtnAmount">{{ $booking->event->price ?? 500 }}</span></span>
+                                <span class="text-xl">Pay ₹<span id="payBtnAmount">{{ $actualPrice }}</span></span>
                             </button>
 
                             <!-- Security Badge -->
@@ -496,7 +502,7 @@
 
     // Promo code state
     let appliedPromoCode = null;
-    let originalAmount = {{ $booking->event->price ?? 500 }};
+    let originalAmount = {{ $actualPrice }};
     let discountedAmount = originalAmount;
     let discountValue = 0;
 

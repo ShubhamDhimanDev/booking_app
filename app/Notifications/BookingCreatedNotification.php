@@ -44,25 +44,34 @@ class BookingCreatedNotification extends Notification implements ShouldQueue
    */
   public function toMail($notifiable)
   {
+    // For booker (guest/anonymous notifiable)
     if ($notifiable instanceof AnonymousNotifiable) {
       return (new MailMessage)
-        ->subject("Your booking for {$this->booking->event->user->name} on event {$this->booking->event->title} was booked successfully.")
-        ->greeting("Hello {$this->booking->booker_name}")
-        ->line("Your booking for {$this->booking->event->user->name} was blaced successfully.")
-        ->line("The booking is scheduled for {$this->booking->booked_at_date}@{$this->booking->booked_at_time}.")
-        ->line("Click the following button to view the link in your calendar")
-        ->action("View event", $this->booking->calendar_link)
-        ->line('Thank you for using our application!');
+        ->subject("Booking Confirmation - {$this->booking->event->title}")
+        ->view('emails.booking-confirmation', [
+          'bookerName' => $this->booking->booker_name,
+          'eventTitle' => $this->booking->event->title,
+          'bookingDate' => $this->booking->booked_at_date,
+          'bookingTime' => $this->booking->booked_at_time,
+          'timezone' => $this->booking->timezone ?? 'IST',
+          'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
+          'organizerName' => $this->booking->event->user->name,
+        ]);
     }
 
+    // For organizer (event owner)
     return (new MailMessage)
-      ->subject("You have a booking placed with {$this->booking->booker_name}.")
-      ->greeting("Hello {$notifiable->name}")
-      ->line("{$this->booking->booker_name} placed a booking for your event {$this->booking->event->title}.")
-      ->line("The booking is scheduled for {$this->booking->booked_at_date}@{$this->booking->booked_at_time}.")
-      ->line("Click the following button to view the link in your calendar.")
-      ->action("View event", $this->booking->calendar_link)
-      ->line('Thank you for using our application!');
+      ->subject("New Booking: {$this->booking->booker_name} - {$this->booking->event->title}")
+      ->view('emails.booking-created-organizer', [
+        'bookerName' => $this->booking->booker_name,
+        'bookerEmail' => $this->booking->booker_email,
+        'eventTitle' => $this->booking->event->title,
+        'bookingDate' => $this->booking->booked_at_date,
+        'bookingTime' => $this->booking->booked_at_time,
+        'confirmUrl' => url("/admin/bookings/{$this->booking->id}?action=confirm"),
+        'rescheduleUrl' => url("/admin/bookings/{$this->booking->id}/reschedule"),
+        'declineUrl' => url("/admin/bookings/{$this->booking->id}?action=decline"),
+      ]);
   }
 
   /**

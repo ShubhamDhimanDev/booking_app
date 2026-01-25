@@ -42,6 +42,16 @@ class Booking extends Model
   }
 
   /**
+   * Tracking data for this booking (UTM parameters, click IDs).
+   *
+   * @return \Illuminate\Database\Eloquent\Relations\HasOne
+   */
+  public function tracking()
+  {
+    return $this->hasOne(BookingTracking::class);
+  }
+
+  /**
    * Payment associated with this booking (if any).
    *
    * @return \Illuminate\Database\Eloquent\Relations\HasOne
@@ -54,6 +64,37 @@ class Booking extends Model
   public function booker()
   {
       return $this->belongsTo(User::class, 'user_id');
+  }
+
+  /**
+   * Follow-up invite this booking was created from (if applicable)
+   *
+   * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+   */
+  public function followUpInvite()
+  {
+      return $this->belongsTo(FollowUpInvite::class, 'followup_invite_id');
+  }
+
+  /**
+   * Check if this is a follow-up booking
+   *
+   * @return bool
+   */
+  public function isFollowUp()
+  {
+      return $this->is_followup;
+  }
+
+  /**
+   * Check if this booking is completed (past date/time)
+   *
+   * @return bool
+   */
+  public function isCompleted()
+  {
+      $bookingDateTime = \Carbon\Carbon::parse($this->booked_at_date . ' ' . $this->booked_at_time);
+      return $bookingDateTime->isPast() && $this->status !== 'cancelled';
   }
 
   /**

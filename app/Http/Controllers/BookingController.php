@@ -11,10 +11,13 @@ use Carbon\Carbon;
 use Google\Client;
 use App\Models\Event;
 use App\Models\Booking;
+use App\Models\BookingTracking;
+use App\Models\FollowUpInvite;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\User;
 use App\Notifications\BookingDeclinedNotification;
 use App\Notifications\BookingRescheduledNotification;
+use App\Notifications\FollowUpInviteNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -29,20 +32,59 @@ class BookingController extends Controller
    * Shows all bookings
    * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
    */
-  public function index()
+  public function index(Request $request)
   {
     /** @var \App\Models\User */
     $user = auth()->user();
 
-    $bookings = Booking::whereHas('event', function ($q) use ($user) {
+    $query = Booking::whereHas('event', function ($q) use ($user) {
         $q->where('user_id', $user->id);
     })
-    ->with(['event', 'booker'])
-    ->where('user_id', '!=', NULL)
-    ->orderBy('booked_at_date', 'asc')
-    ->paginate(10);
+    ->with(['event', 'booker', 'tracking'])
+    ->where('user_id', '!=', NULL);
 
-    return view('admin.bookings.index', compact('bookings'));
+    // Apply UTM filters if provided (using relationship)
+    if ($request->filled('utm_source')) {
+      $query->whereHas('tracking', function ($q) use ($request) {
+        $q->where('utm_source', $request->utm_source);
+      });
+    }
+    if ($request->filled('utm_campaign')) {
+      $query->whereHas('tracking', function ($q) use ($request) {
+        $q->where('utm_campaign', $request->utm_campaign);
+      });
+    }
+    if ($request->filled('utm_medium')) {
+      $query->whereHas('tracking', function ($q) use ($request) {
+        $q->where('utm_medium', $request->utm_medium);
+      });
+    }
+
+    $bookings = $query->orderBy('booked_at_date', 'asc')->paginate(10);
+
+    // Get unique values for filter dropdowns from tracking table
+    $utmSources = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
+        $q->where('user_id', $user->id);
+    })
+    ->whereNotNull('utm_source')
+    ->distinct()
+    ->pluck('utm_source');
+
+    $utmCampaigns = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
+        $q->where('user_id', $user->id);
+    })
+    ->whereNotNull('utm_campaign')
+    ->distinct()
+    ->pluck('utm_campaign');
+
+    $utmMediums = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
+        $q->where('user_id', $user->id);
+    })
+    ->whereNotNull('utm_medium')
+    ->distinct()
+    ->pluck('utm_medium');
+
+    return view('admin.bookings.index', compact('bookings', 'utmSources', 'utmCampaigns', 'utmMediums'));
   }
 
   public function pay(Request $request, PaymentGatewayManager $gatewayManager)
@@ -111,6 +153,15 @@ class BookingController extends Controller
 
     if ($booking->user_id !== $user->id) {
       abort(403);
+    }
+
+    // Check if booking has expired (date/time has passed)
+    $bookingDateTime = \Carbon\Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
+    if ($bookingDateTime->isPast()) {
+      return redirect()->route('user.bookings.index')->with([
+        'alert_type' => 'error',
+        'alert_message' => 'Cannot reschedule an expired booking. The scheduled date and time have already passed.'
+      ]);
     }
 
     $booking->load(['event', 'payment']);
@@ -201,6 +252,18 @@ class BookingController extends Controller
    */
   public function store(StoreBookingRequest $request, Event $event)
   {
+    // Check if this is a follow-up booking
+    $followUpToken = $request->input('followup_token');
+    $followUpInvite = null;
+
+    if ($followUpToken) {
+      $followUpInvite = FollowUpInvite::where('token', $followUpToken)->first();
+
+      if (!$followUpInvite || !$followUpInvite->isValid()) {
+        return response()->json(['error' => 'Invalid or expired follow-up invitation.'], 422);
+      }
+    }
+
     // Extract validated payload
     $validated = $request->validated();
     $bookerEmail = $validated['booker_email'];
@@ -311,9 +374,83 @@ if ($ownerHasBooking) {
       'booked_at_time' => $request->validated('booked_at_time'),
       'user_id' => $user->id,
       'status' => 'pending',
+      'is_followup' => $followUpInvite ? true : false,
+      'followup_invite_id' => $followUpInvite ? $followUpInvite->id : null,
     ]);
 
-    // Redirect to payment page instead of returning JSON
+    // Create tracking record with UTM parameters from session
+    $booking->tracking()->create([
+      'utm_source' => session('tracking_utm_source'),
+      'utm_medium' => session('tracking_utm_medium'),
+      'utm_campaign' => session('tracking_utm_campaign'),
+      'utm_content' => session('tracking_utm_content'),
+      'utm_term' => session('tracking_utm_term'),
+      'fbclid' => session('tracking_fbclid'),
+      'gclid' => session('tracking_gclid'),
+    ]);
+
+    // Determine the price (custom price for follow-up, event price otherwise)
+    $price = $followUpInvite ? $followUpInvite->custom_price : $event->price;
+
+    // If the session is free (price = 0), confirm booking immediately without payment
+    if ($price == 0) {
+      try {
+        // Mark follow-up invite as accepted if this is a follow-up booking
+        if ($followUpInvite) {
+          $followUpInvite->update(['status' => 'accepted']);
+        }
+
+        // Confirm the booking
+        $booking->update(['status' => 'confirmed']);
+
+        // Create Google Calendar event
+        if (!app()->runningUnitTests()) {
+          $calendarEvent = $this->createGoogleEvent(
+            $event,
+            $booking->booked_at_date,
+            $booking->booked_at_time,
+            $booking->booker_name,
+            $booking->booker_email
+          );
+
+          $booking->update([
+            'calendar_id' => $calendarEvent['calendar_id'] ?? null,
+            'calendar_link' => $calendarEvent['calendar_link'] ?? null,
+            'meet_link' => $calendarEvent['meet_link'] ?? null,
+          ]);
+        }
+
+        // Refresh booking with relationships for notification
+        $booking->refresh();
+        $booking->load(['event.user']);
+
+        // Notify owner and booker
+        $event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
+        Notification::route('mail', [$booking->booker_email => $booking->booker_name])
+          ->notify(new \App\Notifications\BookingCreatedNotification($booking));
+
+        // Redirect to thank you page
+        return redirect()->route('payment.thankyou', $booking->id);
+
+      } catch (Exception $e) {
+        Log::error('Free booking confirmation failed: ' . $e->getMessage(), [
+          'booking_id' => $booking->id,
+          'exception' => $e
+        ]);
+
+        return redirect()->back()->with([
+          'alert_type' => 'error',
+          'alert_message' => 'Failed to confirm booking. Please try again.',
+        ]);
+      }
+    }
+
+    // If follow-up, pass custom price to payment page
+    if ($followUpInvite) {
+      session(['followup_custom_price' => $followUpInvite->custom_price]);
+    }
+
+    // Redirect to payment page for paid sessions
     return redirect()->route('payment.page', $booking->id);
   }
 
@@ -771,4 +908,178 @@ if ($ownerHasBooking) {
       'alert_message' => $message,
     ]);
   }
+
+  /**
+   * Send a follow-up session invite to the booker
+   *
+   * @param Request $request
+   * @param Booking $booking
+   * @return \Illuminate\Http\RedirectResponse
+   */
+  public function sendFollowUpInvite(Request $request, Booking $booking)
+  {
+    // Validate that booking is completed
+    if (!$booking->isCompleted()) {
+      return back()->with([
+        'alert_type' => 'error',
+        'alert_message' => 'Follow-up invites can only be sent for completed sessions.',
+      ]);
+    }
+
+    // Validate request
+    $request->validate([
+      'custom_price' => 'required|numeric|min:0',
+      'expires_days' => 'nullable|integer|min:1|max:90',
+    ]);
+
+    // Check if invite already exists and is pending
+    $existingInvite = FollowUpInvite::where('booking_id', $booking->id)
+      ->where('status', 'pending')
+      ->first();
+
+    if ($existingInvite && $existingInvite->isValid()) {
+      return back()->with([
+        'alert_type' => 'warning',
+        'alert_message' => 'A follow-up invite has already been sent for this booking and is still valid.',
+      ]);
+    }
+
+    // Create follow-up invite
+    $expiresAt = $request->expires_days
+      ? now()->addDays($request->expires_days)
+      : now()->addDays(30); // Default 30 days
+
+    $invite = FollowUpInvite::create([
+      'booking_id' => $booking->id,
+      'event_id' => $booking->event_id,
+      'user_id' => $booking->user_id ?? null,
+      'custom_price' => $request->custom_price,
+      'token' => FollowUpInvite::generateUniqueToken(),
+      'status' => 'pending',
+      'expires_at' => $expiresAt,
+      'sent_at' => now(),
+    ]);
+
+    // Send notification
+    try {
+      if ($booking->booker) {
+        $booking->booker->notify(new FollowUpInviteNotification($invite));
+      } else {
+        // Send to email if no user account
+        Notification::route('mail', $booking->booker_email)
+          ->notify(new FollowUpInviteNotification($invite));
+      }
+
+      return back()->with([
+        'alert_type' => 'success',
+        'alert_message' => 'Follow-up invitation sent successfully!',
+      ]);
+    } catch (Exception $e) {
+      Log::error('Failed to send follow-up invite', [
+        'booking_id' => $booking->id,
+        'error' => $e->getMessage(),
+      ]);
+
+      return back()->with([
+        'alert_type' => 'error',
+        'alert_message' => 'Failed to send follow-up invitation. Please try again.',
+      ]);
+    }
+  }
+
+  /**
+   * Show the follow-up booking page
+   *
+   * @param string $token
+   * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+   */
+  public function showFollowUpBooking($token)
+  {
+    $invite = FollowUpInvite::where('token', $token)
+      ->with(['event', 'booking', 'user'])
+      ->first();
+
+    if (!$invite) {
+      abort(404, 'Follow-up invitation not found.');
+    }
+
+    if (!$invite->isValid()) {
+      $message = $invite->status === 'accepted'
+        ? 'This follow-up invitation has already been used.'
+        : 'This follow-up invitation has expired.';
+
+      return view('bookings.followup-expired', compact('message'));
+    }
+
+    // Pass the event and invite details to the booking view
+    $event = $invite->event;
+    $customPrice = $invite->custom_price;
+    $isFollowUp = true;
+
+    // Build available slots for the event
+    $event->append('timeslots');
+
+    // Get confirmed bookings to exclude from available slots
+    $confirmedBookings = $event->bookings()
+      ->where('status', 'confirmed')
+      ->get()
+      ->groupBy('booked_at_date');
+
+    // Build bookedSlots mapping date => [times]
+    $bookedSlots = [];
+    foreach ($confirmedBookings as $date => $collection) {
+      $bookedSlots[$date] = $collection->pluck('booked_at_time')->values()->all();
+    }
+
+    $startDate = Carbon::parse($event->available_from_date);
+    $endDate = Carbon::parse($event->available_to_date);
+
+    $availableSlots = [];
+
+    for ($date = $startDate->copy(); $date->lessThanOrEqualTo($endDate); $date->addDay()) {
+      $dateStr = $date->toDateString();
+
+      // Skip dates that are not allowed by event available_week_days
+      if (!empty($event->available_week_days) && is_array($event->available_week_days)) {
+        $weekday = strtolower($date->format('l'));
+        if (!in_array($weekday, $event->available_week_days)) {
+          continue;
+        }
+      }
+
+      // Check for event exclusions
+      $exclusion = $event->exclusions()->whereDate('date', $dateStr)->first();
+      if ($exclusion && $exclusion->exclude_all) {
+        continue;
+      }
+
+      $free = [];
+
+      foreach ($event->timeslots as $ts) {
+        $startTime = $ts['start'];
+
+        // Check if time is in exclusion
+        if ($exclusion && is_array($exclusion->times) && in_array($startTime, $exclusion->times)) {
+          continue;
+        }
+
+        // Check if time is booked
+        $isBooked = isset($bookedSlots[$dateStr]) && in_array($startTime, $bookedSlots[$dateStr]);
+
+        if (!$isBooked) {
+          $free[] = $ts;
+        }
+      }
+
+      if (count($free) > 0) {
+        $availableSlots[] = [
+          'date' => $dateStr,
+          'timeslots' => $free,
+        ];
+      }
+    }
+
+    return view('bookings.slot-selection', compact('event', 'customPrice', 'isFollowUp', 'invite', 'availableSlots', 'bookedSlots'));
+  }
 }
+

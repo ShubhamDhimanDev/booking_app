@@ -66,7 +66,7 @@ class PaymentController extends Controller
             $signatureStatus = $gateway->verifyPayment($request->all());
 
             if ($signatureStatus && $bookingId) {
-                $booking = Booking::find($bookingId);
+                $booking = Booking::with(['event.user'])->find($bookingId);
                 if (!$booking) {
                     Log::error('Booking not found for ID: ' . $bookingId);
                     return response()->json(['success' => false, 'message' => 'booking_not_found'], 404);
@@ -100,6 +100,11 @@ class PaymentController extends Controller
 
                     $booking->update(['status' => 'confirmed']);
 
+                    // Mark follow-up invite as accepted if this is a follow-up booking
+                    if ($booking->is_followup && $booking->followUpInvite) {
+                        $booking->followUpInvite->update(['status' => 'accepted']);
+                    }
+
                     // Create google calendar event and update booking
                     try {
                         $bookingController = app(BookingController::class);
@@ -117,6 +122,10 @@ class PaymentController extends Controller
                             'meet_link' => $calendarEvent['meet_link'] ?? null,
                             'status' => 'confirmed',
                         ]);
+
+                        // Refresh booking with relationships for notification
+                        $booking->refresh();
+                        $booking->load(['event.user']);
 
                         // Notify owner and booker
                         $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
@@ -142,10 +151,18 @@ class PaymentController extends Controller
 
     public function showPaymentPage(Request $request, $booking)
     {
-        $bookingModel = Booking::with(['event.user', 'booker', 'payment'])->findOrFail($booking);
+        $bookingModel = Booking::with(['event.user', 'booker', 'payment', 'followUpInvite'])->findOrFail($booking);
+
+        // Determine the price - use custom price for follow-up bookings
+        $price = $bookingModel->event->price ?? 500;
+
+        if ($bookingModel->is_followup && $bookingModel->followUpInvite) {
+            $price = $bookingModel->followUpInvite->custom_price;
+        }
 
         return view('payments.show', [
             'booking' => $bookingModel,
+            'customPrice' => $price,
         ]);
     }
 

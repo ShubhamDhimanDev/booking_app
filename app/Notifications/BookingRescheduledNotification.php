@@ -46,18 +46,15 @@ class BookingRescheduledNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Booking Rescheduled')
-            ->greeting('Hello!')
-            ->line('Your booking has been rescheduled.')
-            ->line('🕒 **Previous Schedule**')
-            ->line($this->oldDate . ' at ' . $this->oldTime)
-            ->line('🕒 **New Schedule**')
-            ->line($this->newDate . ' at ' . $this->newTime)
-            ->when($this->booking->meet_link, function ($mail) {
-                $mail->action('Join Meeting', $this->booking->meet_link);
-            })
-            ->line('If you have any questions, please contact us.')
-            ->salutation('Thank you');
+            ->subject('Booking Rescheduled - ' . $this->booking->event->title)
+            ->view('emails.booking-rescheduled', [
+                'eventTitle' => $this->booking->event->title,
+                'newBookingDate' => $this->newDate,
+                'newBookingTime' => $this->newTime,
+                'oldBookingDate' => $this->oldDate,
+                'oldBookingTime' => $this->oldTime,
+                'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
+            ]);
     }
 
     /**

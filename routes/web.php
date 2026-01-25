@@ -51,12 +51,10 @@ Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->name('eve
 Route::get('/e/{event:slug}/details', [BookingController::class, 'showDetailsForm'])->name('bookings.details');
 Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->name('bookings.store');
 
-Route::get('/test', [TestController::class, 'index'])->name('test.index');
-Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
+// Follow-up booking flow
+Route::get('/followup/{token}', [BookingController::class, 'showFollowUpBooking'])->name('bookings.followup.show');
 
-Route::get('/test/razorpay-refund', [TestRazorpayRefundController::class, 'index']);
-Route::post('/test/razorpay-refund', [TestRazorpayRefundController::class, 'refund'])
-    ->name('razorpay.refund');
+Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';

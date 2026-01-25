@@ -152,6 +152,9 @@
                 @csrf
                 <input type="hidden" name="booked_at_date" value="{{ $date }}">
                 <input type="hidden" name="booked_at_time" value="{{ $time }}">
+                @if(request()->has('followup_token'))
+                    <input type="hidden" name="followup_token" value="{{ request('followup_token') }}">
+                @endif
 
                 <div>
                     <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
