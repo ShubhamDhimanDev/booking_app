@@ -22,7 +22,10 @@ class NewUserCredentials extends Mailable
     public function build()
     {
         return $this->subject('Your account details')
-            ->view('emails.new_user_credentials')
-            ->text('emails.new_user_credentials_plain');
+            ->view('emails.tests.new-user-credentials', [
+                'email' => $this->user->email,
+                'password' => $this->password,
+                'loginUrl' => url('/login'),
+            ]);
     }
 }

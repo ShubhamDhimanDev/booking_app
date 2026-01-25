@@ -26,6 +26,18 @@ class TestController extends Controller
 
   public function testEmailForm()
   {
+    // return view('emails.tests.booking-confirmation');
+    return view('emails.tests.booking-created-organizer');
+    return view('emails.tests.booking-declined');
+    return view('emails.tests.booking-reminder');
+    return view('emails.tests.booking-rescheduled');
+    return view('emails.tests.new-user-credentials');
+    return view('emails.tests.refund-processed');
+    return view('emails.tests.reset-password');
+    return view('emails.tests.verify-email');
+
+
+
     return view('test-2');
   }
 

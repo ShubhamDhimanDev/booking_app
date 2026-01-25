@@ -66,7 +66,7 @@ class PaymentController extends Controller
             $signatureStatus = $gateway->verifyPayment($request->all());
 
             if ($signatureStatus && $bookingId) {
-                $booking = Booking::find($bookingId);
+                $booking = Booking::with(['event.user'])->find($bookingId);
                 if (!$booking) {
                     Log::error('Booking not found for ID: ' . $bookingId);
                     return response()->json(['success' => false, 'message' => 'booking_not_found'], 404);
@@ -117,6 +117,10 @@ class PaymentController extends Controller
                             'meet_link' => $calendarEvent['meet_link'] ?? null,
                             'status' => 'confirmed',
                         ]);
+
+                        // Refresh booking with relationships for notification
+                        $booking->refresh();
+                        $booking->load(['event.user']);
 
                         // Notify owner and booker
                         $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));

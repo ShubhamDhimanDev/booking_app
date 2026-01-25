@@ -69,23 +69,29 @@ class BookingReminderNotification extends Notification implements ShouldQueue
 
     if ($notifiable instanceof AnonymousNotifiable) {
       return (new MailMessage)
-        ->subject("Reminder: your booking in {$when}")
-        ->greeting("Hello {$this->booking->booker_name}")
-        ->line("This is a reminder that your booking for {$this->booking->event->user->name} is {$when}.")
-        ->line("The booking is scheduled for {$this->booking->booked_at_date} at {$this->booking->booked_at_time}.")
-        ->line("Click the following button to view the link in your calendar:")
-        ->action("View event", $this->booking->calendar_link)
-        ->line('Thank you for using our application!');
+        ->subject("Reminder: Your booking is {$when}")
+        ->view('emails.tests.booking-reminder', [
+          'organizerName' => $this->booking->event->user->name,
+          'eventTitle' => $this->booking->event->title,
+          'bookingDate' => $this->booking->booked_at_date,
+          'bookingTime' => $this->booking->booked_at_time,
+          'timeUntil' => $when,
+          'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
+          'rescheduleUrl' => url("/user/bookings/{$this->booking->id}/reschedule"),
+        ]);
     }
 
     return (new MailMessage)
-      ->subject("Reminder: meeting with {$this->booking->booker_name} in {$when}")
-      ->greeting("Hello {$notifiable->name}")
-      ->line("This is a reminder that you are meeting with {$this->booking->booker_name} on event {$this->booking->event->title} {$when}.")
-      ->line("The booking is scheduled for {$this->booking->booked_at_date} at {$this->booking->booked_at_time}.")
-      ->line("Click the following button to view the link in your calendar:")
-      ->action("View event", $this->booking->calendar_link)
-      ->line('Thank you for using our application!');
+      ->subject("Reminder: Meeting with {$this->booking->booker_name} in {$when}")
+      ->view('emails.tests.booking-reminder', [
+        'organizerName' => $notifiable->name,
+        'eventTitle' => $this->booking->event->title,
+        'bookingDate' => $this->booking->booked_at_date,
+        'bookingTime' => $this->booking->booked_at_time,
+        'timeUntil' => $when,
+        'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
+        'rescheduleUrl' => url("/admin/bookings/{$this->booking->id}/reschedule"),
+      ]);
   }
 
   /**
