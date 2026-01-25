@@ -53,6 +53,9 @@ Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->name('
 
 Route::get('/test', [TestController::class, 'index'])->name('test.index');
 Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
+Route::get('/test-email', [TestController::class, 'testEmailForm'])->name('test.email.form');
+Route::post('/test-email', [TestController::class, 'sendTestEmail'])->name('test.send-email');
+Route::post('/test-email/send-all', [TestController::class, 'sendAllTestEmails'])->name('test.send-all-emails');
 
 Route::get('/test/razorpay-refund', [TestRazorpayRefundController::class, 'index']);
 Route::post('/test/razorpay-refund', [TestRazorpayRefundController::class, 'refund'])
