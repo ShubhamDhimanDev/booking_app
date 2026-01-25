@@ -117,7 +117,7 @@
                     </button>
                 </div>
             </form>
-            
+
             <!-- Preview Info -->
             <div class="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-primary rounded-lg p-4">
                 <div class="flex items-start">
