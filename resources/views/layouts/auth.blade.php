@@ -39,12 +39,11 @@
                 <div class="mb-12">
                     <div
                         class="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-2xl mb-6">
-                        <span class="material-icons-outlined text-5xl">event_available</span>
+                        <span class="material-icons-outlined text-5xl">auto_awesome</span>
                     </div>
-                    <h1 class="font-display text-6xl mb-4 leading-tight">Master Your <br />Time and Craft.</h1>
+                    <h1 class="font-display text-6xl mb-4 leading-tight">Transform Your Life <br />Through Energy.</h1>
                     <p class="text-xl text-indigo-100 max-w-md mx-auto font-light leading-relaxed">
-                        Join our community of professionals and enthusiasts. Seamlessly book sessions, manage events,
-                        and grow with us.
+                        Experience energy-based astrology with no birth charts needed. Join thousands who discovered clarity, purpose, and transformation through personalized guidance.
                     </p>
                 </div>
                 <div class="mt-auto bg-white/5 backdrop-blur-sm p-8 rounded-3xl border border-white/10 max-w-sm">
@@ -56,14 +55,14 @@
                         <span class="material-icons-outlined text-sm">star</span>
                     </div>
                     <p class="text-lg italic text-indigo-50 leading-snug mb-4">
-                        "The most elegant booking experience I've used in years. It just works and looks beautiful."
+                        "Chaitanya revealed truths I never knew and transformed my life with powerful energy work. His guidance continues to light my path."
                     </p>
                     <div class="flex items-center gap-3">
                         <img alt="User avatar" class="w-10 h-10 rounded-full bg-white/20"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuAD9KEzF-zAORGc2JdMozYOq4lAwMd-mcXj2xQz-4xlUEbVVEMEFpYedWMymi2Hos9NmQmJ7ctf9viyMEJE6RXvKvQrG3gPF_rFAagnKEVpL3a8ZNwTZEEWwyvOuy-jvey3vNDKKIwhyoph3WIsl6MaMRF4o9ektO8xLFBjKAO8Vw_6nVPvNphjz-FvWwRRWPtSCHjMq-BScKwAOrpnz0FCZxoVaPkcYuvrGQ6ZRYtEKz7LyPD_nGPjJ-xUy4WLZdGMeBaVpMd6CBM" />
                         <div class="text-left">
-                            <p class="font-semibold text-sm">Shubham Dhiman</p>
-                            <p class="text-xs text-indigo-200">Creative Director</p>
+                            <p class="font-semibold text-sm">Sweekrutha</p>
+                            <p class="text-xs text-indigo-200">Verified Client</p>
                         </div>
                     </div>
                 </div>
@@ -79,7 +78,7 @@
                     <div class="flex items-center gap-2 group cursor-pointer">
                         <div
                             class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                            <span class="material-icons-outlined">insights</span>
+                            <span class="material-icons-outlined">auto_awesome</span>
                         </div>
                         <span
                             class="font-display text-2xl font-bold tracking-tight text-slate-800 dark:text-white">{{ config('app.name', 'MeetFlow') }}</span>
