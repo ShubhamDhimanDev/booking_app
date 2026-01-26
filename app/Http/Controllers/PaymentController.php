@@ -175,6 +175,172 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function payuCallback(Request $request, PaymentGatewayManager $gatewayManager)
+    {
+        // Extract booking ID from UDF1
+        $bookingId = $request->udf1 ?? null;
+        $status = $request->status ?? null;
+
+        Log::info('PayU Callback Received', [
+            'booking_id' => $bookingId,
+            'status' => $status,
+            'txnid' => $request->txnid ?? null,
+            'amount' => $request->amount ?? null,
+        ]);
+
+        if (!$bookingId) {
+            Log::error('PayU callback: No booking ID in UDF1');
+            return redirect()->route('payment.failed')->with('error', 'Invalid payment data');
+        }
+
+        $booking = Booking::find($bookingId);
+        if (!$booking) {
+            Log::error('PayU callback: Booking not found', ['booking_id' => $bookingId]);
+            return redirect()->route('payment.failed')->with('error', 'Booking not found');
+        }
+
+        // Check if payment already processed
+        $existingPayment = PaymentModel::where('booking_id', $booking->id)
+            ->where('status', 'success')
+            ->exists();
+
+        if ($existingPayment) {
+            Log::info('PayU callback: Payment already processed', ['booking_id' => $bookingId]);
+            return redirect()->route('payment.thankyou', ['booking' => $bookingId]);
+        }
+
+        // Get PayU gateway and verify signature
+        try {
+            $gateway = $gatewayManager->getGateway('payu');
+            $signatureStatus = $gateway->verifyPayment($request->all());
+
+            if ($signatureStatus && strtolower($status) === 'success') {
+                // Payment successful - process it
+                try {
+                    $booking->load(['event.user']);
+
+                    // Update or create payment record
+                    PaymentModel::updateOrCreate(
+                        ['booking_id' => $booking->id],
+                        [
+                            'user_id' => $booking->user_id,
+                            'provider' => 'payu',
+                            'transaction_id' => $request->txnid ?? null,
+                            'status' => 'success',
+                            'amount' => $request->amount ?? 0,
+                            'currency' => 'INR',
+                            'promo_code' => $request->udf2 ?? null,
+                            'metadata' => json_encode($request->all()),
+                        ]
+                    );
+
+                    $booking->update(['status' => 'confirmed']);
+
+                    // Mark follow-up invite as accepted if this is a follow-up booking
+                    if ($booking->is_followup && $booking->followUpInvite) {
+                        $booking->followUpInvite->update(['status' => 'accepted']);
+                    }
+
+                    // Create google calendar event and update booking
+                    try {
+                        $bookingController = app(BookingController::class);
+                        $calendarEvent = $bookingController->createGoogleEvent(
+                            $booking->event,
+                            $booking->booked_at_date,
+                            $booking->booked_at_time,
+                            $booking->booker_name,
+                            $booking->booker_email
+                        );
+
+                        $booking->update([
+                            'calendar_id' => $calendarEvent['calendar_id'] ?? null,
+                            'calendar_link' => $calendarEvent['calendar_link'] ?? null,
+                            'meet_link' => $calendarEvent['meet_link'] ?? null,
+                            'status' => 'confirmed',
+                        ]);
+
+                        // Refresh booking with relationships for notification
+                        $booking->refresh();
+                        $booking->load(['event.user']);
+
+                        // Notify owner and booker
+                        $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
+                        Notification::route('mail', [$booking->booker_email => $booking->booker_name])
+                            ->notify(new \App\Notifications\BookingCreatedNotification($booking));
+                    } catch (Exception $e) {
+                        Log::error('PayU callback - Google event creation failed: ' . $e->getMessage(), [
+                            'booking_id' => $bookingId,
+                            'exception' => $e
+                        ]);
+                        // Don't fail the payment if calendar event creation fails
+                    }
+
+                    Log::info('PayU callback: Payment processed successfully', ['booking_id' => $bookingId]);
+                    return redirect()->route('payment.thankyou', ['booking' => $bookingId]);
+
+                } catch (Exception $e) {
+                    Log::error('PayU callback: Payment processing failed: ' . $e->getMessage(), [
+                        'booking_id' => $bookingId,
+                        'exception' => $e
+                    ]);
+                    return redirect()->route('payment.failed', ['booking' => $bookingId])
+                        ->with('error', 'Payment verification successful but processing failed');
+                }
+            } else {
+                // Payment failed or verification failed
+                Log::warning('PayU callback: Payment failed or verification failed', [
+                    'booking_id' => $bookingId,
+                    'status' => $status,
+                    'verification' => $signatureStatus,
+                    'message' => $request->error_Message ?? $request->field9 ?? 'Unknown error'
+                ]);
+
+                // Create failed payment record
+                try {
+                    PaymentModel::updateOrCreate(
+                        ['booking_id' => $booking->id],
+                        [
+                            'user_id' => $booking->user_id,
+                            'provider' => 'payu',
+                            'transaction_id' => $request->txnid ?? null,
+                            'status' => 'failed',
+                            'amount' => $request->amount ?? 0,
+                            'currency' => 'INR',
+                            'metadata' => json_encode($request->all()),
+                        ]
+                    );
+                } catch (Exception $e) {
+                    Log::error('PayU callback: Failed to record failed payment', ['exception' => $e]);
+                }
+
+                return redirect()->route('payment.failed', ['booking' => $bookingId])
+                    ->with('error', $request->error_Message ?? $request->field9 ?? 'Payment verification failed');
+            }
+        } catch (Exception $e) {
+            Log::error('PayU callback exception: ' . $e->getMessage(), [
+                'booking_id' => $bookingId,
+                'exception' => $e
+            ]);
+            return redirect()->route('payment.failed', ['booking' => $bookingId])
+                ->with('error', 'An error occurred while processing your payment');
+        }
+    }
+
+    public function paymentFailedPage(Request $request, $booking = null)
+    {
+        $bookingModel = null;
+        if ($booking) {
+            $bookingModel = Booking::with(['event.user', 'booker'])->find($booking);
+        }
+
+        $errorMessage = $request->session()->get('error', 'Payment was not successful');
+
+        return view('payments.failed', [
+            'booking' => $bookingModel,
+            'errorMessage' => $errorMessage,
+        ]);
+    }
+
     public function validatePromoCode(Request $request)
     {
         $request->validate([

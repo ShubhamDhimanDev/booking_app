@@ -673,8 +673,6 @@
 
                 const data = await response.json();
 
-                console.log(data);
-
                 if (data.gateway === 'payu') {
                     handlePayUPayment(data);
                 } else {
@@ -772,23 +770,23 @@
             }
         }
 
-        // const bookingInput = document.createElement('input');
-        // bookingInput.type = 'hidden';
-        // bookingInput.name = 'udf1';
-        // bookingInput.value = bookingId;
-        // form.appendChild(bookingInput);
+        const bookingInput = document.createElement('input');
+        bookingInput.type = 'hidden';
+        bookingInput.name = 'udf1';
+        bookingInput.value = bookingId;
+        form.appendChild(bookingInput);
 
-        // // Add promo code if applied
-        // if (appliedPromoCode) {
-        //     const promoInput = document.createElement('input');
-        //     promoInput.type = 'hidden';
-        //     promoInput.name = 'udf2';
-        //     promoInput.value = appliedPromoCode;
-        //     form.appendChild(promoInput);
-        // }
+        // Add promo code if applied
+        if (appliedPromoCode) {
+            const promoInput = document.createElement('input');
+            promoInput.type = 'hidden';
+            promoInput.name = 'udf2';
+            promoInput.value = appliedPromoCode;
+            form.appendChild(promoInput);
+        }
 
         document.body.appendChild(form);
-        // form.submit();
+        form.submit();
     }
     </script>
 @endpush

@@ -46,6 +46,10 @@ Route::post('/create-order', [PaymentController::class, 'createOrder']);
 Route::post('/verify-payment', [PaymentController::class, 'verifyPayment']);
 Route::post('/validate-promo', [PaymentController::class, 'validatePromoCode']);
 
+// PayU callback routes
+Route::post('/payment/payu/callback', [PaymentController::class, 'payuCallback'])->name('payment.payu.callback');
+Route::get('/payment/failed/{booking?}', [PaymentController::class, 'paymentFailedPage'])->name('payment.failed');
+
 // Multi-page booking flow
 Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->name('events.show.public');
 Route::get('/e/{event:slug}/details', [BookingController::class, 'showDetailsForm'])->name('bookings.details');
@@ -56,6 +60,8 @@ Route::get('/followup/{token}', [BookingController::class, 'showFollowUpBooking'
 
 Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
 Route::get('/test', [TestController::class, 'test'])->name('test.test');
+Route::post('/test/payu/initiate', [TestController::class, 'initiateTestPayment'])->name('test.payu.initiate');
+Route::get('/test/payu/verify', [TestController::class, 'verifyTestPayment'])->name('test.payu.verify');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
