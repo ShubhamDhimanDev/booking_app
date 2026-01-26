@@ -250,10 +250,19 @@
 
     // Cancel modal functions
     const bookingsData = @json($bookings->map(function($b) {
+        $refundPolicy = null;
+        if ($b->event) {
+            try {
+                $refundPolicy = $b->event->getRefundPolicyDescription();
+            } catch (\Exception $e) {
+                $refundPolicy = null;
+            }
+        }
+        
         return [
             'id' => $b->id,
             'title' => optional($b->event)->title ?? 'Event',
-            'refund_policy' => optional($b->event)->getRefundPolicyDescription()
+            'refund_policy' => $refundPolicy
         ];
     }));
 
