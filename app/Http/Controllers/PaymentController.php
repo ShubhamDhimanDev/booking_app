@@ -79,8 +79,8 @@ class PaymentController extends Controller
 
                 try {
                     // Extract transaction ID based on gateway
-                    // Razorpay: razorpay_payment_id, PayU: txnid
-                    $transactionId = $request->razorpay_payment_id ?? $request->txnid ?? $request->order_id ?? null;
+                    // Razorpay: razorpay_payment_id, PayU: mihpayid
+                    $transactionId = $request->razorpay_payment_id ?? $request->mihpayid ?? $request->order_id ?? null;
 
                     if (!$transactionId) {
                         Log::warning('No transaction ID found in verify-payment request for booking: ' . $bookingId);
@@ -225,7 +225,7 @@ class PaymentController extends Controller
                         [
                             'user_id' => $booking->user_id,
                             'provider' => 'payu',
-                            'transaction_id' => $request->txnid ?? null,
+                            'transaction_id' => $request->mihpayid ?? null, // Store mihpayid for refunds
                             'status' => 'success',
                             'amount' => $request->amount ?? 0,
                             'currency' => 'INR',
@@ -302,7 +302,7 @@ class PaymentController extends Controller
                         [
                             'user_id' => $booking->user_id,
                             'provider' => 'payu',
-                            'transaction_id' => $request->txnid ?? null,
+                            'transaction_id' => $request->mihpayid ?? null,
                             'status' => 'failed',
                             'amount' => $request->amount ?? 0,
                             'currency' => 'INR',

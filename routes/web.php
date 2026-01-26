@@ -60,8 +60,6 @@ Route::get('/followup/{token}', [BookingController::class, 'showFollowUpBooking'
 
 Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
 Route::get('/test', [TestController::class, 'test'])->name('test.test');
-Route::post('/test/payu/initiate', [TestController::class, 'initiateTestPayment'])->name('test.payu.initiate');
-Route::get('/test/payu/verify', [TestController::class, 'verifyTestPayment'])->name('test.payu.verify');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
