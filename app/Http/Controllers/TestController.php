@@ -3,30 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Services\PayUService;
 
 class TestController extends Controller
 {
-  public function index()
+  public function test()
   {
-
+    // return view('test.test');
+    // return view('test.payu');
   }
 
-  public function welcome()
-  {
-    return view('welcome');
-  }
-
-  public function testEmailForm()
-  {
-  }
-
-  public function sendTestEmail(Request $request)
-  {
-
-  }
-
-  public function sendAllTestEmails(Request $request)
-  {
-
-  }
 }

@@ -55,6 +55,7 @@ Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->name('
 Route::get('/followup/{token}', [BookingController::class, 'showFollowUpBooking'])->name('bookings.followup.show');
 
 Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
+Route::get('/test', [TestController::class, 'test'])->name('test.test');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';

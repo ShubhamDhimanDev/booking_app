@@ -45,18 +45,10 @@ class PayUService implements PaymentGatewayInterface
             $txnId = $data['txn_id'] ?? 'Txn' . uniqid();
             $bookingId = $data['booking_id'] ?? null;
 
-            // UDF fields (optional)
-            $udf1 = $data['udf1'] ?? '';
-            $udf2 = $data['udf2'] ?? '';
-            $udf3 = $data['udf3'] ?? '';
-            $udf4 = $data['udf4'] ?? '';
-            $udf5 = $data['udf5'] ?? '';
-
             // Generate hash as per PayU official documentation
             // Formula v1: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT)
             $hashSequence = $this->merchantKey . '|' . $txnId . '|' . $amount . '|' . $productInfo . '|' .
-                           $firstName . '|' . $email . '|' . $udf1 . '|' . $udf2 . '|' .
-                           $udf3 . '|' . $udf4 . '|' . $udf5 . '|||||||' . $this->merchantSalt;
+                           $firstName . '|' . $email . '|||||||||||' . $this->merchantSalt;
 
             // Generate v1 and v2 hashes (PayU requires both in JSON format)
             $hash_v1 = strtolower(hash('sha512', $hashSequence));
@@ -79,12 +71,8 @@ class PayUService implements PaymentGatewayInterface
                 'email' => $email,
                 'phone' => $phone,
                 'surl' => route('payment.thankyou', ['booking' => $bookingId]),
+                'furl' => route('payment.thankyou', ['booking' => $bookingId]),
                 'service_provider' => 'payu_paisa',
-                'udf1' => $udf1,
-                'udf2' => $udf2,
-                'udf3' => $udf3,
-                'udf4' => $udf4,
-                'udf5' => $udf5,
             ];
         } catch (Exception $e) {
             return ['gateway' => 'payu', 'success' => false, 'error' => $e->getMessage()];
