@@ -76,7 +76,7 @@ class TrackingSettingsController extends Controller
 
         // Update Meta Pixel settings
         Setting::setSetting('meta_pixel_enabled', $request->has('meta_pixel_enabled') ? '1' : '0');
-        Setting::setSetting('meta_pixel_id', $request->input('meta_pixel_id', ''));
+        Setting::setSetting('meta_pixel_id', $request->input('meta_pixel_id') ?: '');
         Setting::setSetting('meta_event_page_view', $request->has('meta_event_page_view') ? '1' : '0');
         Setting::setSetting('meta_event_initiate_checkout', $request->has('meta_event_initiate_checkout') ? '1' : '0');
         Setting::setSetting('meta_event_add_payment_info', $request->has('meta_event_add_payment_info') ? '1' : '0');
@@ -88,7 +88,7 @@ class TrackingSettingsController extends Controller
 
         // Update Google Analytics settings
         Setting::setSetting('google_analytics_enabled', $request->has('google_analytics_enabled') ? '1' : '0');
-        Setting::setSetting('google_analytics_id', $request->input('google_analytics_id', ''));
+        Setting::setSetting('google_analytics_id', $request->input('google_analytics_id') ?: '');
         Setting::setSetting('google_event_page_view', $request->has('google_event_page_view') ? '1' : '0');
         Setting::setSetting('google_event_begin_checkout', $request->has('google_event_begin_checkout') ? '1' : '0');
         Setting::setSetting('google_event_add_payment_info', $request->has('google_event_add_payment_info') ? '1' : '0');

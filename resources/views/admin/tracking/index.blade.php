@@ -421,7 +421,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
-                    <a href="{{ route('admin.events.index') }}" class="btn btn-secondary">Cancel</a>
+                    <a href="{{ route('admin.events.index') }}" class="btn btn-secondary text-white">Cancel</a>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Save Settings
                     </button>

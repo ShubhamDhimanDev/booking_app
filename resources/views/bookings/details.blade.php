@@ -101,7 +101,7 @@
 
                         <div class="pt-2">
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Description</h3>
-                            <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{!! $event->description !!}</div>
+                            <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{!! nl2br($event->description) !!}</div>
                         </div>
                     </div>
                 </div>

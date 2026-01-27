@@ -71,7 +71,7 @@
                     $bookingDateTime = \Carbon\Carbon::parse($b->booked_at_date . ' ' . $b->booked_at_time);
                     $isExpired = $bookingDateTime->isPast();
                 @endphp
-                
+
                 @if ($b->status === 'confirmed' && $b->meet_link)
                     @if ($isExpired)
                         <div class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-2xl text-sm font-bold">

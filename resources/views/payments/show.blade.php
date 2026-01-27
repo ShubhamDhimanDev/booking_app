@@ -275,7 +275,7 @@
                             About this event
                         </h3>
                         <div class="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-700/50 dark:to-slate-600/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-600">
-                            <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{!! nl2br(e($booking->event->description)) !!}</p>
+                            <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{!! nl2br($booking->event->description) !!}</p>
                         </div>
                     </div>
                     @endif
@@ -672,6 +672,15 @@
                 });
 
                 const data = await response.json();
+
+                if (!data.success && data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Use validated amount from backend
+                if (data.validated_amount) {
+                    discountedAmount = data.validated_amount;
+                }
 
                 if (data.gateway === 'payu') {
                     handlePayUPayment(data);

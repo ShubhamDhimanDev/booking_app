@@ -19,6 +19,7 @@ class PaymentController extends Controller
     {
         $amount = floatval($request->amount ?? 500);
         $bookingId = $request->booking_id ?? null;
+        $promoCode = $request->promo_code ?? null;
 
         try {
             $gateway = $gatewayManager->getActiveGateway();
@@ -33,6 +34,7 @@ class PaymentController extends Controller
                 'email' => $request->email ?? '',
                 'txn_id' => 'txn_' . time() . rand(1000, 9999),
                 'phone' => $request->phone ?? '',
+                'promo_code' => $promoCode,
             ];
 
             $response = $gateway->initiatePayment($paymentData);

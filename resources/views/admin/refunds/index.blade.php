@@ -99,7 +99,7 @@
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary btn-sm me-2">Filter</button>
-                    <a href="{{ route('admin.refunds.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+                    <a href="{{ route('admin.refunds.index') }}" class="btn btn-secondary btn-sm text-white">Reset</a>
                 </div>
             </form>
         </div>
