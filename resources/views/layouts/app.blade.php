@@ -86,8 +86,8 @@
         <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
                 <a href="/" class="flex items-center space-x-3 group">
-                    <div class="w-11 h-11 bg-gradient-to-br from-primary to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-xl group-hover:shadow-primary/40 transition-all">
-                        <span class="material-icons-round text-white text-xl">event_available</span>
+                    <div class="w-11 h-17 flex items-center justify-center">
+                        <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-11 h-17 object-cover" />
                     </div>
                     <span class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{{ config('app.name') }}</span>
                 </a>

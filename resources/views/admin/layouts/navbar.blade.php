@@ -7,10 +7,10 @@
         </div>
         <div>
             <a class="navbar-brand brand-logo" href="{{ route('admin.dashboard') }}">
-                <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" />
+                <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" />
             </a>
             <a class="navbar-brand brand-logo-mini" href="{{ route('admin.dashboard') }}">
-                <img src="{{ asset('admins/assets/images/logo.png') }}" alt="logo" />
+                <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" />
             </a>
         </div>
     </div>

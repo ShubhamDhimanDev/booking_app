@@ -38,8 +38,8 @@
             <div class="relative z-10 w-full flex flex-col justify-center items-center p-16 text-white text-center">
                 <div class="mb-12">
                     <div
-                        class="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-2xl mb-6">
-                        <span class="material-icons-outlined text-5xl">auto_awesome</span>
+                        class="inline-flex items-center justify-center mb-6">
+                        <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-12 h-12 object-cover" />
                     </div>
                     <h1 class="font-display text-6xl mb-4 leading-tight">Transform Your Life <br />Through Energy.</h1>
                     <p class="text-xl text-indigo-100 max-w-md mx-auto font-light leading-relaxed">
@@ -77,8 +77,8 @@
                 <div class="mb-10 flex items-center justify-between">
                     <div class="flex items-center gap-2 group cursor-pointer">
                         <div
-                            class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                            <span class="material-icons-outlined">auto_awesome</span>
+                            class="inline-flex items-center justify-center">
+                            <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-12  object-cover" />
                         </div>
                         <span
                             class="font-display text-2xl font-bold tracking-tight text-slate-800 dark:text-white">{{ config('app.name', 'MeetFlow') }}</span>
