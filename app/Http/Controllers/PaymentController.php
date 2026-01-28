@@ -22,6 +22,11 @@ class PaymentController extends Controller
         $promoCode = $request->promo_code ?? null;
 
         try {
+            // Check if amount is 0 (100% discount) - skip payment gateway
+            if ($amount == 0 && $bookingId) {
+                return $this->processFreeBooking($bookingId, $promoCode);
+            }
+
             $gateway = $gatewayManager->getActiveGateway();
             $gatewayName = $gateway->getName();
 
@@ -45,6 +50,115 @@ class PaymentController extends Controller
             return response()->json($response);
         } catch (Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Process free bookings (0 amount after discount) without payment gateway
+     */
+    private function processFreeBooking($bookingId, $promoCode = null)
+    {
+        try {
+            $booking = Booking::with(['event.user'])->find($bookingId);
+
+            if (!$booking) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Booking not found'
+                ], 404);
+            }
+
+            // Check if payment already exists
+            $existingPayment = PaymentModel::where('booking_id', $booking->id)
+                ->where('status', 'success')
+                ->exists();
+
+            if ($existingPayment) {
+                return response()->json([
+                    'success' => true,
+                    'free_booking' => true,
+                    'already_processed' => true,
+                    'booking_id' => $bookingId
+                ]);
+            }
+
+            // Create payment record with 0 amount (no actual payment made)
+            PaymentModel::create([
+                'user_id' => $booking->user_id,
+                'booking_id' => $booking->id,
+                'provider' => 'free',
+                'transaction_id' => 'FREE_' . time() . rand(1000, 9999),
+                'status' => 'success',
+                'amount' => 0,
+                'currency' => 'INR',
+                'promo_code' => $promoCode,
+                'metadata' => json_encode(['type' => 'free_booking', 'promo_code' => $promoCode]),
+            ]);
+
+            $booking->update(['status' => 'confirmed']);
+
+            // Mark follow-up invite as accepted if this is a follow-up booking
+            if ($booking->is_followup && $booking->followUpInvite) {
+                $booking->followUpInvite->update(['status' => 'accepted']);
+            }
+
+            // Create Google Calendar event
+            try {
+                $bookingController = app(BookingController::class);
+                $calendarEvent = $bookingController->createGoogleEvent(
+                    $booking->event,
+                    $booking->booked_at_date,
+                    $booking->booked_at_time,
+                    $booking->booker_name,
+                    $booking->booker_email
+                );
+
+                $booking->update([
+                    'calendar_id' => $calendarEvent['calendar_id'] ?? null,
+                    'calendar_link' => $calendarEvent['calendar_link'] ?? null,
+                    'meet_link' => $calendarEvent['meet_link'] ?? null,
+                    'status' => 'confirmed',
+                ]);
+
+                // Refresh booking with relationships for notification
+                $booking->refresh();
+                $booking->load(['event.user']);
+
+                // Notify owner and booker
+                $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
+                Notification::route('mail', [$booking->booker_email => $booking->booker_name])
+                    ->notify(new \App\Notifications\BookingCreatedNotification($booking));
+
+            } catch (Exception $e) {
+                Log::error('Free booking - Google event creation failed: ' . $e->getMessage(), [
+                    'booking_id' => $bookingId,
+                    'exception' => $e
+                ]);
+                // Don't fail the booking confirmation if calendar event creation fails
+            }
+
+            Log::info('Free booking processed successfully', [
+                'booking_id' => $bookingId,
+                'promo_code' => $promoCode
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'free_booking' => true,
+                'booking_id' => $bookingId,
+                'message' => 'Booking confirmed successfully!'
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Free booking processing failed: ' . $e->getMessage(), [
+                'booking_id' => $bookingId,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
