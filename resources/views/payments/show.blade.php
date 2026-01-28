@@ -449,13 +449,13 @@
         </div>
 
         <!-- Footer Note -->
-        <div class="mt-12 text-center">
+        {{-- <div class="mt-12 text-center">
             <p class="text-xs text-slate-500 dark:text-slate-400">
                 By completing this payment, you agree to our
                 <a href="#" class="text-primary hover:underline">Terms of Service</a> and
                 <a href="#" class="text-primary hover:underline">Privacy Policy</a>
             </p>
-        </div>
+        </div> --}}
     </main>
 @endsection
 

@@ -185,9 +185,8 @@
             <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
                 <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">© {{ date('Y') }} {{ config('app.name') }}@auth  Platform @endauth. All rights reserved.</p>
                 <div class="flex items-center space-x-6 text-sm">
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@auth Support @else Help @endauth</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@guest Contact @endguest Privacy</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@guest Privacy @else Terms @endauth</a>
+                    For Help Contact - <a href="tel:+916366282505" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">+91 6366282505</a>
+                    <a href="https://astrochaitanya.com/privacy-policy/" target="_blank" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Privacy Policy</a>
                 </div>
             </div>
         </div>
