@@ -122,7 +122,7 @@
                     </tr>
 
                     <!-- Footer -->
-                    <tr>
+                    {{-- <tr>
                         <td style="background-color:#0f172a;padding:32px 24px;border-top:1px solid #334155;">
                             <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
@@ -134,7 +134,7 @@
                                 </tr>
                             </table>
                         </td>
-                    </tr>
+                    </tr> --}}
 
                 </table>
 

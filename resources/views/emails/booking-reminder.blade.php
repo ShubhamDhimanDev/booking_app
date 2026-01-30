@@ -38,7 +38,7 @@
                             </div>
                             <h1 style="color:#f8fafc;font-size:36px;font-weight:800;line-height:1.1;margin:0 0 12px;letter-spacing:-0.02em;">Session Reminder</h1>
                             <p style="color:#cbd5e1;font-size:18px;font-weight:400;line-height:1.5;margin:0;max-width:500px;margin:0 auto;">
-                                Your session with {{ $organizerName ?? 'Astro Chaitanya' }} is coming up soon!
+                                Your session with {{ $organizerName ?? config('app.name') }} is coming up soon!
                             </p>
                         </td>
                     </tr>

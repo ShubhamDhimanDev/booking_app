@@ -160,20 +160,6 @@
                                                                 <img src="{{ asset('images/email-icons/wand_stars.png') }}" alt="Wand Stars" style="width:14px;height:14px;margin-top:4px;">
                                                             </td>
                                                             <td>
-                                                                <p style="color:#cbd5e1;font-size:16px;line-height:1.6;margin:0;">Chaitanya will read your energy in real time, no date of birth, charts, or prior details required.</p>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:10px 0;">
-                                                    <table cellpadding="0" cellspacing="0">
-                                                        <tr>
-                                                            <td style="vertical-align:top;padding-right:12px;padding-top: 2px;">
-                                                                <img src="{{ asset('images/email-icons/wand_stars.png') }}" alt="Wand Stars" style="width:14px;height:14px;margin-top:4px;">
-                                                            </td>
-                                                            <td>
                                                                 <p style="color:#cbd5e1;font-size:16px;line-height:1.6;margin:0;">The focus will be on identifying the root cause of the challenges you are currently facing.</p>
                                                             </td>
                                                         </tr>
@@ -267,7 +253,7 @@
                             <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <!-- Questions Section -->
-                                    <td style="width:50%;vertical-align:top;text-align:left;padding-right:24px;">
+                                    {{-- <td style="width:50%;vertical-align:top;text-align:left;padding-right:24px;">
                                         <p style="color:#f8fafc;font-size:16px;font-weight:700;margin:0 0 8px;">Questions?</p>
                                         <p style="color:#cbd5e1;font-size:14px;margin:0 0 4px;">
                                             Email: <a href="mailto:astrology.chaitanya@gmail.com" style="color:#818cf8;text-decoration:none;">astrology.chaitanya@gmail.com</a>
@@ -275,7 +261,7 @@
                                         <p style="color:#cbd5e1;font-size:14px;margin:0;">
                                             Call: <a href="tel:+916366282505" style="color:#818cf8;text-decoration:none;">+91 63662 82505</a>
                                         </p>
-                                    </td>
+                                    </td> --}}
                                     <!-- Closing Message -->
                                     <td style="width:50%;vertical-align:top;text-align:right;padding-left:24px;">
                                         <p style="color:#94a3b8;font-size:14px;margin:0 0 8px;font-style:italic;">We look forward to connecting with you and supporting you on this journey.</p>

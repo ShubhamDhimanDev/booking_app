@@ -80,6 +80,7 @@
                             <th>Event</th>
                             <th>Booker</th>
                             <th>Email</th>
+                            <th>Phone</th>
                             <th>Booked Date</th>
                             <th>Booked Time</th>
                             <th>Meet Link</th>
