@@ -271,7 +271,7 @@ class BookingController extends Controller
     $bookedDate = $validated['booked_at_date'];
     $bookedTime = $validated['booked_at_time'];
     $phone      = $request->phone;
-    // $dob         = $validated['dob'];
+    $dob         = $validated['dob'];
 
     // Server-side availability checks
     // 1) date within event range
@@ -346,7 +346,7 @@ if ($ownerHasBooking) {
       $user = User::create([
         'name' => $bookerName,
         'email' => $bookerEmail,
-        // 'dob' => $dob,
+        'dob' => $dob,
         'phone' => $phone,
         'password' => bcrypt($randomPassword),
       ]);
