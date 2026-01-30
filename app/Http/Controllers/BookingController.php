@@ -60,7 +60,7 @@ class BookingController extends Controller
       });
     }
 
-    $bookings = $query->orderBy('booked_at_date', 'asc')->paginate(10);
+    $bookings = $query->orderBy('created_at', 'DESC')->paginate(10);
 
     // Get unique values for filter dropdowns from tracking table
     $utmSources = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
@@ -954,6 +954,7 @@ if ($ownerHasBooking) {
       'event_id' => $booking->event_id,
       'user_id' => $booking->user_id ?? null,
       'custom_price' => $request->custom_price,
+      'is_normal_invite' => $request->boolean('is_normal_invite', false),
       'token' => FollowUpInvite::generateUniqueToken(),
       'status' => 'pending',
       'expires_at' => $expiresAt,

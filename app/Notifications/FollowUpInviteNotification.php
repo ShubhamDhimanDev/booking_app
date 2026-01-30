@@ -44,6 +44,21 @@ class FollowUpInviteNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         $bookingUrl = url("/followup/{$this->invite->token}");
+        // Choose template based on whether this is a normal (non-followup) invite
+        if ($this->invite->is_normal_invite) {
+            return (new MailMessage)
+                ->subject("Invitation: {$this->invite->event->title}")
+                ->view('emails.invitation', [
+                    'userName' => $this->invite->user->name ?? $this->invite->booking->booker_name,
+                    'eventTitle' => $this->invite->event->title,
+                    'customPrice' => $this->invite->custom_price,
+                    'isFree' => $this->invite->custom_price == 0,
+                    'bookingUrl' => $bookingUrl,
+                    'organizerName' => $this->invite->event->user->name,
+                    'expiresAt' => $this->invite->expires_at,
+                    'originalBookingDate' => $this->invite->booking->booked_at_date,
+                ]);
+        }
 
         return (new MailMessage)
             ->subject("Follow-up Session Invitation - {$this->invite->event->title}")

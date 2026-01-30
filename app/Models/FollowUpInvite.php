@@ -16,6 +16,7 @@ class FollowUpInvite extends Model
         'expires_at' => 'datetime',
         'sent_at' => 'datetime',
         'custom_price' => 'decimal:2',
+        'is_normal_invite' => 'boolean',
     ];
 
     /**
