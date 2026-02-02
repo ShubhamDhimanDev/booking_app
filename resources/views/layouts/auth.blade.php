@@ -92,9 +92,9 @@
                 <!-- Footer Links -->
                 <div
                     class="mt-16 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-center gap-6 text-xs text-slate-400 uppercase tracking-widest">
-                    <a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
-                    <a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
-                    <a class="hover:text-primary transition-colors" href="#">Help Center</a>
+                    <a class="hover:text-primary transition-colors" href="{{ route('privacy') }}">Privacy Policy</a>
+                    <a class="hover:text-primary transition-colors" href="{{ route('terms') }}">Terms of Service</a>
+                    <a class="hover:text-primary transition-colors" href="{{ route('help') }}">Help Center</a>
                 </div>
             </div>
         </div>

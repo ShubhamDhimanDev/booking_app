@@ -77,13 +77,13 @@
     @yield('additional-styles')
     @stack('styles')
 </head>
-<body class="@auth bg-background-light dark:bg-background-dark @else bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 @endauth min-h-screen antialiased text-slate-900 dark:text-slate-100 transition-colors duration-300">
+<body class="bg-background-light dark:bg-background-dark min-h-screen antialiased text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
     @stack('body-scripts')
 
     <!-- Modern Header -->
     <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 shadow-sm">
-        <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
                 <a href="/" class="flex items-center space-x-3 group">
                     <div class="w-11 h-11 bg-gradient-to-br from-primary to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-xl group-hover:shadow-primary/40 transition-all">
@@ -169,7 +169,7 @@
     @endif
 
     <!-- Main Content -->
-    <main class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 @auth py-10 @else py-8 sm:py-12 @endauth">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         @yield('content')
     </main>
 
@@ -180,14 +180,14 @@
     </button>
 
     <!-- Footer -->
-    <footer class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-700 @auth mt-20 @else mt-20 @endauth">
-        <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <footer class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-700 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-                <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">© {{ date('Y') }} {{ config('app.name') }}@auth  Platform @endauth. All rights reserved.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
                 <div class="flex items-center space-x-6 text-sm">
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@auth Support @else Help @endauth</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@guest Contact @endguest Privacy</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@guest Privacy @else Terms @endauth</a>
+                    <a href="{{ route('privacy') }}" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Privacy Policy</a>
+                    <a href="{{ route('terms') }}" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Terms of Service</a>
+                    <a href="{{ route('help') }}" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Help Center</a>
                 </div>
             </div>
         </div>

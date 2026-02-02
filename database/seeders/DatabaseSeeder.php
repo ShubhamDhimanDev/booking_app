@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             \Database\Seeders\RoleAndAdminSeeder::class,
+            \Database\Seeders\SuperAdminSeeder::class,
             \Database\Seeders\TrackingSettingsSeeder::class,
         ]);
     }

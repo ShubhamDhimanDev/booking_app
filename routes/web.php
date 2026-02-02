@@ -5,10 +5,10 @@ use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\PayuController;
 use App\Http\Controllers\TestController;
-use App\Http\Controllers\TestRazorpayRefundController;
 use App\Http\Controllers\TransactionsController;
+use App\Http\Controllers\HelpController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -63,3 +63,10 @@ Route::get('/test', [TestController::class, 'test'])->name('test.test');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
+
+// Static public pages: Privacy Policy, Terms of Service, Help Center
+Route::view('/privacy', 'static.privacy')->name('privacy');
+Route::view('/terms', 'static.terms')->name('terms');
+
+Route::get('/help', [HelpController::class, 'index'])->name('help');
+Route::post('/help', [HelpController::class, 'store'])->name('help.submit');

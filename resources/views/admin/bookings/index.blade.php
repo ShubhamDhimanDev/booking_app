@@ -189,7 +189,7 @@
                             </tr>
 
                             {{-- Follow-up Modal --}}
-                            @if($booking->isCompleted() && !$booking->is_followup)
+                            @if($booking->calendar_link && !$bookingDateTime->isFuture())
                             <div class="modal fade" id="followUpModal{{ $booking->id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
                                 <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content bg-dark border-secondary">
