@@ -49,7 +49,7 @@ class BookingReminderJob implements ShouldQueue
     $endDate = Carbon::today()->copy()->addDays(max(1, $daysAhead))->toDateString();
 
     // Candidate bookings: confirmed/pending bookings between today and endDate
-    $candidates = Booking::whereIn('status', ['confirmed', 'pending'])
+    $candidates = Booking::whereIn('status', [Booking::STATUS_CONFIRMED, Booking::STATUS_PENDING])
       ->whereBetween('booked_at_date', [Carbon::today()->toDateString(), $endDate])
       ->get();
 

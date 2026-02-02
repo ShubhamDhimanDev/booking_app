@@ -70,7 +70,7 @@ class StoreBookingRequest extends FormRequest
 
       // check existing bookings (confirmed/pending)
       // Only block confirmed bookings; pending (unpaid) slots can be re-booked
-      if ($bookedDate && $event->bookings()->where('booked_at_date', $bookedDate)->where('booked_at_time', $value)->where('status', 'confirmed')->exists()) {
+      if ($bookedDate && $event->bookings()->where('booked_at_date', $bookedDate)->where('booked_at_time', $value)->confirmed()->exists()) {
         $fail('This timeslot is already booked try another one.');
       }
     };

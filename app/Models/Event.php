@@ -6,20 +6,116 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Event Model - SaaS Ready
+ *
+ * Recommended Database Indexes:
+ * - Index: (user_id, is_active)
+ * - Index: (slug) UNIQUE
+ * - Index: (is_active, is_public)
+ * - Index: (created_at)
+ *
+ * NOTE: This model contains heavy business logic that should be extracted to services:
+ * - calculateRefundAmount() → RefundService
+ * - canBeCancelled() → BookingService
+ * - Timeslot generation → EventService with caching
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property int $duration_minutes
+ * @property float|null $price
+ * @property array|null $available_week_days
+ * @property array|null $custom_timeslots
+ * @property array|null $refund_rules
+ * @property bool $refund_enabled
+ * @property bool $deduct_gateway_charges
+ * @property bool $is_active
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ */
 class Event extends Model
 {
-  use HasFactory;
+  use HasFactory, SoftDeletes;
 
-  protected $guarded = [];
+  /**
+   * Mass-assignable attributes
+   */
+  protected $fillable = [
+    'user_id',
+    'name',
+    'slug',
+    'description',
+    'duration_minutes',
+    'price',
+    'currency',
+    'location',
+    'location_type',
+    'meeting_url',
+    'available_week_days',
+    'custom_timeslots',
+    'buffer_time_before',
+    'buffer_time_after',
+    'min_notice_hours',
+    'max_bookings_per_day',
+    'questions',
+    'confirmation_message',
+    'is_active',
+    'is_public',
+    'requires_confirmation',
+    'refund_enabled',
+    'refund_rules',
+    'deduct_gateway_charges',
+    'color',
+    'category',
+  ];
 
+  /**
+   * Attributes that should be cast
+   */
   protected $casts = [
     'available_week_days' => 'array',
     'custom_timeslots' => 'array',
     'refund_rules' => 'array',
+    'questions' => 'array',
     'refund_enabled' => 'boolean',
     'deduct_gateway_charges' => 'boolean',
+    'is_active' => 'boolean',
+    'is_public' => 'boolean',
+    'requires_confirmation' => 'boolean',
+    'price' => 'decimal:2',
+    'created_at' => 'datetime',
+    'updated_at' => 'datetime',
+    'deleted_at' => 'datetime',
   ];
+
+  /**
+   * Count bookings by default
+   */
+  protected $withCount = ['bookings'];
+
+  // ==================== RELATIONSHIPS ====================
+
+  /**
+   * The user who created this event
+   */
+  public function user()
+  {
+    return $this->belongsTo(User::class);
+  }
+
+  /**
+   * Bookings for this event
+   */
+  public function bookings()
+  {
+    return $this->hasMany(Booking::class);
+  }
 
   /**
    * Exclusions for this event (per-date excluded times or full-day exclusion)
@@ -37,19 +133,67 @@ class Event extends Model
     return $this->hasMany(\App\Models\EventReminder::class);
   }
 
-  protected $withCount = ['bookings'];
-
+  // ==================== QUERY SCOPES ====================
 
   /**
-   * Format available from time in hours and minutes only (H:i)
-   *
-   * @return \Illuminate\Database\Eloquent\Casts\Attribute
+   * Scope: Filter active events
    */
-  // Note: `available_from_time` / `available_to_time` columns removed — custom_timeslots is used instead.
-
+  public function scopeActive(Builder $query): Builder
+  {
+    return $query->where('is_active', true);
+  }
 
   /**
-   * Timeslots
+   * Scope: Filter public events
+   */
+  public function scopePublic(Builder $query): Builder
+  {
+    return $query->where('is_public', true);
+  }
+
+  /**
+   * Scope: Filter by user
+   */
+  public function scopeForUser(Builder $query, int $userId): Builder
+  {
+    return $query->where('user_id', $userId);
+  }
+
+  /**
+   * Scope: Filter free events
+   */
+  public function scopeFree(Builder $query): Builder
+  {
+    return $query->whereNull('price')->orWhere('price', 0);
+  }
+
+  /**
+   * Scope: Filter paid events
+   */
+  public function scopePaid(Builder $query): Builder
+  {
+    return $query->where('price', '>', 0);
+  }
+
+  /**
+   * Scope: Search events by name or description
+   */
+  public function scopeSearch(Builder $query, string $search): Builder
+  {
+    return $query->where(function($q) use ($search) {
+      $q->where('name', 'LIKE', "%{$search}%")
+        ->orWhere('description', 'LIKE', "%{$search}%")
+        ->orWhere('slug', 'LIKE', "%{$search}%");
+    });
+  }
+
+  // ==================== ATTRIBUTES & ACCESSORS ====================
+
+  /**
+   * Timeslots - Generate available time slots for this event
+   *
+   * NOTE: This accessor performs expensive calculations.
+   * TODO: Move to EventService with caching for better performance
    *
    * @return array
    */
@@ -89,35 +233,20 @@ class Event extends Model
     return $timeSlots;
   }
 
+  // ==================== BUSINESS LOGIC (TO BE MOVED TO SERVICES) ====================
 
-  /**
-   * The user created the event
-   *
-   * @return \App\Models\User
-   */
-  public function user()
-  {
-    return $this->belongsTo(User::class);
-  }
-
-
-  /**
-   * The bookings associated with this event
-   *
-   * @return \Illuminate\Support\Collection<\App\Models\Booking>
-   */
-  public function bookings()
-  {
-    return $this->hasMany(Booking::class);
-  }
+  // ==================== BUSINESS LOGIC (TO BE MOVED TO SERVICES) ====================
 
   /**
    * Check if a booking can be cancelled based on event refund policy
    *
+   * @deprecated Use BookingService::canCancel() instead
+   * NOTE: This business logic will be moved to BookingService in next refactoring phase
+   *
    * @param \App\Models\Booking $booking
    * @return bool
    */
-  public function canBeCancelled($booking)
+  public function canBeCancelled($booking): bool
   {
     // Refund must be enabled
     if (!$this->refund_enabled) {
@@ -150,10 +279,13 @@ class Event extends Model
   /**
    * Calculate refund amount based on refund policy
    *
+   * @deprecated Use RefundService::calculateRefundAmount() instead
+   * NOTE: This complex business logic (200+ lines) will be moved to RefundService
+   *
    * @param \App\Models\Booking $booking
    * @return array ['percentage' => int, 'amount' => float, 'gateway_charges' => float]
    */
-  public function calculateRefundAmount($booking)
+  public function calculateRefundAmount($booking): array
   {
     if (!$this->canBeCancelled($booking)) {
       return ['percentage' => 0, 'amount' => 0, 'gateway_charges' => 0];

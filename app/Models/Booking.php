@@ -7,34 +7,88 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\Payment;
 
+/**
+ * Booking Model - SaaS Ready
+ *
+ * Recommended Database Indexes:
+ * - Index: (event_id, scheduled_at) - for event bookings list
+ * - Index: (user_id, status) - for user bookings with status filter
+ * - Index: (status, scheduled_at) - for dashboard queries
+ * - Index: (confirmation_token) - unique for confirmations
+ * - Index: (email, status) - for guest bookings lookup
+ *
+ * @property int $id
+ * @property int $event_id
+ * @property int|null $user_id
+ * @property string $email
+ * @property string $name
+ * @property string|null $phone
+ * @property string $status
+ * @property \Carbon\Carbon $scheduled_at
+ * @property \Carbon\Carbon|null $cancelled_at
+ * @property string|null $cancellation_reason
+ */
 class Booking extends Model
 {
   use HasFactory, SoftDeletes;
 
-  protected $guarded = [];
-
-  protected $casts = [
-    'cancelled_at' => 'datetime',
+  /**
+   * Mass-assignable attributes
+   */
+  protected $fillable = [
+    'event_id',
+    'user_id',
+    'email',
+    'name',
+    'phone',
+    'status',
+    'scheduled_at',
+    'notes',
+    'timezone',
+    'confirmation_token',
+    'answered_questions',
+    'location',
   ];
 
   /**
+   * Attributes that should be cast
+   */
+  protected $casts = [
+    'scheduled_at' => 'datetime',
+    'cancelled_at' => 'datetime',
+    'created_at' => 'datetime',
+    'updated_at' => 'datetime',
+    'deleted_at' => 'datetime',
+    'answered_questions' => 'array',
+  ];
+
+  // ==================== CONSTANTS ====================
+
+  public const STATUS_PENDING = 'pending';
+  public const STATUS_CONFIRMED = 'confirmed';
+  public const STATUS_CANCELLED = 'cancelled';
+  public const STATUS_COMPLETED = 'completed';
+  public const STATUS_NO_SHOW = 'no_show';
+
+  // ==================== ATTRIBUTES ====================
+
+  /**
    * Format booked_at_time in hours and minutes only (H:i)
-   *
-   * @return \Illuminate\Database\Eloquent\Casts\Attribute
    */
   protected function bookedAtTime(): Attribute
   {
     return Attribute::make(
-      get: fn ($value) => Carbon::parse($value)->format('H:i'),
+      get: fn ($value) => $value ? Carbon::parse($value)->format('H:i') : null,
     );
   }
 
+  // ==================== RELATIONSHIPS ====================
+
   /**
-   * The event this bookin is associated with
-   *
-   * @return \App\Models\Event
+   * The event this booking is associated with
    */
   public function event()
   {
@@ -61,6 +115,9 @@ class Booking extends Model
     return $this->hasOne(Payment::class);
   }
 
+  /**
+   * User who made this booking
+   */
   public function booker()
   {
       return $this->belongsTo(User::class, 'user_id');
@@ -68,8 +125,6 @@ class Booking extends Model
 
   /**
    * Follow-up invite this booking was created from (if applicable)
-   *
-   * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
    */
   public function followUpInvite()
   {
@@ -77,30 +132,7 @@ class Booking extends Model
   }
 
   /**
-   * Check if this is a follow-up booking
-   *
-   * @return bool
-   */
-  public function isFollowUp()
-  {
-      return $this->is_followup;
-  }
-
-  /**
-   * Check if this booking is completed (past date/time)
-   *
-   * @return bool
-   */
-  public function isCompleted()
-  {
-      $bookingDateTime = \Carbon\Carbon::parse($this->booked_at_date . ' ' . $this->booked_at_time);
-      return $bookingDateTime->isPast() && $this->status !== 'cancelled';
-  }
-
-  /**
    * User who cancelled this booking
-   *
-   * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
    */
   public function cancelledBy()
   {
@@ -109,12 +141,117 @@ class Booking extends Model
 
   /**
    * Refund associated with this booking (if any)
-   *
-   * @return \Illuminate\Database\Eloquent\Relations\HasOne
    */
   public function refund()
   {
       return $this->hasOne(\App\Models\Refund::class);
+  }
+
+  // ==================== QUERY SCOPES ====================
+
+  /**
+   * Scope: Filter confirmed bookings
+   */
+  public function scopeConfirmed(Builder $query): Builder
+  {
+      return $query->where('status', self::STATUS_CONFIRMED);
+  }
+
+  /**
+   * Scope: Filter cancelled bookings
+   */
+  public function scopeCancelled(Builder $query): Builder
+  {
+      return $query->where('status', self::STATUS_CANCELLED);
+  }
+
+  /**
+   * Scope: Filter pending bookings
+   */
+  public function scopePending(Builder $query): Builder
+  {
+      return $query->where('status', self::STATUS_PENDING);
+  }
+
+  /**
+   * Scope: Filter upcoming bookings
+   */
+  public function scopeUpcoming(Builder $query): Builder
+  {
+      return $query->where('scheduled_at', '>', now());
+  }
+
+  /**
+   * Scope: Filter past bookings
+   */
+  public function scopePast(Builder $query): Builder
+  {
+      return $query->where('scheduled_at', '<=', now());
+  }
+
+  /**
+   * Scope: Filter by event
+   */
+  public function scopeForEvent(Builder $query, int $eventId): Builder
+  {
+      return $query->where('event_id', $eventId);
+  }
+
+  /**
+   * Scope: Filter by user
+   */
+  public function scopeForUser(Builder $query, int $userId): Builder
+  {
+      return $query->where('user_id', $userId);
+  }
+
+  /**
+   * Scope: Filter by date range
+   */
+  public function scopeBetweenDates(Builder $query, $startDate, $endDate): Builder
+  {
+      return $query->whereBetween('scheduled_at', [$startDate, $endDate]);
+  }
+
+  /**
+   * Scope: With refundable bookings
+   */
+  public function scopeRefundable(Builder $query): Builder
+  {
+      return $query->where('status', self::STATUS_CANCELLED)
+                   ->whereNull('refund_status')
+                   ->orWhere('refund_status', 'pending');
+  }
+
+  /**
+   * Scope: Search bookings
+   */
+  public function scopeSearch(Builder $query, string $search): Builder
+  {
+      return $query->where(function($q) use ($search) {
+          $q->where('name', 'LIKE', "%{$search}%")
+            ->orWhere('email', 'LIKE', "%{$search}%")
+            ->orWhere('phone', 'LIKE', "%{$search}%");
+      });
+  }
+
+  // ==================== HELPER METHODS ====================
+
+  /**
+   * Check if this is a follow-up booking
+   */
+  public function isFollowUp(): bool
+  {
+      return $this->is_followup ?? false;
+  }
+
+  /**
+   * Check if this booking is completed (past date/time)
+   */
+  public function isCompleted(): bool
+  {
+      $bookingDateTime = \Carbon\Carbon::parse($this->booked_at_date . ' ' . $this->booked_at_time);
+      return $bookingDateTime->isPast() && $this->status !== self::STATUS_CANCELLED;
   }
 
   /**
@@ -156,11 +293,11 @@ class Booking extends Model
 
       // Update booking status
       $this->update([
-          'status' => 'declined',
+          'status' => self::STATUS_DECLINED,
           'cancelled_at' => now(),
           'cancelled_by' => $userId,
           'cancellation_reason' => $reason,
-          'refund_status' => 'pending',
+          'refund_status' => Refund::STATUS_PENDING,
       ]);
 
       return true;

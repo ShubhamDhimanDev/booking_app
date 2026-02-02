@@ -18,7 +18,7 @@ class DashboardController extends Controller
         // Upcoming sessions (confirmed or pending)
         $upcoming = Booking::with('event')
             ->whereDate('booked_at_date', '>=', $today)
-            ->whereIn('status', ['confirmed', 'pending'])
+            ->whereIn('status', [Booking::STATUS_CONFIRMED, Booking::STATUS_PENDING])
             ->orderBy('booked_at_date')
             ->limit(15)
             ->get();
@@ -26,7 +26,7 @@ class DashboardController extends Controller
         // Past sessions (held)
         $past = Booking::with('event')
             ->whereDate('booked_at_date', '<', $today)
-            ->where('status', 'confirmed')
+            ->where('status', Booking::STATUS_CONFIRMED)
             ->orderByDesc('booked_at_date')
             ->limit(15)
             ->get();
@@ -39,7 +39,7 @@ class DashboardController extends Controller
             'total_this_month' => Booking::whereBetween('booked_at_date', [$startOfMonth, $endOfMonth])->count(),
             'held_this_month' => Booking::whereBetween('booked_at_date', [$startOfMonth, $endOfMonth])->whereDate('booked_at_date', '<', $today)->count(),
             'upcoming_this_month' => Booking::whereBetween('booked_at_date', [$startOfMonth, $endOfMonth])->whereDate('booked_at_date', '>=', $today)->count(),
-            'cancelled_this_month' => Booking::whereBetween('booked_at_date', [$startOfMonth, $endOfMonth])->where('status', 'cancelled')->count(),
+            'cancelled_this_month' => Booking::whereBetween('booked_at_date', [$startOfMonth, $endOfMonth])->where('status', Booking::STATUS_CANCELLED)->count(),
             'sessions_last_7_days' => Booking::whereBetween('booked_at_date', [Carbon::now()->subDays(6)->toDateString(), $today])->count(),
         ];
 

@@ -24,7 +24,22 @@ class RefundController extends Controller
 
         // Apply filters
         if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            switch ($request->status) {
+                case Refund::STATUS_PENDING:
+                    $query->pending();
+                    break;
+                case Refund::STATUS_PROCESSING:
+                    $query->processing();
+                    break;
+                case Refund::STATUS_COMPLETED:
+                    $query->completed();
+                    break;
+                case Refund::STATUS_FAILED:
+                    $query->failed();
+                    break;
+                default:
+                    $query->where('status', $request->status);
+            }
         }
 
         if ($request->has('gateway') && $request->gateway !== 'all') {
@@ -51,11 +66,11 @@ class RefundController extends Controller
         // Calculate statistics
         $stats = [
             'total' => Refund::count(),
-            'pending' => Refund::where('status', 'pending')->count(),
-            'processing' => Refund::where('status', 'processing')->count(),
-            'completed' => Refund::where('status', 'completed')->count(),
-            'failed' => Refund::where('status', 'failed')->count(),
-            'total_amount' => Refund::where('status', 'completed')->sum('net_refund_amount'),
+            'pending' => Refund::pending()->count(),
+            'processing' => Refund::processing()->count(),
+            'completed' => Refund::completed()->count(),
+            'failed' => Refund::failed()->count(),
+            'total_amount' => Refund::completed()->sum('net_refund_amount'),
         ];
 
         return view('admin.refunds.index', compact('refunds', 'stats'));
@@ -82,7 +97,7 @@ class RefundController extends Controller
      */
     public function retry(Refund $refund)
     {
-        if (!in_array($refund->status, ['failed', 'pending'])) {
+        if (!in_array($refund->status, [Refund::STATUS_FAILED, Refund::STATUS_PENDING])) {
             return back()->with([
                 'alert_type' => 'error',
                 'alert_message' => 'Only failed or pending refunds can be retried.',
@@ -91,7 +106,7 @@ class RefundController extends Controller
 
         // Reset status to pending
         $refund->update([
-            'status' => 'pending',
+            'status' => Refund::STATUS_PENDING,
             'failure_reason' => null,
         ]);
 
@@ -122,7 +137,22 @@ class RefundController extends Controller
 
         // Apply same filters as index
         if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            switch ($request->status) {
+                case Refund::STATUS_PENDING:
+                    $query->pending();
+                    break;
+                case Refund::STATUS_PROCESSING:
+                    $query->processing();
+                    break;
+                case Refund::STATUS_COMPLETED:
+                    $query->completed();
+                    break;
+                case Refund::STATUS_FAILED:
+                    $query->failed();
+                    break;
+                default:
+                    $query->where('status', $request->status);
+            }
         }
 
         if ($request->has('gateway') && $request->gateway !== 'all') {

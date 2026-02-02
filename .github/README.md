@@ -24,6 +24,7 @@ MeetFlow is a powerful, scalable booking management system built with Laravel th
 
 #### 📅 **Smart Scheduling**
 - **Google Calendar Integration:** Bidirectional sync with Google Calendar for real-time availability
+- **Automatic Token Refresh:** Persistent Google OAuth with automatic access token renewal (no re-authentication needed)
 - **Custom Timeslots:** Define specific time windows for different event types
 - **Week Day Availability:** Set recurring availability patterns (e.g., only Mondays and Wednesdays)
 - **Event Exclusions:** Block out specific dates or times (holidays, vacations, etc.)
@@ -227,6 +228,32 @@ MeetFlow is a powerful, scalable booking management system built with Laravel th
 - Google OAuth only works with `127.0.0.1`, not `.test` domains in local development
 - Configure payment gateway credentials via Admin Panel → Payment Gateway Settings
 - Set up cron job for scheduled tasks: `* * * * * php artisan schedule:run`
+- **Google Token Management:** Tokens automatically refresh - see [docs/GOOGLE_TOKEN_MANAGEMENT.md](../docs/GOOGLE_TOKEN_MANAGEMENT.md) for details
+
+### **Google OAuth Token Management**
+
+MeetFlow implements automatic Google OAuth token refresh to prevent re-authentication:
+
+```bash
+# Check token status for all users
+php artisan google:refresh-tokens --check
+
+# Manually refresh expired tokens
+php artisan google:refresh-tokens
+
+# Schedule automatic daily refresh (recommended)
+# Add to app/Console/Kernel.php schedule method
+```
+
+**Key Features:**
+- ✅ Automatic token refresh before expiration (5-minute buffer)
+- ✅ Middleware-level token validation and refresh
+- ✅ Centralized GoogleCalendarService for all API operations
+- ✅ Persistent refresh tokens (no re-auth needed)
+- ✅ Graceful error handling and logging
+
+**For detailed documentation, troubleshooting, and Google verification checklist, see:**
+📖 [Google Token Management Guide](../docs/GOOGLE_TOKEN_MANAGEMENT.md)
 
 ---
 
@@ -333,11 +360,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### **Technical Highlights:**
 - Pluggable payment gateway architecture for easy provider switching
+- **Automatic Google OAuth token refresh** - prevents re-authentication loops
 - Idempotent reminder system preventing duplicate notifications
 - Time-based refund calculation engine with multiple policy types
 - Soft delete implementation for data retention and recovery
 - Composite database indexes for optimal query performance
 - Queue-based job processing for scalability
+- Centralized GoogleCalendarService with automatic token management
 
 ---
 

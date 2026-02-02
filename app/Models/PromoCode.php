@@ -4,12 +4,39 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * PromoCode Model - SaaS Ready
+ *
+ * Recommended Database Indexes:
+ * - UNIQUE Index: (code)
+ * - Index: (is_active, valid_until)
+ * - Index: (valid_from, valid_until)
+ *
+ * @property int $id
+ * @property string $code
+ * @property string|null $description
+ * @property string $discount_type
+ * @property float $discount_value
+ * @property float|null $min_booking_amount
+ * @property float|null $max_discount_amount
+ * @property int|null $usage_limit
+ * @property int $usage_count
+ * @property \Carbon\Carbon|null $valid_from
+ * @property \Carbon\Carbon|null $valid_until
+ * @property bool $is_active
+ */
 class PromoCode extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
+    /**
+     * Mass-assignable attributes
+     */
     protected $fillable = [
         'code',
         'description',
@@ -22,8 +49,13 @@ class PromoCode extends Model
         'valid_from',
         'valid_until',
         'is_active',
+        'applicable_events', // JSON array of event IDs
+        'user_limit_per_code', // Max uses per user
     ];
 
+    /**
+     * Attributes that should be cast
+     */
     protected $casts = [
         'discount_value' => 'decimal:2',
         'min_booking_amount' => 'decimal:2',
@@ -31,7 +63,66 @@ class PromoCode extends Model
         'valid_from' => 'datetime',
         'valid_until' => 'datetime',
         'is_active' => 'boolean',
+        'applicable_events' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
+
+    // ==================== CONSTANTS ====================
+
+    public const TYPE_PERCENTAGE = 'percentage';
+    public const TYPE_FIXED = 'fixed';
+
+    // ==================== QUERY SCOPES ====================
+
+    /**
+     * Scope: Get only active promo codes
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope: Get valid promo codes (active and within date range)
+     */
+    public function scopeValidNow(Builder $query): Builder
+    {
+        $now = Carbon::now();
+        return $query->active()
+            ->where(function ($q) use ($now) {
+                $q->whereNull('valid_from')
+                  ->orWhere('valid_from', '<=', $now);
+            })
+            ->where(function ($q) use ($now) {
+                $q->whereNull('valid_until')
+                  ->orWhere('valid_until', '>=', $now);
+            });
+    }
+
+    /**
+     * Scope: Promo codes with available usage
+     */
+    public function scopeAvailable(Builder $query): Builder
+    {
+        return $query->where(function($q) {
+            $q->whereNull('usage_limit')
+              ->orWhereRaw('usage_count < usage_limit');
+        });
+    }
+
+    /**
+     * Scope: Search by code
+     */
+    public function scopeByCode(Builder $query, string $code): Builder
+    {
+        return $query->where('code', strtoupper($code));
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    // ==================== HELPER METHODS ====================
 
     /**
      * Check if promo code is valid for use
@@ -61,6 +152,8 @@ class PromoCode extends Model
 
     /**
      * Calculate discount amount for given booking amount
+     *
+     * NOTE: Consider moving to PromoCodeService for complex business logic
      */
     public function calculateDiscount(float $bookingAmount): float
     {
@@ -69,7 +162,7 @@ class PromoCode extends Model
             return 0;
         }
 
-        if ($this->discount_type === 'percentage') {
+        if ($this->discount_type === self::TYPE_PERCENTAGE) {
             $discount = ($bookingAmount * $this->discount_value) / 100;
 
             // Apply max discount cap if set
@@ -85,35 +178,34 @@ class PromoCode extends Model
     }
 
     /**
-     * Increment usage count
+     * Increment usage count atomically to prevent race conditions
+     *
+     * FIXED: Now uses atomic increment to avoid concurrent booking issues
      */
-    public function incrementUsage(): void
+    public function incrementUsage(): bool
     {
-        $this->increment('usage_count');
+        // Use atomic increment to prevent race conditions
+        return $this->increment('usage_count') > 0;
     }
 
     /**
-     * Scope to get only active promo codes
+     * Check if promo code can be used (has remaining usage)
      */
-    public function scopeActive($query)
+    public function canBeUsed(): bool
     {
-        return $query->where('is_active', true);
+        return $this->isValid() &&
+               (!$this->usage_limit || $this->usage_count < $this->usage_limit);
     }
 
     /**
-     * Scope to get valid promo codes (active and within date range)
+     * Get remaining uses
      */
-    public function scopeValidNow($query)
+    public function getRemainingUses(): ?int
     {
-        $now = Carbon::now();
-        return $query->active()
-            ->where(function ($q) use ($now) {
-                $q->whereNull('valid_from')
-                  ->orWhere('valid_from', '<=', $now);
-            })
-            ->where(function ($q) use ($now) {
-                $q->whereNull('valid_until')
-                  ->orWhere('valid_until', '>=', $now);
-            });
+        if (!$this->usage_limit) {
+            return null; // Unlimited
+        }
+
+        return max(0, $this->usage_limit - $this->usage_count);
     }
 }

@@ -3,18 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Services\PaymentService;
 use App\Services\PaymentGatewayManager;
 use Exception;
-use Notification;
 use App\Models\Booking;
 use App\Models\Payment as PaymentModel;
-use App\Models\PromoCode;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\BookingController;
-use Carbon\Carbon;
 
+/**
+ * PaymentController - Thin HTTP layer
+ *
+ * Delegates all business logic to PaymentService
+ * Handles only HTTP concerns: requests, responses
+ */
 class PaymentController extends Controller
 {
+    protected PaymentService $paymentService;
+
+    public function __construct(PaymentService $paymentService)
+    {
+        $this->paymentService = $paymentService;
+    }
+    /**
+     * Create payment order
+     */
     public function createOrder(Request $request, PaymentGatewayManager $gatewayManager)
     {
         $amount = floatval($request->amount ?? 500);
@@ -22,247 +34,45 @@ class PaymentController extends Controller
         $promoCode = $request->promo_code ?? null;
 
         try {
-            // Check if amount is 0 (100% discount) - skip payment gateway
+            // Free booking - use service
             if ($amount == 0 && $bookingId) {
-                return $this->processFreeBooking($bookingId, $promoCode);
+                $result = $this->paymentService->processFreeBooking($bookingId, $promoCode);
+                return response()->json($result);
             }
 
-            $gateway = $gatewayManager->getActiveGateway();
-            $gatewayName = $gateway->getName();
-
-            $paymentData = [
-                'amount' => $amount,
-                'receipt' => 'order_' . time(),
-                'booking_id' => $bookingId,
-                'product_info' => $request->product_info ?? 'Booking Payment',
-                'first_name' => $request->first_name ?? '',
-                'email' => $request->email ?? '',
-                'txn_id' => 'txn_' . time() . rand(1000, 9999),
-                'phone' => $request->phone ?? '',
-                'promo_code' => $promoCode,
-            ];
-
-            $response = $gateway->initiatePayment($paymentData);
-
-            // Add gateway name to response for frontend to determine which handler to use
-            $response['gateway'] = strtolower($gatewayName);
+            // Create payment order
+            $response = $this->paymentService->createPaymentOrder(
+                $amount,
+                $bookingId,
+                $promoCode,
+                $request->all()
+            );
 
             return response()->json($response);
+
         } catch (Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
 
     /**
-     * Process free bookings (0 amount after discount) without payment gateway
+     * Verify payment and confirm booking
      */
-    private function processFreeBooking($bookingId, $promoCode = null)
-    {
-        try {
-            $booking = Booking::with(['event.user'])->find($bookingId);
-
-            if (!$booking) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Booking not found'
-                ], 404);
-            }
-
-            // Check if payment already exists
-            $existingPayment = PaymentModel::where('booking_id', $booking->id)
-                ->where('status', 'success')
-                ->exists();
-
-            if ($existingPayment) {
-                return response()->json([
-                    'success' => true,
-                    'free_booking' => true,
-                    'already_processed' => true,
-                    'booking_id' => $bookingId
-                ]);
-            }
-
-            // Create payment record with 0 amount (no actual payment made)
-            PaymentModel::create([
-                'user_id' => $booking->user_id,
-                'booking_id' => $booking->id,
-                'provider' => 'free',
-                'transaction_id' => 'FREE_' . time() . rand(1000, 9999),
-                'status' => 'success',
-                'amount' => 0,
-                'currency' => 'INR',
-                'promo_code' => $promoCode,
-                'metadata' => json_encode(['type' => 'free_booking', 'promo_code' => $promoCode]),
-            ]);
-
-            $booking->update(['status' => 'confirmed']);
-
-            // Mark follow-up invite as accepted if this is a follow-up booking
-            if ($booking->is_followup && $booking->followUpInvite) {
-                $booking->followUpInvite->update(['status' => 'accepted']);
-            }
-
-            // Create Google Calendar event
-            try {
-                $bookingController = app(BookingController::class);
-                $calendarEvent = $bookingController->createGoogleEvent(
-                    $booking->event,
-                    $booking->booked_at_date,
-                    $booking->booked_at_time,
-                    $booking->booker_name,
-                    $booking->booker_email
-                );
-
-                $booking->update([
-                    'calendar_id' => $calendarEvent['calendar_id'] ?? null,
-                    'calendar_link' => $calendarEvent['calendar_link'] ?? null,
-                    'meet_link' => $calendarEvent['meet_link'] ?? null,
-                    'status' => 'confirmed',
-                ]);
-
-                // Refresh booking with relationships for notification
-                $booking->refresh();
-                $booking->load(['event.user']);
-
-                // Notify owner and booker
-                $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                Notification::route('mail', [$booking->booker_email => $booking->booker_name])
-                    ->notify(new \App\Notifications\BookingCreatedNotification($booking));
-
-            } catch (Exception $e) {
-                Log::error('Free booking - Google event creation failed: ' . $e->getMessage(), [
-                    'booking_id' => $bookingId,
-                    'exception' => $e
-                ]);
-                // Don't fail the booking confirmation if calendar event creation fails
-            }
-
-            Log::info('Free booking processed successfully', [
-                'booking_id' => $bookingId,
-                'promo_code' => $promoCode
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'free_booking' => true,
-                'booking_id' => $bookingId,
-                'message' => 'Booking confirmed successfully!'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Free booking processing failed: ' . $e->getMessage(), [
-                'booking_id' => $bookingId,
-                'exception' => $e
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
     public function verifyPayment(Request $request, PaymentGatewayManager $gatewayManager)
     {
         $bookingId = $request->booking_id ?? null;
-        $signatureStatus = false;
-
-        if ($bookingId) {
-            $already = PaymentModel::where('booking_id', $bookingId)->where('status', 'success')->exists();
-            if ($already) {
-                return response()->json(['success' => true, 'message' => 'already_processed']);
-            }
-        }
 
         try {
-            $gateway = $gatewayManager->getActiveGateway();
-            $gatewayName = $gateway->getName();
-
-            // Verify payment signature with the gateway
-            $signatureStatus = $gateway->verifyPayment($request->all());
-
-            if ($signatureStatus && $bookingId) {
-                $booking = Booking::with(['event.user'])->find($bookingId);
-                if (!$booking) {
-                    Log::error('Booking not found for ID: ' . $bookingId);
-                    return response()->json(['success' => false, 'message' => 'booking_not_found'], 404);
-                }
-
-                $already = PaymentModel::where('booking_id', $booking->id)->where('status', 'success')->exists();
-                if ($already) {
-                    return response()->json(['success' => true, 'message' => 'already_processed']);
-                }
-
-                try {
-                    // Extract transaction ID based on gateway
-                    // Razorpay: razorpay_payment_id, PayU: mihpayid
-                    $transactionId = $request->razorpay_payment_id ?? $request->mihpayid ?? $request->order_id ?? null;
-
-                    if (!$transactionId) {
-                        Log::warning('No transaction ID found in verify-payment request for booking: ' . $bookingId);
-                    }
-
-                    PaymentModel::create([
-                        'user_id' => $booking->user_id,
-                        'booking_id' => $booking->id,
-                        'provider' => $gatewayName,
-                        'transaction_id' => $transactionId,
-                        'status' => 'success',
-                        'amount' => $request->amount ?? 0,
-                        'currency' => 'INR',
-                        'promo_code' => $request->promo_code ?? null,
-                        'metadata' => json_encode($request->all()),
-                    ]);
-
-                    $booking->update(['status' => 'confirmed']);
-
-                    // Mark follow-up invite as accepted if this is a follow-up booking
-                    if ($booking->is_followup && $booking->followUpInvite) {
-                        $booking->followUpInvite->update(['status' => 'accepted']);
-                    }
-
-                    // Create google calendar event and update booking
-                    try {
-                        $bookingController = app(BookingController::class);
-                        $calendarEvent = $bookingController->createGoogleEvent(
-                            $booking->event,
-                            $booking->booked_at_date,
-                            $booking->booked_at_time,
-                            $booking->booker_name,
-                            $booking->booker_email
-                        );
-
-                        $booking->update([
-                            'calendar_id' => $calendarEvent['calendar_id'] ?? null,
-                            'calendar_link' => $calendarEvent['calendar_link'] ?? null,
-                            'meet_link' => $calendarEvent['meet_link'] ?? null,
-                            'status' => 'confirmed',
-                        ]);
-
-                        // Refresh booking with relationships for notification
-                        $booking->refresh();
-                        $booking->load(['event.user']);
-
-                        // Notify owner and booker
-                        $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                        Notification::route('mail', [$booking->booker_email => $booking->booker_name])
-                            ->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                    } catch (Exception $e) {
-                        Log::error('Finalize booking google event failed: ' . $e->getMessage(), ['booking_id' => $bookingId, 'exception' => $e]);
-                        // Don't fail the payment verification if calendar event creation fails
-                    }
-                } catch (Exception $e) {
-                    Log::error('Persist payment failed: ' . $e->getMessage(), ['booking_id' => $bookingId, 'exception' => $e]);
-                    return response()->json(['success' => false, 'message' => 'payment_persist_failed', 'error' => $e->getMessage()], 500);
-                }
-            }
+            $result = $this->paymentService->verifyAndConfirmPayment($request->all(), $bookingId);
+            return response()->json($result);
 
         } catch (Exception $e) {
-            Log::error('verifyPayment error: ' . $e->getMessage(), ['booking_id' => $bookingId, 'exception' => $e]);
-            $signatureStatus = false;
+            Log::error('verifyPayment error: ' . $e->getMessage(), [
+                'booking_id' => $bookingId,
+                'exception' => $e
+            ]);
+            return response()->json(['success' => false]);
         }
-
-        return response()->json(['success' => $signatureStatus]);
     }
 
     public function showPaymentPage(Request $request, $booking)
@@ -291,9 +101,11 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * Handle PayU payment callback
+     */
     public function payuCallback(Request $request, PaymentGatewayManager $gatewayManager)
     {
-        // Extract booking ID from UDF1
         $bookingId = $request->udf1 ?? null;
         $status = $request->status ?? null;
 
@@ -315,9 +127,9 @@ class PaymentController extends Controller
             return redirect()->route('payment.failed')->with('error', 'Booking not found');
         }
 
-        // Check if payment already processed
+        // Check if already processed
         $existingPayment = PaymentModel::where('booking_id', $booking->id)
-            ->where('status', 'success')
+            ->where('status', Payment::STATUS_COMPLETED)
             ->exists();
 
         if ($existingPayment) {
@@ -325,109 +137,18 @@ class PaymentController extends Controller
             return redirect()->route('payment.thankyou', ['booking' => $bookingId]);
         }
 
-        // Get PayU gateway and verify signature
         try {
-            $gateway = $gatewayManager->getGateway('payu');
-            $signatureStatus = $gateway->verifyPayment($request->all());
+            $result = $this->paymentService->verifyAndConfirmPayment($request->all(), $bookingId);
 
-            if ($signatureStatus && strtolower($status) === 'success') {
-                // Payment successful - process it
-                try {
-                    $booking->load(['event.user']);
-
-                    // Update or create payment record
-                    PaymentModel::updateOrCreate(
-                        ['booking_id' => $booking->id],
-                        [
-                            'user_id' => $booking->user_id,
-                            'provider' => 'payu',
-                            'transaction_id' => $request->mihpayid ?? null, // Store mihpayid for refunds
-                            'status' => 'success',
-                            'amount' => $request->amount ?? 0,
-                            'currency' => 'INR',
-                            'promo_code' => $request->udf2 ?? null,
-                            'metadata' => json_encode($request->all()),
-                        ]
-                    );
-
-                    $booking->update(['status' => 'confirmed']);
-
-                    // Mark follow-up invite as accepted if this is a follow-up booking
-                    if ($booking->is_followup && $booking->followUpInvite) {
-                        $booking->followUpInvite->update(['status' => 'accepted']);
-                    }
-
-                    // Create google calendar event and update booking
-                    try {
-                        $bookingController = app(BookingController::class);
-                        $calendarEvent = $bookingController->createGoogleEvent(
-                            $booking->event,
-                            $booking->booked_at_date,
-                            $booking->booked_at_time,
-                            $booking->booker_name,
-                            $booking->booker_email
-                        );
-
-                        $booking->update([
-                            'calendar_id' => $calendarEvent['calendar_id'] ?? null,
-                            'calendar_link' => $calendarEvent['calendar_link'] ?? null,
-                            'meet_link' => $calendarEvent['meet_link'] ?? null,
-                            'status' => 'confirmed',
-                        ]);
-
-                        // Refresh booking with relationships for notification
-                        $booking->refresh();
-                        $booking->load(['event.user']);
-
-                        // Notify owner and booker
-                        $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                        Notification::route('mail', [$booking->booker_email => $booking->booker_name])
-                            ->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                    } catch (Exception $e) {
-                        Log::error('PayU callback - Google event creation failed: ' . $e->getMessage(), [
-                            'booking_id' => $bookingId,
-                            'exception' => $e
-                        ]);
-                        // Don't fail the payment if calendar event creation fails
-                    }
-
-                    Log::info('PayU callback: Payment processed successfully', ['booking_id' => $bookingId]);
-                    return redirect()->route('payment.thankyou', ['booking' => $bookingId]);
-
-                } catch (Exception $e) {
-                    Log::error('PayU callback: Payment processing failed: ' . $e->getMessage(), [
-                        'booking_id' => $bookingId,
-                        'exception' => $e
-                    ]);
-                    return redirect()->route('payment.failed', ['booking' => $bookingId])
-                        ->with('error', 'Payment verification successful but processing failed');
-                }
+            if ($result['success'] && strtolower($status) === 'success') {
+                Log::info('PayU callback: Payment processed successfully', ['booking_id' => $bookingId]);
+                return redirect()->route('payment.thankyou', ['booking' => $bookingId]);
             } else {
-                // Payment failed or verification failed
                 Log::warning('PayU callback: Payment failed or verification failed', [
                     'booking_id' => $bookingId,
                     'status' => $status,
-                    'verification' => $signatureStatus,
                     'message' => $request->error_Message ?? $request->field9 ?? 'Unknown error'
                 ]);
-
-                // Create failed payment record
-                try {
-                    PaymentModel::updateOrCreate(
-                        ['booking_id' => $booking->id],
-                        [
-                            'user_id' => $booking->user_id,
-                            'provider' => 'payu',
-                            'transaction_id' => $request->mihpayid ?? null,
-                            'status' => 'failed',
-                            'amount' => $request->amount ?? 0,
-                            'currency' => 'INR',
-                            'metadata' => json_encode($request->all()),
-                        ]
-                    );
-                } catch (Exception $e) {
-                    Log::error('PayU callback: Failed to record failed payment', ['exception' => $e]);
-                }
 
                 return redirect()->route('payment.failed', ['booking' => $bookingId])
                     ->with('error', $request->error_Message ?? $request->field9 ?? 'Payment verification failed');
@@ -457,6 +178,9 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * Validate promo code
+     */
     public function validatePromoCode(Request $request)
     {
         $request->validate([
@@ -465,101 +189,20 @@ class PaymentController extends Controller
             'amount' => 'required|numeric|min:0'
         ]);
 
-        $code = strtoupper($request->promo_code);
-        $bookingId = $request->booking_id;
-        $originalAmount = floatval($request->amount);
+        try {
+            $result = $this->paymentService->validatePromoCode(
+                $request->promo_code,
+                $request->booking_id,
+                floatval($request->amount)
+            );
 
-        // Find the promo code
-        $promoCode = PromoCode::where('code', $code)->first();
+            return response()->json($result);
 
-        if (!$promoCode) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid promo code'
-            ], 404);
+                'message' => $e->getMessage()
+            ], $e->getCode() ?: 400);
         }
-
-        // Check if active
-        if (!$promoCode->is_active) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This promo code is no longer active'
-            ], 400);
-        }
-
-        // Check validity dates
-        $now = Carbon::now();
-
-        if ($promoCode->valid_from && $now->lt(Carbon::parse($promoCode->valid_from))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This promo code is not yet valid'
-            ], 400);
-        }
-
-        if ($promoCode->valid_until && $now->gt(Carbon::parse($promoCode->valid_until))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This promo code has expired'
-            ], 400);
-        }
-
-        // Check minimum booking amount
-        if ($promoCode->min_booking_amount && $originalAmount < $promoCode->min_booking_amount) {
-            return response()->json([
-                'success' => false,
-                'message' => "Minimum booking amount of ₹{$promoCode->min_booking_amount} required"
-            ], 400);
-        }
-
-        // Check usage limit
-        if ($promoCode->usage_limit) {
-            $usageCount = PaymentModel::where('promo_code', $code)
-                ->where('status', 'success')
-                ->count();
-
-            if ($usageCount >= $promoCode->usage_limit) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This promo code has reached its usage limit'
-                ], 400);
-            }
-        }
-
-        // Check if this booking already used a promo code
-        $booking = Booking::findOrFail($bookingId);
-        if ($booking->payment && $booking->payment->promo_code) {
-            return response()->json([
-                'success' => false,
-                'message' => 'A promo code has already been applied to this booking'
-            ], 400);
-        }
-
-        // Calculate discount
-        $discountValue = 0;
-
-        if ($promoCode->discount_type === 'percentage') {
-            $discountValue = ($originalAmount * $promoCode->discount_value) / 100;
-
-            // Apply max discount cap if set
-            if ($promoCode->max_discount_amount && $discountValue > $promoCode->max_discount_amount) {
-                $discountValue = $promoCode->max_discount_amount;
-            }
-        } else {
-            // Fixed discount
-            $discountValue = min($promoCode->discount_value, $originalAmount);
-        }
-
-        $discountedAmount = max(0, $originalAmount - $discountValue);
-
-        return response()->json([
-            'success' => true,
-            'message' => "Promo code applied successfully! You saved ₹{$discountValue}",
-            'promo_code' => $code,
-            'discount_type' => $promoCode->discount_type,
-            'discount_value' => round($discountValue, 2),
-            'original_amount' => round($originalAmount, 2),
-            'discounted_amount' => round($discountedAmount, 2)
-        ]);
     }
 }

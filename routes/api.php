@@ -25,7 +25,7 @@ Route::get('/events/{event:slug}/reschedule-data', function($slug) {
 
     // Only confirmed bookings occupy slots
     $confirmedBookings = $event->bookings()
-        ->where('status', 'confirmed')
+        ->confirmed()
         ->get()
         ->groupBy('booked_at_date');
 

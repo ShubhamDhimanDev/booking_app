@@ -18,6 +18,18 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        \App\Events\BookingCreated::class => [
+            \App\Listeners\HandleBookingCreated::class,
+        ],
+        \App\Events\BookingCancelled::class => [
+            \App\Listeners\HandleBookingCancelled::class,
+        ],
+        \App\Events\BookingRescheduled::class => [
+            \App\Listeners\HandleBookingRescheduled::class,
+        ],
+        \App\Events\PaymentProcessed::class => [
+            \App\Listeners\HandlePaymentProcessed::class,
+        ],
     ];
 
     /**

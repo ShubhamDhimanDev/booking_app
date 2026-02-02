@@ -84,7 +84,7 @@ class ProcessRefundJob implements ShouldQueue
             if ($result['success']) {
                 // Update refund record with success
                 $this->refund->update([
-                    'status' => 'completed',
+                    'status' => Refund::STATUS_COMPLETED,
                     'gateway_refund_id' => $result['refund_id'] ?? null,
                     'gateway_charges' => $gatewayCharges,
                     'net_refund_amount' => $netRefundAmount,
@@ -94,7 +94,7 @@ class ProcessRefundJob implements ShouldQueue
 
                 // Update booking refund status
                 $booking->update([
-                    'refund_status' => 'completed',
+                    'refund_status' => Refund::STATUS_COMPLETED,
                     'refund_amount' => $netRefundAmount,
                 ]);
 
@@ -116,7 +116,7 @@ class ProcessRefundJob implements ShouldQueue
 
                 // Update booking refund status
                 $booking->update([
-                    'refund_status' => 'failed',
+                    'refund_status' => Refund::STATUS_FAILED,
                 ]);
 
                 Log::error("Refund failed", [
@@ -144,7 +144,7 @@ class ProcessRefundJob implements ShouldQueue
             // Update booking refund status
             if ($this->refund->booking) {
                 $this->refund->booking->update([
-                    'refund_status' => 'failed',
+                    'refund_status' => Refund::STATUS_FAILED,
                 ]);
             }
 
@@ -180,7 +180,7 @@ class ProcessRefundJob implements ShouldQueue
         // Update booking refund status
         if ($this->refund->booking) {
             $this->refund->booking->update([
-                'refund_status' => 'failed',
+                'refund_status' => Refund::STATUS_FAILED,
             ]);
         }
     }

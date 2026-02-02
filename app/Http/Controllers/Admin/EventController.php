@@ -6,14 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\LinkedWithGoogleMiddleware;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
-use App\Models\Booking;
 use App\Models\Event;
-use Carbon\Carbon;
+use App\Services\BookingService;
 
+/**
+ * EventController
+ *
+ * Delegates business logic to BookingService where appropriate
+ */
 class EventController extends Controller
 {
-    public function __construct()
+    protected BookingService $bookingService;
+
+    public function __construct(BookingService $bookingService)
     {
+        $this->bookingService = $bookingService;
         $this->middleware('role:admin|owner')->except('showPublic');
         $this->middleware(LinkedWithGoogleMiddleware::class)->except('showPublic');
     }
@@ -133,77 +140,23 @@ class EventController extends Controller
      */
     public function showPublic(Event $event)
     {
-        $event->load('user')->append('timeslots');
+        $event->load('user');
 
-        // Load only confirmed bookings; pending should stay available for others to book
-        $confirmedBookings = $event->bookings()->where('status', 'confirmed')->get()->groupBy(function ($item) {
-            return $item->booked_at_date;
-        });
-
-        // Build an array of booked slots per date for easy lookup on the frontend
-        $bookedSlots = [];
-        foreach ($confirmedBookings as $date => $collection) {
-            $bookedSlots[$date] = $collection->pluck('booked_at_time')->values()->all();
-        }
-
-        // NEW: Also get all confirmed bookings from OTHER events by the same owner
-        $ownerOtherBookings = Booking::whereHas('event', function ($q) use ($event) {
-            $q->where('user_id', $event->user_id)
-              ->where('id', '!=', $event->id); // exclude current event
-        })
-        ->where('status', 'confirmed')
-        ->get()
-        ->groupBy('booked_at_date');
-
-        // Merge owner's other bookings into bookedSlots
-        foreach ($ownerOtherBookings as $date => $collection) {
-            $times = $collection->pluck('booked_at_time')->values()->all();
-            if (isset($bookedSlots[$date])) {
-                $bookedSlots[$date] = array_unique(array_merge($bookedSlots[$date], $times));
-            } else {
-                $bookedSlots[$date] = $times;
-            }
-        }
-
-        // Build availableSlots (dates that have at least one free timeslot)
-        $startDate = Carbon::parse($event->available_from_date);
-        $endDate = Carbon::parse($event->available_to_date);
-        $availableSlots = [];
-
-        for ($date = $startDate->copy(); $date->lessThanOrEqualTo($endDate); $date->addDay()) {
-            $dateStr = $date->toDateString();
-            $free = [];
-
-            foreach ($event->timeslots as $ts) {
-                $startTime = $ts['start'];
-                $isBooked = isset($bookedSlots[$dateStr]) && in_array($startTime, $bookedSlots[$dateStr]);
-                if (! $isBooked) {
-                    $free[] = $ts;
-                }
-            }
-
-            // ensure timeslots are ordered early -> late
-            usort($free, function ($a, $b) {
-                $ta = strtotime($a['start']);
-                $tb = strtotime($b['start']);
-
-                return $ta <=> $tb;
-            });
-
-            if (count($free) > 0) {
-                $availableSlots[] = [
-                    'date' => $dateStr,
-                    'timeslots' => $free,
-                ];
-            }
-        }
+        // Get available slots using service (cached for 5 minutes)
+        $slots = $this->bookingService->getAvailableSlots($event);
 
         // Get active payment gateway config for frontend
         $paymentGatewayManager = app(\App\Services\PaymentGatewayManager::class);
         $gatewayConfig = $paymentGatewayManager->getActiveGatewayConfig();
         $activeGateway = $gatewayConfig['name'] ?? 'razorpay';
 
-        return view('bookings.slot-selection', compact('event', 'availableSlots', 'bookedSlots', 'activeGateway', 'gatewayConfig'));
+        return view('bookings.slot-selection', [
+            'event' => $event,
+            'availableSlots' => $slots['availableSlots'],
+            'bookedSlots' => $slots['bookedSlots'],
+            'activeGateway' => $activeGateway,
+            'gatewayConfig' => $gatewayConfig,
+        ]);
     }
 
     /**
@@ -315,11 +268,11 @@ class EventController extends Controller
     {
         $this->authorize('delete', $event);
 
-        if ($event->delete()) {
-            return back()->with([
-                'alert_type' => 'success',
-                'alert_message' => 'Event deleted!',
-            ]);
-        }
+        $event->delete();
+
+        return back()->with([
+            'alert_type' => 'success',
+            'alert_message' => 'Event deleted!',
+        ]);
     }
 }
