@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
  * Payment Model - SaaS Ready
  *
  * Recommended Database Indexes:
- * - UNIQUE Index: (transaction_id)
+ * - Index: (transaction_id)
  * - Index: (booking_id)
  * - Index: (user_id, status)
  * - Index: (status, created_at)
@@ -19,10 +19,11 @@ use Illuminate\Database\Eloquent\Builder;
  * @property int $booking_id
  * @property int|null $user_id
  * @property string $transaction_id
- * @property float $amount
+ * @property int $amount Amount in smallest currency unit (paise for INR)
  * @property string $currency
  * @property string $status
- * @property string $gateway
+ * @property string $provider Payment provider (razorpay, etc)
+ * @property string|null $promo_code
  * @property array|null $metadata
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
@@ -41,22 +42,16 @@ class Payment extends Model
         'amount',
         'currency',
         'status',
-        'gateway',
-        'gateway_fee',
-        'net_amount',
+        'provider',
+        'promo_code',
         'metadata',
-        'razorpay_payment_id',
-        'razorpay_order_id',
-        'razorpay_signature',
     ];
 
     /**
      * Attributes that should be cast
      */
     protected $casts = [
-        'amount' => 'decimal:2',
-        'gateway_fee' => 'decimal:2',
-        'net_amount' => 'decimal:2',
+        'amount' => 'integer',
         'metadata' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -70,9 +65,9 @@ class Payment extends Model
     public const STATUS_REFUNDED = 'refunded';
     public const STATUS_PARTIALLY_REFUNDED = 'partially_refunded';
 
-    public const GATEWAY_RAZORPAY = 'razorpay';
-    public const GATEWAY_STRIPE = 'stripe';
-    public const GATEWAY_PAYPAL = 'paypal';
+    public const PROVIDER_RAZORPAY = 'razorpay';
+    public const PROVIDER_STRIPE = 'stripe';
+    public const PROVIDER_PAYPAL = 'paypal';
 
     // ==================== RELATIONSHIPS ====================
 

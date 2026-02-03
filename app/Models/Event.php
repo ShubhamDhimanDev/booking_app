@@ -13,9 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
  * Event Model - SaaS Ready
  *
  * Recommended Database Indexes:
- * - Index: (user_id, is_active)
+ * - Index: (user_id)
  * - Index: (slug) UNIQUE
- * - Index: (is_active, is_public)
  * - Index: (created_at)
  *
  * NOTE: This model contains heavy business logic that should be extracted to services:
@@ -25,19 +24,27 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * @property int $id
  * @property int $user_id
- * @property string $name
+ * @property string $title
  * @property string $slug
  * @property string|null $description
- * @property int $duration_minutes
+ * @property int $duration Duration in minutes
  * @property float|null $price
+ * @property \Carbon\Carbon $available_from_date
+ * @property \Carbon\Carbon $available_to_date
  * @property array|null $available_week_days
  * @property array|null $custom_timeslots
  * @property array|null $refund_rules
  * @property bool $refund_enabled
+ * @property string $refund_policy_type
+ * @property int $min_cancellation_hours
  * @property bool $deduct_gateway_charges
- * @property bool $is_active
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
+ * @property \Carbon\Carbon|null $deleted_at
+ *
+ * Virtual/Accessor Properties (for backward compatibility):
+ * @property string $name Alias for title
+ * @property int $duration_minutes Alias for duration
  */
 class Event extends Model
 {
@@ -48,47 +55,36 @@ class Event extends Model
    */
   protected $fillable = [
     'user_id',
-    'name',
+    'title',
     'slug',
     'description',
-    'duration_minutes',
+    'duration',
     'price',
-    'currency',
-    'location',
-    'location_type',
-    'meeting_url',
+    'available_from_date',
+    'available_to_date',
     'available_week_days',
     'custom_timeslots',
-    'buffer_time_before',
-    'buffer_time_after',
-    'min_notice_hours',
-    'max_bookings_per_day',
-    'questions',
-    'confirmation_message',
-    'is_active',
-    'is_public',
-    'requires_confirmation',
     'refund_enabled',
+    'refund_policy_type',
+    'min_cancellation_hours',
     'refund_rules',
     'deduct_gateway_charges',
-    'color',
-    'category',
   ];
 
   /**
    * Attributes that should be cast
    */
   protected $casts = [
+    'available_from_date' => 'date',
+    'available_to_date' => 'date',
     'available_week_days' => 'array',
     'custom_timeslots' => 'array',
     'refund_rules' => 'array',
-    'questions' => 'array',
     'refund_enabled' => 'boolean',
     'deduct_gateway_charges' => 'boolean',
-    'is_active' => 'boolean',
-    'is_public' => 'boolean',
-    'requires_confirmation' => 'boolean',
     'price' => 'decimal:2',
+    'duration' => 'integer',
+    'min_cancellation_hours' => 'integer',
     'created_at' => 'datetime',
     'updated_at' => 'datetime',
     'deleted_at' => 'datetime',
@@ -98,6 +94,32 @@ class Event extends Model
    * Count bookings by default
    */
   protected $withCount = ['bookings'];
+
+  // ==================== ATTRIBUTES/ACCESSORS ====================
+
+  /**
+   * Virtual attribute for name (maps to title)
+   * Provides backward compatibility
+   */
+  protected function name(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->title,
+      set: fn ($value) => ['title' => $value],
+    );
+  }
+
+  /**
+   * Virtual attribute for duration_minutes (maps to duration)
+   * Provides backward compatibility
+   */
+  protected function durationMinutes(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->duration,
+      set: fn ($value) => ['duration' => $value],
+    );
+  }
 
   // ==================== RELATIONSHIPS ====================
 
@@ -136,22 +158,6 @@ class Event extends Model
   // ==================== QUERY SCOPES ====================
 
   /**
-   * Scope: Filter active events
-   */
-  public function scopeActive(Builder $query): Builder
-  {
-    return $query->where('is_active', true);
-  }
-
-  /**
-   * Scope: Filter public events
-   */
-  public function scopePublic(Builder $query): Builder
-  {
-    return $query->where('is_public', true);
-  }
-
-  /**
    * Scope: Filter by user
    */
   public function scopeForUser(Builder $query, int $userId): Builder
@@ -176,12 +182,12 @@ class Event extends Model
   }
 
   /**
-   * Scope: Search events by name or description
+   * Scope: Search events by title or description
    */
   public function scopeSearch(Builder $query, string $search): Builder
   {
     return $query->where(function($q) use ($search) {
-      $q->where('name', 'LIKE', "%{$search}%")
+      $q->where('title', 'LIKE', "%{$search}%")
         ->orWhere('description', 'LIKE', "%{$search}%")
         ->orWhere('slug', 'LIKE', "%{$search}%");
     });

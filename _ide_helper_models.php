@@ -12,26 +12,36 @@
 
 namespace App\Models{
 /**
- * App\Models\Booking
+ * Booking Model - SaaS Ready
+ * 
+ * Recommended Database Indexes:
+ * - Index: (event_id, scheduled_at) - for event bookings list
+ * - Index: (user_id, status) - for user bookings with status filter
+ * - Index: (status, scheduled_at) - for dashboard queries
+ * - Index: (confirmation_token) - unique for confirmations
+ * - Index: (email, status) - for guest bookings lookup
  *
  * @property int $id
+ * @property int $event_id
  * @property int|null $user_id
+ * @property string $email
+ * @property string $name
+ * @property string|null $phone
+ * @property string $status
+ * @property \Carbon\Carbon $scheduled_at
+ * @property \Carbon\Carbon|null $cancelled_at
+ * @property string|null $cancellation_reason
  * @property int $is_followup
  * @property string $booker_name
  * @property string $booker_email
- * @property string|null $phone
  * @property string|null $calendar_id
  * @property string|null $calendar_link
  * @property string|null $meet_link
- * @property string $status
- * @property \Illuminate\Support\Carbon|null $cancelled_at
  * @property int|null $cancelled_by
- * @property string|null $cancellation_reason
  * @property string $refund_status
  * @property string $refund_amount
- * @property string $booked_at_date
+ * @property \Illuminate\Support\Carbon $booked_at_date
  * @property string $booked_at_time
- * @property int $event_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -43,11 +53,21 @@ namespace App\Models{
  * @property-read \App\Models\Payment|null $payment
  * @property-read \App\Models\Refund|null $refund
  * @property-read \App\Models\BookingTracking|null $tracking
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking betweenDates($startDate, $endDate)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking cancelled()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking confirmed()
  * @method static \Database\Factories\BookingFactory factory(...$parameters)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking forEvent(int $eventId)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking forUser(int $userId)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newQuery()
  * @method static \Illuminate\Database\Query\Builder|Booking onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking past()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking pending()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking refundable()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking search(string $search)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking upcoming()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBookedAtDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBookedAtTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBookerEmail($value)
@@ -136,26 +156,41 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * App\Models\Event
+ * Event Model - SaaS Ready
+ * 
+ * Recommended Database Indexes:
+ * - Index: (user_id, is_active)
+ * - Index: (slug) UNIQUE
+ * - Index: (is_active, is_public)
+ * - Index: (created_at)
+ * 
+ * NOTE: This model contains heavy business logic that should be extracted to services:
+ * - calculateRefundAmount() → RefundService
+ * - canBeCancelled() → BookingService
+ * - Timeslot generation → EventService with caching
  *
  * @property int $id
- * @property string $title
- * @property string|null $description
+ * @property int $user_id
+ * @property string $name
  * @property string $slug
- * @property string $price
- * @property bool $refund_enabled
- * @property string $refund_policy_type
- * @property int $min_cancellation_hours Minimum hours before event to cancel
- * @property array|null $refund_rules Custom refund rules: [{hours: 48, percentage: 100}]
- * @property bool $deduct_gateway_charges
- * @property int $duration
- * @property string $available_from_date
- * @property string $available_to_date
+ * @property string|null $description
+ * @property int $duration_minutes
+ * @property float|null $price
  * @property array|null $available_week_days
  * @property array|null $custom_timeslots
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property int $user_id
+ * @property array|null $refund_rules
+ * @property bool $refund_enabled
+ * @property bool $deduct_gateway_charges
+ * @property bool $is_active
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property string $title
+ * @property string $refund_policy_type
+ * @property int $min_cancellation_hours Minimum hours before event to cancel
+ * @property int $duration
+ * @property \Illuminate\Support\Carbon $available_from_date
+ * @property \Illuminate\Support\Carbon $available_to_date
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Booking[] $bookings
  * @property-read int|null $bookings_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\EventExclusion[] $exclusions
@@ -164,16 +199,24 @@ namespace App\Models{
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\EventReminder[] $reminders
  * @property-read int|null $reminders_count
  * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder|Event active()
  * @method static \Database\Factories\EventFactory factory(...$parameters)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event forUser(int $userId)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event free()
  * @method static \Illuminate\Database\Eloquent\Builder|Event newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Event newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Event onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Event paid()
+ * @method static \Illuminate\Database\Eloquent\Builder|Event public()
  * @method static \Illuminate\Database\Eloquent\Builder|Event query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Event search(string $search)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereAvailableFromDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereAvailableToDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereAvailableWeekDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereCustomTimeslots($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereDeductGatewayCharges($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereDuration($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereId($value)
@@ -186,6 +229,8 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereUserId($value)
+ * @method static \Illuminate\Database\Query\Builder|Event withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Event withoutTrashed()
  */
 	class Event extends \Eloquent {}
 }
@@ -218,16 +263,24 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * App\Models\EventReminder
+ * EventReminder Model - SaaS Ready
+ * 
+ * Recommended Database Indexes:
+ * - Index: (event_id, enabled)
+ * - Index: (minutes_before)
  *
  * @property int $id
  * @property int $event_id
+ * @property int $minutes_before
+ * @property bool $enabled
+ * @property string|null $custom_message
  * @property int $offset_minutes
  * @property string|null $name
- * @property bool $enabled
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Event $event
+ * @method static \Illuminate\Database\Eloquent\Builder|EventReminder byTime()
+ * @method static \Illuminate\Database\Eloquent\Builder|EventReminder enabled()
  * @method static \Illuminate\Database\Eloquent\Builder|EventReminder newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EventReminder newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EventReminder query()
@@ -244,26 +297,37 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * App\Models\FollowUpInvite
+ * FollowUpInvite Model - SaaS Ready
+ * 
+ * Recommended Database Indexes:
+ * - UNIQUE Index: (token)
+ * - Index: (booking_id)
+ * - Index: (event_id)
+ * - Index: (status, created_at)
  *
  * @property int $id
  * @property int $booking_id
  * @property int $event_id
+ * @property string $token
+ * @property string $recipient_email
+ * @property string|null $recipient_name
+ * @property string $status
+ * @property \Carbon\Carbon|null $expires_at
+ * @property \Carbon\Carbon|null $sent_at
  * @property int $user_id
  * @property string $custom_price
  * @property bool $is_normal_invite
- * @property string $token
- * @property string $status
- * @property \Illuminate\Support\Carbon|null $expires_at
- * @property \Illuminate\Support\Carbon|null $sent_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Booking $booking
  * @property-read \App\Models\Event $event
- * @property-read \App\Models\Booking|null $followUpBooking
- * @property-read \App\Models\User $user
+ * @property-read \App\Models\User|null $inviter
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite accepted()
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite active()
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite expired()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite pending()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite query()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereBookingId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite whereCreatedAt($value)
@@ -285,34 +349,67 @@ namespace App\Models{
 /**
  * App\Models\HelpRequest
  *
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $subject
+ * @property string $message
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest query()
+ * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereMessage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereSubject($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereUpdatedAt($value)
  */
 	class HelpRequest extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Payment
+ * Payment Model - SaaS Ready
+ * 
+ * Recommended Database Indexes:
+ * - UNIQUE Index: (transaction_id)
+ * - Index: (booking_id)
+ * - Index: (user_id, status)
+ * - Index: (status, created_at)
  *
  * @property int $id
+ * @property int $booking_id
  * @property int|null $user_id
- * @property int|null $booking_id
- * @property string $provider
- * @property string|null $transaction_id
- * @property int $amount
+ * @property string $transaction_id
+ * @property float $amount
  * @property string $currency
  * @property string $status
- * @property string|null $promo_code
+ * @property string $gateway
  * @property array|null $metadata
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property string $provider
+ * @property string|null $promo_code
  * @property-read \App\Models\Booking|null $booking
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Refund[] $refunds
+ * @property-read int|null $refunds_count
  * @property-read \App\Models\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder|Payment betweenDates($startDate, $endDate)
+ * @method static \Illuminate\Database\Eloquent\Builder|Payment byGateway(string $gateway)
+ * @method static \Illuminate\Database\Eloquent\Builder|Payment failed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Payment forBooking(int $bookingId)
+ * @method static \Illuminate\Database\Eloquent\Builder|Payment forUser(int $userId)
  * @method static \Illuminate\Database\Eloquent\Builder|Payment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Payment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Payment pending()
  * @method static \Illuminate\Database\Eloquent\Builder|Payment query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Payment refunded()
+ * @method static \Illuminate\Database\Eloquent\Builder|Payment successful()
  * @method static \Illuminate\Database\Eloquent\Builder|Payment whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Payment whereBookingId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Payment whereCreatedAt($value)
@@ -331,25 +428,33 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * App\Models\PromoCode
+ * PromoCode Model - SaaS Ready
+ * 
+ * Recommended Database Indexes:
+ * - UNIQUE Index: (code)
+ * - Index: (is_active, valid_until)
+ * - Index: (valid_from, valid_until)
  *
  * @property int $id
  * @property string $code
  * @property string|null $description
  * @property string $discount_type
- * @property string $discount_value
- * @property string|null $min_booking_amount
- * @property string|null $max_discount_amount
+ * @property float $discount_value
+ * @property float|null $min_booking_amount
+ * @property float|null $max_discount_amount
  * @property int|null $usage_limit
  * @property int $usage_count
- * @property \Illuminate\Support\Carbon|null $valid_from
- * @property \Illuminate\Support\Carbon|null $valid_until
+ * @property \Carbon\Carbon|null $valid_from
+ * @property \Carbon\Carbon|null $valid_until
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode active()
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode available()
+ * @method static \Illuminate\Database\Eloquent\Builder|PromoCode byCode(string $code)
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode newQuery()
+ * @method static \Illuminate\Database\Query\Builder|PromoCode onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode query()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode validNow()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereCode($value)
@@ -366,38 +471,50 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereUsageLimit($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereValidFrom($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereValidUntil($value)
+ * @method static \Illuminate\Database\Query\Builder|PromoCode withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|PromoCode withoutTrashed()
  */
 	class PromoCode extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Refund
+ * Refund Model - SaaS Ready
+ * 
+ * Recommended Database Indexes:
+ * - Index: (booking_id)
+ * - Index: (payment_id)
+ * - Index: (status, created_at)
+ * - Index: (initiated_by_user_id)
  *
  * @property int $id
  * @property int $booking_id
  * @property int $payment_id
- * @property string $amount
- * @property string $gateway_charges
- * @property string $net_refund_amount
+ * @property float $amount
+ * @property float $gateway_charges
+ * @property float $net_refund_amount
  * @property string $status
- * @property string $gateway razorpay or payu
- * @property string|null $gateway_refund_id Gateway refund transaction ID
+ * @property string $gateway
+ * @property string|null $gateway_refund_id
  * @property string $initiated_by
  * @property int|null $initiated_by_user_id
  * @property string|null $failure_reason
  * @property array|null $gateway_response
- * @property \Illuminate\Support\Carbon|null $processed_at
+ * @property \Carbon\Carbon|null $processed_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Booking $booking
  * @property-read \App\Models\User|null $initiatedBy
  * @property-read \App\Models\Payment $payment
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund betweenDates($startDate, $endDate)
  * @method static \Illuminate\Database\Eloquent\Builder|Refund completed()
  * @method static \Illuminate\Database\Eloquent\Builder|Refund failed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund forBooking(int $bookingId)
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund forUser(int $userId)
  * @method static \Illuminate\Database\Eloquent\Builder|Refund newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Refund newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Refund pending()
+ * @method static \Illuminate\Database\Eloquent\Builder|Refund processing()
  * @method static \Illuminate\Database\Eloquent\Builder|Refund query()
  * @method static \Illuminate\Database\Eloquent\Builder|Refund whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Refund whereBookingId($value)
@@ -467,26 +584,32 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * App\Models\User
+ * User Model - SaaS Ready
  *
  * @property int $id
  * @property string $name
  * @property string|null $username
  * @property string $email
  * @property string|null $phone
- * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string $password
- * @property mixed|null $google_auth_metadata
+ * @property array|null $google_auth_metadata
+ * @property \Carbon\Carbon|null $email_verified_at
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  * @property string|null $remember_token
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Booking[] $bookings
  * @property-read int|null $bookings_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Event[] $events
  * @property-read int|null $events_count
  * @property-read string $avatar
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Refund[] $initiatedRefunds
+ * @property-read int|null $initiated_refunds_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Booking[] $myBookings
+ * @property-read int|null $my_bookings_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
  * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Payment[] $payments
+ * @property-read int|null $payments_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\Spatie\Permission\Models\Permission[] $permissions
  * @property-read int|null $permissions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\Spatie\Permission\Models\Role[] $roles
@@ -499,6 +622,8 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|User permission($permissions, $without = false)
  * @method static \Illuminate\Database\Eloquent\Builder|User query()
  * @method static \Illuminate\Database\Eloquent\Builder|User role($roles, $guard = null, $without = false)
+ * @method static \Illuminate\Database\Eloquent\Builder|User search(string $search)
+ * @method static \Illuminate\Database\Eloquent\Builder|User verified()
  * @method static \Illuminate\Database\Eloquent\Builder|User whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereEmailVerifiedAt($value)
@@ -510,6 +635,8 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereUsername($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|User withGoogleAuth()
+ * @method static \Illuminate\Database\Eloquent\Builder|User withRole(string $role)
  * @method static \Illuminate\Database\Eloquent\Builder|User withoutPermission($permissions)
  * @method static \Illuminate\Database\Eloquent\Builder|User withoutRole($roles, $guard = null)
  */

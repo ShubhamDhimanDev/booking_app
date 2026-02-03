@@ -11,13 +11,15 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * Recommended Database Indexes:
  * - Index: (event_id, enabled)
- * - Index: (minutes_before)
+ * - Index: (offset_minutes)
  *
  * @property int $id
  * @property int $event_id
- * @property int $minutes_before
+ * @property int $offset_minutes Minutes before event to send reminder
+ * @property string|null $name Human-friendly label for the reminder
  * @property bool $enabled
- * @property string|null $custom_message
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  */
 class EventReminder extends Model
 {
@@ -28,10 +30,9 @@ class EventReminder extends Model
      */
     protected $fillable = [
         'event_id',
-        'minutes_before',
+        'offset_minutes',
+        'name',
         'enabled',
-        'reminder_type',
-        'custom_message',
     ];
 
     /**
@@ -39,7 +40,7 @@ class EventReminder extends Model
      */
     protected $casts = [
         'enabled' => 'boolean',
-        'minutes_before' => 'integer',
+        'offset_minutes' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -69,6 +70,6 @@ class EventReminder extends Model
      */
     public function scopeByTime(Builder $query): Builder
     {
-        return $query->orderBy('minutes_before');
+        return $query->orderBy('offset_minutes');
     }
 }

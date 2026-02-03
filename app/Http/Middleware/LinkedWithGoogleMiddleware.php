@@ -20,6 +20,7 @@ class LinkedWithGoogleMiddleware
   {
     $user = $request->user();
 
+
     // Check if user has Google authentication
     if (!$user || !$user->hasGoogleAuth()) {
       return redirect()->route('admin.google.auth')->with([

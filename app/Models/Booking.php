@@ -14,22 +14,38 @@ use App\Models\Payment;
  * Booking Model - SaaS Ready
  *
  * Recommended Database Indexes:
- * - Index: (event_id, scheduled_at) - for event bookings list
+ * - Index: (event_id, booked_at_date) - for event bookings list
  * - Index: (user_id, status) - for user bookings with status filter
- * - Index: (status, scheduled_at) - for dashboard queries
- * - Index: (confirmation_token) - unique for confirmations
- * - Index: (email, status) - for guest bookings lookup
+ * - Index: (status, booked_at_date) - for dashboard queries
+ * - Index: (booker_email, status) - for guest bookings lookup
  *
  * @property int $id
  * @property int $event_id
  * @property int|null $user_id
- * @property string $email
- * @property string $name
+ * @property bool $is_followup
+ * @property int|null $followup_invite_id
+ * @property string $booker_email
+ * @property string $booker_name
  * @property string|null $phone
  * @property string $status
- * @property \Carbon\Carbon $scheduled_at
+ * @property \Carbon\Carbon $booked_at_date
+ * @property string $booked_at_time
+ * @property string|null $calendar_id
+ * @property string|null $calendar_link
+ * @property string|null $meet_link
  * @property \Carbon\Carbon|null $cancelled_at
+ * @property int|null $cancelled_by
  * @property string|null $cancellation_reason
+ * @property string $refund_status
+ * @property float $refund_amount
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property \Carbon\Carbon|null $deleted_at
+ *
+ * Virtual/Accessor Properties (for backward compatibility):
+ * @property string $email Alias for booker_email
+ * @property string $name Alias for booker_name
+ * @property \Carbon\Carbon $scheduled_at Combines booked_at_date and booked_at_time
  */
 class Booking extends Model
 {
@@ -41,28 +57,35 @@ class Booking extends Model
   protected $fillable = [
     'event_id',
     'user_id',
-    'email',
-    'name',
+    'is_followup',
+    'followup_invite_id',
+    'booker_email',
+    'booker_name',
     'phone',
     'status',
-    'scheduled_at',
-    'notes',
-    'timezone',
-    'confirmation_token',
-    'answered_questions',
-    'location',
+    'booked_at_date',
+    'booked_at_time',
+    'calendar_id',
+    'calendar_link',
+    'meet_link',
+    'cancelled_at',
+    'cancelled_by',
+    'cancellation_reason',
+    'refund_status',
+    'refund_amount',
   ];
 
   /**
    * Attributes that should be cast
    */
   protected $casts = [
-    'scheduled_at' => 'datetime',
+    'booked_at_date' => 'date',
+    'is_followup' => 'boolean',
     'cancelled_at' => 'datetime',
     'created_at' => 'datetime',
     'updated_at' => 'datetime',
     'deleted_at' => 'datetime',
-    'answered_questions' => 'array',
+    'refund_amount' => 'decimal:2',
   ];
 
   // ==================== CONSTANTS ====================
@@ -73,15 +96,42 @@ class Booking extends Model
   public const STATUS_COMPLETED = 'completed';
   public const STATUS_NO_SHOW = 'no_show';
 
+  public const STATUS_DECLINED = 'declined';
+
   // ==================== ATTRIBUTES ====================
 
   /**
-   * Format booked_at_time in hours and minutes only (H:i)
+   * Virtual attribute for scheduled_at that combines booked_at_date and booked_at_time
+   * Provides backward compatibility
    */
-  protected function bookedAtTime(): Attribute
+  protected function scheduledAt(): Attribute
   {
     return Attribute::make(
-      get: fn ($value) => $value ? Carbon::parse($value)->format('H:i') : null,
+      get: fn () => $this->booked_at_date && $this->booked_at_time
+        ? Carbon::parse($this->booked_at_date . ' ' . $this->booked_at_time)
+        : null,
+    );
+  }
+
+  /**
+   * Virtual attribute for name (maps to booker_name)
+   */
+  protected function name(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->booker_name,
+      set: fn ($value) => ['booker_name' => $value],
+    );
+  }
+
+  /**
+   * Virtual attribute for email (maps to booker_email)
+   */
+  protected function email(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->booker_email,
+      set: fn ($value) => ['booker_email' => $value],
     );
   }
 
@@ -178,7 +228,7 @@ class Booking extends Model
    */
   public function scopeUpcoming(Builder $query): Builder
   {
-      return $query->where('scheduled_at', '>', now());
+      return $query->where('booked_at_date', '>', now()->toDateString());
   }
 
   /**
@@ -186,7 +236,7 @@ class Booking extends Model
    */
   public function scopePast(Builder $query): Builder
   {
-      return $query->where('scheduled_at', '<=', now());
+      return $query->where('booked_at_date', '<=', now()->toDateString());
   }
 
   /**
@@ -210,7 +260,7 @@ class Booking extends Model
    */
   public function scopeBetweenDates(Builder $query, $startDate, $endDate): Builder
   {
-      return $query->whereBetween('scheduled_at', [$startDate, $endDate]);
+      return $query->whereBetween('booked_at_date', [$startDate, $endDate]);
   }
 
   /**

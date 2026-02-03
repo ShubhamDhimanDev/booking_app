@@ -84,6 +84,7 @@ class BookingService
             ]);
 
             // If free booking, confirm immediately and dispatch event
+            // For paid bookings, event will be dispatched after payment confirmation
             if ($price == 0) {
                 event(new BookingCreated($booking));
             }

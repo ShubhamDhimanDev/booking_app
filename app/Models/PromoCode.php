@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -32,7 +31,7 @@ use Illuminate\Support\Facades\DB;
  */
 class PromoCode extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     /**
      * Mass-assignable attributes
@@ -49,8 +48,6 @@ class PromoCode extends Model
         'valid_from',
         'valid_until',
         'is_active',
-        'applicable_events', // JSON array of event IDs
-        'user_limit_per_code', // Max uses per user
     ];
 
     /**
@@ -63,10 +60,10 @@ class PromoCode extends Model
         'valid_from' => 'datetime',
         'valid_until' => 'datetime',
         'is_active' => 'boolean',
-        'applicable_events' => 'array',
+        'usage_limit' => 'integer',
+        'usage_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
     ];
 
     // ==================== CONSTANTS ====================

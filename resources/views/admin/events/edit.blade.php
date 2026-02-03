@@ -98,7 +98,7 @@
                             type="date"
                             name="available_from_date"
                             class="form-control @error('available_from_date') is-invalid @enderror"
-                            value="{{ old('available_from_date', $event->available_from_date) }}"
+                            value="{{ old('available_from_date', $event->available_from_date?->format('Y-m-d')) }}"
                         >
                         @error('available_from_date')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -111,7 +111,7 @@
                             type="date"
                             name="available_to_date"
                             class="form-control @error('available_to_date') is-invalid @enderror"
-                            value="{{ old('available_to_date', $event->available_to_date) }}"
+                            value="{{ old('available_to_date', $event->available_to_date?->format('Y-m-d')) }}"
                         >
                         @error('available_to_date')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -283,7 +283,7 @@
     const toDate   = document.querySelector('input[name="available_to_date"]');
 
     // In edit: min should be the originally selected available_from_date
-    const originalFrom = "{{ \Carbon\Carbon::parse($event->available_from_date)->toDateString() }}";
+    const originalFrom = "{{ $event->available_from_date?->format('Y-m-d') }}";
     fromDate.setAttribute("min", originalFrom);
     // Ensure available_to_date cannot be before the chosen fromDate (or originalFrom)
     toDate.setAttribute("min", fromDate.value || originalFrom);
