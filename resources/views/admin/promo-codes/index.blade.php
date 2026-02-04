@@ -54,15 +54,15 @@
 
                             <td>
                                 @if($promoCode->discount_type === 'percentage')
-                                    <span class="badge bg-info">{{ $promoCode->discount_value }}% OFF</span>
+                                    <span class="badge bg-info text-white">{{ $promoCode->discount_value }}% OFF</span>
                                     @if($promoCode->max_discount_amount)
-                                        <br><small class="text-muted">Max: ₹{{ number_format($promoCode->max_discount_amount, 2) }}</small>
+                                        <br><small class="text-muted text-white">Max: ₹{{ number_format($promoCode->max_discount_amount, 2) }}</small>
                                     @endif
                                 @else
-                                    <span class="badge bg-success">₹{{ number_format($promoCode->discount_value, 2) }} OFF</span>
+                                    <span class="badge bg-success text-white">₹{{ number_format($promoCode->discount_value, 2) }} OFF</span>
                                 @endif
                                 @if($promoCode->min_booking_amount)
-                                    <br><small class="text-muted">Min: ₹{{ number_format($promoCode->min_booking_amount, 2) }}</small>
+                                    <br><small class="text-muted text-white">Min: ₹{{ number_format($promoCode->min_booking_amount, 2) }}</small>
                                 @endif
                             </td>
 
@@ -88,15 +88,15 @@
 
                             <td>
                                 @if($promoCode->isValid())
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-success text-white">Active</span>
                                 @elseif(!$promoCode->is_active)
-                                    <span class="badge bg-secondary">Inactive</span>
+                                    <span class="badge bg-secondary text-white">Inactive</span>
                                 @elseif($promoCode->usage_limit && $promoCode->usage_count >= $promoCode->usage_limit)
-                                    <span class="badge bg-warning">Limit Reached</span>
+                                    <span class="badge bg-warning text-white">Limit Reached</span>
                                 @elseif($promoCode->valid_until && $promoCode->valid_until->isPast())
-                                    <span class="badge bg-danger">Expired</span>
+                                    <span class="badge bg-danger text-white">Expired</span>
                                 @else
-                                    <span class="badge bg-warning">Inactive</span>
+                                    <span class="badge bg-warning text-white">Inactive</span>
                                 @endif
                             </td>
 

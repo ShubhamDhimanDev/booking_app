@@ -103,9 +103,9 @@
                                     <strong>{{ $booking->event->title }}</strong>
                                     <br>
                                     <small class="text-muted">
-                                        {{ \Carbon\Carbon::parse($booking->event->available_from_date)->format('d M Y') }}
+                                        {{ optional($booking->event)->formatted_from_date ?? '-' }}
                                         →
-                                        {{ \Carbon\Carbon::parse($booking->event->available_to_date)->format('d M Y') }}
+                                        {{ optional($booking->event)->formatted_to_date ?? '-' }}
                                     </small>
                                 </td>
 
@@ -120,20 +120,17 @@
 
                                 {{-- Booked date --}}
                                 <td>
-                                    {{ \Carbon\Carbon::parse($booking->booked_at_date)->format('d M Y') }}
+                                    {{ $booking->formatted_date }}
                                 </td>
 
                                 {{-- booked time (from accessor) --}}
-                                <td>{{ $booking->booked_at_time }}</td>
+                                <td>{{ $booking->formatted_time }}</td>
 
                                 {{-- Meet link --}}
-                                @php
-                                    $bookingDateTime = \Carbon\Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
-                                @endphp
                                 <td>
                                     @if($booking->status === 'cancelled')
                                         <span class="text-warning">Cancelled</span>
-                                    @elseif($booking->meet_link && $bookingDateTime->isFuture())
+                                    @elseif($booking->meet_link && !($booking->is_expired ?? false))
                                         <a href="{{ $booking->meet_link }}" target="_blank">
                                             <i class="fa fa-external-link"></i>
                                         </a>
@@ -148,7 +145,7 @@
                                 <td>
                                     @if($booking->status === 'cancelled')
                                         <span class="text-warning">Cancelled</span>
-                                    @elseif($booking->calendar_link && $bookingDateTime->isFuture())
+                                    @elseif($booking->calendar_link && !($booking->is_expired ?? false))
                                         <a href="{{ $booking->calendar_link }}" target="_blank">
                                             <i class="fa fa-external-link"></i>
                                         </a>
@@ -164,7 +161,7 @@
 
                                 {{-- Actions --}}
                                 <td>
-                                    @if($booking->calendar_link && !$bookingDateTime->isFuture())
+                                    @if($booking->calendar_link && ($booking->is_expired ?? false))
                                         <button
                                             type="button"
                                             class="btn btn-sm btn-primary"
@@ -189,7 +186,7 @@
                             </tr>
 
                             {{-- Follow-up Modal --}}
-                            @if($booking->calendar_link && !$bookingDateTime->isFuture())
+                            @if($booking->calendar_link && $booking->is_expired)
                             <div class="modal fade" id="followUpModal{{ $booking->id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
                                 <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content bg-dark border-secondary">

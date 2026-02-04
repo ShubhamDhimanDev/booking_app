@@ -36,8 +36,8 @@ class CreateCalendarEvent implements ShouldQueue
 
             $booking = $this->booking->load('event.user');
 
-            // Create calendar event
-            $startTime = Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
+            // Create calendar event using the scheduled_at accessor
+            $startTime = $booking->scheduled_at;
             $endTime = $startTime->copy()->addMinutes($booking->event->duration);
 
             $result = $calendarService->createEvent(

@@ -38,7 +38,7 @@ class UpdateCalendarEvent implements ShouldQueue
 
             $booking = $this->booking->load('event.user');
 
-            $newStartTime = Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
+            $newStartTime = Carbon::parse($booking->booked_at_date->toDateString() . ' ' . $booking->booked_at_time);
             $newEndTime = $newStartTime->copy()->addMinutes($booking->event->duration);
 
             $calendarService->updateEvent(

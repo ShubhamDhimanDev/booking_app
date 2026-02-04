@@ -67,14 +67,17 @@ class BookingReminderNotification extends Notification implements ShouldQueue
   {
     $when = $this->humanizeOffset();
 
+    $startTime = \Carbon\Carbon::parse($this->booking->booked_at_date->toDateString() . ' ' . $this->booking->booked_at_time);
+    $endTime = $startTime->copy()->addMinutes($this->booking->event->duration);
+
     if ($notifiable instanceof AnonymousNotifiable) {
       return (new MailMessage)
         ->subject("Reminder: Your booking is {$when}")
         ->view('emails.booking-reminder', [
           'organizerName' => $this->booking->event->user->name,
           'eventTitle' => $this->booking->event->title,
-          'bookingDate' => $this->booking->booked_at_date,
-          'bookingTime' => $this->booking->booked_at_time,
+          'bookingDate' => $startTime->format('l, M d, Y'),
+          'bookingTime' => $startTime->format('h:i A') . ' - ' . $endTime->format('h:i A'),
           'timeUntil' => $when,
           'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
           'rescheduleUrl' => url("/user/bookings/{$this->booking->id}/reschedule"),
@@ -86,8 +89,8 @@ class BookingReminderNotification extends Notification implements ShouldQueue
       ->view('emails.booking-reminder', [
         'organizerName' => $notifiable->name,
         'eventTitle' => $this->booking->event->title,
-        'bookingDate' => $this->booking->booked_at_date,
-        'bookingTime' => $this->booking->booked_at_time,
+        'bookingDate' => $startTime->format('l, M d, Y'),
+        'bookingTime' => $startTime->format('h:i A') . ' - ' . $endTime->format('h:i A'),
         'timeUntil' => $when,
         'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
         'rescheduleUrl' => url("/admin/bookings/{$this->booking->id}/reschedule"),

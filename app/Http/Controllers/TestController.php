@@ -11,6 +11,7 @@ class TestController extends Controller
 {
   public function test(PayUService $payuService)
   {
+    dd(app()->runningUnitTests());
     return view('test.test');
   }
 }

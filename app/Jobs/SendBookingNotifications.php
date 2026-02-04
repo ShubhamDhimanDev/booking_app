@@ -20,12 +20,16 @@ class SendBookingNotifications implements ShouldQueue
 
     public Booking $booking;
     public string $type;
+    public ?string $oldDate = null;
+    public ?string $oldTime = null;
     public int $tries = 3;
 
-    public function __construct(Booking $booking, string $type)
+    public function __construct(Booking $booking, string $type, ?string $oldDate = null, ?string $oldTime = null)
     {
         $this->booking = $booking;
         $this->type = $type;
+        $this->oldDate = $oldDate;
+        $this->oldTime = $oldTime;
     }
 
     public function handle(): void
@@ -76,9 +80,9 @@ class SendBookingNotifications implements ShouldQueue
         // Notify booker
         Notification::route('mail', [$booking->booker_email => $booking->booker_name])
             ->notify(new BookingDeclinedNotification(
-                $booking->event->title,
+                $booking->event,
                 $booking->booker_name,
-                $booking->booked_at_date,
+                $booking->booked_at_date->toDateString(),
                 $booking->booked_at_time
             ));
 
@@ -88,12 +92,11 @@ class SendBookingNotifications implements ShouldQueue
     protected function sendRescheduledNotifications(Booking $booking): void
     {
         $notification = new BookingRescheduledNotification(
-            $booking->event->title,
-            $booking->booker_name,
-            $booking->booked_at_date,
-            $booking->booked_at_time,
-            $booking->booked_at_date, // old date
-            $booking->booked_at_time  // old time
+            $booking,
+            $this->oldDate,
+            $this->oldTime,
+            $booking->booked_at_date->toDateString(),
+            $booking->booked_at_time
         );
 
         // Notify organizer

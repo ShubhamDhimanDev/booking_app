@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\BookingRescheduled;
-use App\Jobs\UpdateCalendarEvent;
 use App\Jobs\SendBookingNotifications;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
@@ -13,14 +12,9 @@ class HandleBookingRescheduled implements ShouldQueue
     {
         $booking = $event->booking;
 
-        // Queue calendar event update
-        UpdateCalendarEvent::dispatch(
-            $booking,
-            $event->oldDate,
-            $event->oldTime
-        )->onQueue('calendar');
-
-        // Queue notifications
-        SendBookingNotifications::dispatch($booking, 'rescheduled')->onQueue('notifications');
+        // Calendar is now updated synchronously in BookingService
+        // Only queue notifications here with old date/time info
+        SendBookingNotifications::dispatch($booking, 'rescheduled', $event->oldDate, $event->oldTime)
+            ->onQueue('notifications');
     }
 }

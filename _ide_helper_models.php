@@ -15,37 +15,38 @@ namespace App\Models{
  * Booking Model - SaaS Ready
  * 
  * Recommended Database Indexes:
- * - Index: (event_id, scheduled_at) - for event bookings list
+ * - Index: (event_id, booked_at_date) - for event bookings list
  * - Index: (user_id, status) - for user bookings with status filter
- * - Index: (status, scheduled_at) - for dashboard queries
- * - Index: (confirmation_token) - unique for confirmations
- * - Index: (email, status) - for guest bookings lookup
+ * - Index: (status, booked_at_date) - for dashboard queries
+ * - Index: (booker_email, status) - for guest bookings lookup
  *
  * @property int $id
  * @property int $event_id
  * @property int|null $user_id
- * @property string $email
- * @property string $name
+ * @property bool $is_followup
+ * @property int|null $followup_invite_id
+ * @property string $booker_email
+ * @property string $booker_name
  * @property string|null $phone
  * @property string $status
- * @property \Carbon\Carbon $scheduled_at
- * @property \Carbon\Carbon|null $cancelled_at
- * @property string|null $cancellation_reason
- * @property int $is_followup
- * @property string $booker_name
- * @property string $booker_email
+ * @property \Carbon\Carbon $booked_at_date
+ * @property string $booked_at_time
  * @property string|null $calendar_id
  * @property string|null $calendar_link
  * @property string|null $meet_link
+ * @property \Carbon\Carbon|null $cancelled_at
  * @property int|null $cancelled_by
+ * @property string|null $cancellation_reason
  * @property string $refund_status
- * @property string $refund_amount
- * @property \Illuminate\Support\Carbon $booked_at_date
- * @property string $booked_at_time
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property int|null $followup_invite_id
+ * @property float $refund_amount
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property \Carbon\Carbon|null $deleted_at
+ * 
+ * Virtual/Accessor Properties (for backward compatibility):
+ * @property string $email Alias for booker_email
+ * @property string $name Alias for booker_name
+ * @property \Carbon\Carbon $scheduled_at Combines booked_at_date and booked_at_time
  * @property-read \App\Models\User|null $booker
  * @property-read \App\Models\User|null $cancelledBy
  * @property-read \App\Models\Event $event
@@ -159,9 +160,8 @@ namespace App\Models{
  * Event Model - SaaS Ready
  * 
  * Recommended Database Indexes:
- * - Index: (user_id, is_active)
+ * - Index: (user_id)
  * - Index: (slug) UNIQUE
- * - Index: (is_active, is_public)
  * - Index: (created_at)
  * 
  * NOTE: This model contains heavy business logic that should be extracted to services:
@@ -171,26 +171,27 @@ namespace App\Models{
  *
  * @property int $id
  * @property int $user_id
- * @property string $name
+ * @property string $title
  * @property string $slug
  * @property string|null $description
- * @property int $duration_minutes
+ * @property int $duration Duration in minutes
  * @property float|null $price
+ * @property \Carbon\Carbon $available_from_date
+ * @property \Carbon\Carbon $available_to_date
  * @property array|null $available_week_days
  * @property array|null $custom_timeslots
  * @property array|null $refund_rules
  * @property bool $refund_enabled
+ * @property string $refund_policy_type
+ * @property int $min_cancellation_hours
  * @property bool $deduct_gateway_charges
- * @property bool $is_active
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
- * @property string $title
- * @property string $refund_policy_type
- * @property int $min_cancellation_hours Minimum hours before event to cancel
- * @property int $duration
- * @property \Illuminate\Support\Carbon $available_from_date
- * @property \Illuminate\Support\Carbon $available_to_date
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Carbon\Carbon|null $deleted_at
+ * 
+ * Virtual/Accessor Properties (for backward compatibility):
+ * @property string $name Alias for title
+ * @property int $duration_minutes Alias for duration
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Booking[] $bookings
  * @property-read int|null $bookings_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\EventExclusion[] $exclusions
@@ -199,7 +200,6 @@ namespace App\Models{
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\EventReminder[] $reminders
  * @property-read int|null $reminders_count
  * @property-read \App\Models\User $user
- * @method static \Illuminate\Database\Eloquent\Builder|Event active()
  * @method static \Database\Factories\EventFactory factory(...$parameters)
  * @method static \Illuminate\Database\Eloquent\Builder|Event forUser(int $userId)
  * @method static \Illuminate\Database\Eloquent\Builder|Event free()
@@ -207,7 +207,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Event newQuery()
  * @method static \Illuminate\Database\Query\Builder|Event onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Event paid()
- * @method static \Illuminate\Database\Eloquent\Builder|Event public()
  * @method static \Illuminate\Database\Eloquent\Builder|Event query()
  * @method static \Illuminate\Database\Eloquent\Builder|Event search(string $search)
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereAvailableFromDate($value)
@@ -267,17 +266,15 @@ namespace App\Models{
  * 
  * Recommended Database Indexes:
  * - Index: (event_id, enabled)
- * - Index: (minutes_before)
+ * - Index: (offset_minutes)
  *
  * @property int $id
  * @property int $event_id
- * @property int $minutes_before
+ * @property int $offset_minutes Minutes before event to send reminder
+ * @property string|null $name Human-friendly label for the reminder
  * @property bool $enabled
- * @property string|null $custom_message
- * @property int $offset_minutes
- * @property string|null $name
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  * @property-read \App\Models\Event $event
  * @method static \Illuminate\Database\Eloquent\Builder|EventReminder byTime()
  * @method static \Illuminate\Database\Eloquent\Builder|EventReminder enabled()
@@ -307,21 +304,19 @@ namespace App\Models{
  *
  * @property int $id
  * @property int $booking_id
+ * @property int $user_id
+ * @property float $custom_price
+ * @property bool $is_normal_invite
  * @property int $event_id
  * @property string $token
- * @property string $recipient_email
- * @property string|null $recipient_name
  * @property string $status
  * @property \Carbon\Carbon|null $expires_at
  * @property \Carbon\Carbon|null $sent_at
- * @property int $user_id
- * @property string $custom_price
- * @property bool $is_normal_invite
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  * @property-read \App\Models\Booking $booking
  * @property-read \App\Models\Event $event
- * @property-read \App\Models\User|null $inviter
+ * @property-read \App\Models\User $inviter
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite accepted()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite active()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite expired()
@@ -377,7 +372,7 @@ namespace App\Models{
  * Payment Model - SaaS Ready
  * 
  * Recommended Database Indexes:
- * - UNIQUE Index: (transaction_id)
+ * - Index: (transaction_id)
  * - Index: (booking_id)
  * - Index: (user_id, status)
  * - Index: (status, created_at)
@@ -386,15 +381,14 @@ namespace App\Models{
  * @property int $booking_id
  * @property int|null $user_id
  * @property string $transaction_id
- * @property float $amount
+ * @property int $amount Amount in smallest currency unit (paise for INR)
  * @property string $currency
  * @property string $status
- * @property string $gateway
+ * @property string $provider Payment provider (razorpay, etc)
+ * @property string|null $promo_code
  * @property array|null $metadata
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
- * @property string $provider
- * @property string|null $promo_code
  * @property-read \App\Models\Booking|null $booking
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Refund[] $refunds
  * @property-read int|null $refunds_count
@@ -454,7 +448,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode byCode(string $code)
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode newQuery()
- * @method static \Illuminate\Database\Query\Builder|PromoCode onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode query()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode validNow()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereCode($value)
@@ -471,8 +464,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereUsageLimit($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereValidFrom($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode whereValidUntil($value)
- * @method static \Illuminate\Database\Query\Builder|PromoCode withTrashed()
- * @method static \Illuminate\Database\Query\Builder|PromoCode withoutTrashed()
  */
 	class PromoCode extends \Eloquent {}
 }

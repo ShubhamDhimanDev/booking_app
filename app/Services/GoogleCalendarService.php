@@ -179,7 +179,10 @@ class GoogleCalendarService
             ],
         ]);
 
-        $createdEvent = $service->events->insert('primary', $event, ['conferenceDataVersion' => 1]);
+        $createdEvent = $service->events->insert('primary', $event, [
+            'conferenceDataVersion' => 1,
+            'sendUpdates' => 'all', // Send invitation emails to all attendees immediately
+        ]);
 
         return [
             'calendar_id' => $createdEvent->getId(),
@@ -199,7 +202,7 @@ class GoogleCalendarService
     public function deleteEvent(User $organizer, string $eventId): bool
     {
         $service = $this->getCalendarService($organizer);
-        
+
         try {
             $service->events->delete('primary', $eventId);
             return true;

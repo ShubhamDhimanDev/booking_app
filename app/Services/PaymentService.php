@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\PromoCode;
+use App\Models\FollowUpInvite;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -91,7 +92,7 @@ class PaymentService
             ];
         }
 
-        return DB::transaction(function () use ($booking, $promoCode) {
+        $booking = DB::transaction(function () use ($booking, $promoCode) {
             // Create payment record
             Payment::create([
                 'user_id' => $booking->user_id,
@@ -109,21 +110,26 @@ class PaymentService
 
             // Mark follow-up invite as accepted
             if ($booking->is_followup && $booking->followUpInvite) {
-                $booking->followUpInvite->update(['status' => 'accepted']);
+                $booking->followUpInvite->update(['status' => FollowUpInvite::STATUS_ACCEPTED]);
             }
 
-            // Dispatch payment processed event
-            event(new \App\Events\PaymentProcessed($booking));
-
-            Log::info('Free booking processed', ['booking_id' => $booking->id]);
-
-            return [
-                'success' => true,
-                'free_booking' => true,
-                'booking_id' => $booking->id,
-                'message' => 'Booking confirmed successfully!'
-            ];
+            return $booking->fresh();
         });
+
+        // Create calendar synchronously (outside transaction)
+        $this->bookingService->createCalendarEventForBooking($booking);
+
+        // Dispatch payment processed event for notifications
+        event(new \App\Events\PaymentProcessed($booking));
+
+        Log::info('Free booking processed', ['booking_id' => $booking->id]);
+
+        return [
+            'success' => true,
+            'free_booking' => true,
+            'booking_id' => $booking->id,
+            'message' => 'Booking confirmed successfully!'
+        ];
     }
 
     /**
@@ -150,7 +156,7 @@ class PaymentService
             throw new Exception('Payment verification failed');
         }
 
-        return DB::transaction(function () use ($booking, $paymentData, $gateway) {
+        $transactionResult = DB::transaction(function () use ($booking, $paymentData, $gateway) {
             // Extract transaction ID based on gateway
             $transactionId = $paymentData['razorpay_payment_id']
                 ?? $paymentData['mihpayid']
@@ -174,23 +180,36 @@ class PaymentService
 
             // Mark follow-up invite as accepted
             if ($booking->is_followup && $booking->followUpInvite) {
-                $booking->followUpInvite->update(['status' => 'accepted']);
+                $booking->followUpInvite->update(['status' => FollowUpInvite::STATUS_ACCEPTED]);
             }
 
-            // Dispatch payment processed event
-            event(new \App\Events\PaymentProcessed($booking));
-
-            Log::info('Payment verified and booking confirmed', [
-                'booking_id' => $booking->id,
-                'transaction_id' => $transactionId
-            ]);
-
             return [
-                'success' => true,
-                'booking' => $booking,
+                'booking' => $booking->fresh(),
                 'transaction_id' => $transactionId
             ];
         });
+
+        // Get the result from transaction
+        $result = $transactionResult;
+        $booking = $result['booking'];
+        $transactionId = $result['transaction_id'];
+
+        // Create calendar synchronously (outside transaction)
+        $this->bookingService->createCalendarEventForBooking($booking);
+
+        // Dispatch payment processed event for notifications
+        event(new \App\Events\PaymentProcessed($booking));
+
+        Log::info('Payment verified and booking confirmed', [
+            'booking_id' => $booking->id,
+            'transaction_id' => $transactionId
+        ]);
+
+        return [
+            'success' => true,
+            'booking' => $booking,
+            'transaction_id' => $transactionId
+        ];
     }
 
     /**

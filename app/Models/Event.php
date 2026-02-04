@@ -196,6 +196,31 @@ class Event extends Model
   // ==================== ATTRIBUTES & ACCESSORS ====================
 
   /**
+   * Virtual attribute for formatted available_from_date (e.g., "01 Feb 2026")
+   */
+  protected function formattedFromDate(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->available_from_date
+        ? $this->available_from_date->format('d M Y')
+        : null,
+    );
+  }
+
+  /**
+   * Virtual attribute for formatted available_to_date (e.g., "28 Feb 2026")
+   */
+  protected function formattedToDate(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->available_to_date
+        ? $this->available_to_date->format('d M Y')
+        : null,
+    );
+  }
+
+
+  /**
    * Timeslots - Generate available time slots for this event
    *
    * NOTE: This accessor performs expensive calculations.
@@ -271,7 +296,7 @@ class Event extends Model
 
     // Check minimum cancellation hours
     if ($this->min_cancellation_hours > 0) {
-      $eventDateTime = Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
+      $eventDateTime = Carbon::parse($booking->booked_at_date->toDateString() . ' ' . $booking->booked_at_time);
       $hoursUntilEvent = Carbon::now()->diffInHours($eventDateTime, false);
 
       if ($hoursUntilEvent < $this->min_cancellation_hours) {
@@ -297,7 +322,7 @@ class Event extends Model
       return ['percentage' => 0, 'amount' => 0, 'gateway_charges' => 0];
     }
 
-    $eventDateTime = Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
+    $eventDateTime = Carbon::parse($booking->booked_at_date->toDateString() . ' ' . $booking->booked_at_time);
     $hoursUntilEvent = Carbon::now()->diffInHours($eventDateTime, false);
     $daysUntilEvent = floor($hoursUntilEvent / 24);
 

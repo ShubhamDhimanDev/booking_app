@@ -18,13 +18,16 @@ use Illuminate\Support\Str;
  *
  * @property int $id
  * @property int $booking_id
+ * @property int $user_id
+ * @property float $custom_price
+ * @property bool $is_normal_invite
  * @property int $event_id
  * @property string $token
- * @property string $recipient_email
- * @property string|null $recipient_name
  * @property string $status
  * @property \Carbon\Carbon|null $expires_at
  * @property \Carbon\Carbon|null $sent_at
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  */
 class FollowUpInvite extends Model
 {
@@ -36,15 +39,11 @@ class FollowUpInvite extends Model
     protected $fillable = [
         'booking_id',
         'event_id',
-        'inviter_user_id',
-        'recipient_email',
-        'recipient_name',
+        'user_id',
         'token',
         'status',
         'expires_at',
         'sent_at',
-        'accepted_at',
-        'custom_message',
         'custom_price',
         'is_normal_invite',
     ];
@@ -55,11 +54,8 @@ class FollowUpInvite extends Model
     protected $casts = [
         'expires_at' => 'datetime',
         'sent_at' => 'datetime',
-        'accepted_at' => 'datetime',
         'custom_price' => 'decimal:2',
         'is_normal_invite' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     // ==================== CONSTANTS ====================
@@ -67,7 +63,6 @@ class FollowUpInvite extends Model
     public const STATUS_PENDING = 'pending';
     public const STATUS_ACCEPTED = 'accepted';
     public const STATUS_EXPIRED = 'expired';
-    public const STATUS_CANCELLED = 'cancelled';
 
     // ==================== RELATIONSHIPS ====================
 
@@ -92,7 +87,7 @@ class FollowUpInvite extends Model
      */
     public function inviter()
     {
-        return $this->belongsTo(User::class, 'inviter_user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // ==================== QUERY SCOPES ====================

@@ -90,7 +90,7 @@
                                     };
                                 @endphp
 
-                                <span class="badge bg-{{ $color }}">
+                                <span class="badge bg-{{ $color }} text-white">
                                     {{ ucfirst($payment->status) }}
                                 </span>
                             </td>

@@ -45,14 +45,20 @@ class BookingRescheduledNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
+        $oldStartTime = \Carbon\Carbon::parse($this->oldDate . ' ' . $this->oldTime);
+        $oldEndTime = $oldStartTime->copy()->addMinutes($this->booking->event->duration);
+
+        $newStartTime = \Carbon\Carbon::parse($this->newDate . ' ' . $this->newTime);
+        $newEndTime = $newStartTime->copy()->addMinutes($this->booking->event->duration);
+
         return (new MailMessage)
             ->subject('Booking Rescheduled - ' . $this->booking->event->title)
             ->view('emails.booking-rescheduled', [
                 'eventTitle' => $this->booking->event->title,
-                'newBookingDate' => $this->newDate,
-                'newBookingTime' => $this->newTime,
-                'oldBookingDate' => $this->oldDate,
-                'oldBookingTime' => $this->oldTime,
+                'newBookingDate' => $newStartTime->format('l, M d, Y'),
+                'newBookingTime' => $newStartTime->format('h:i A') . ' - ' . $newEndTime->format('h:i A'),
+                'oldBookingDate' => $oldStartTime->format('l, M d, Y'),
+                'oldBookingTime' => $oldStartTime->format('h:i A') . ' - ' . $oldEndTime->format('h:i A'),
                 'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
             ]);
     }

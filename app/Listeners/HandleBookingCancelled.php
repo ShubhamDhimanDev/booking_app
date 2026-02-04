@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\BookingCancelled;
-use App\Jobs\DeleteCalendarEvent;
 use App\Jobs\SendBookingNotifications;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
@@ -13,12 +12,8 @@ class HandleBookingCancelled implements ShouldQueue
     {
         $booking = $event->booking;
 
-        // Queue calendar event deletion
-        if ($booking->calendar_id) {
-            DeleteCalendarEvent::dispatch($booking)->onQueue('calendar');
-        }
-
-        // Queue notifications
+        // Calendar is now deleted synchronously in BookingService
+        // Only queue notifications here
         SendBookingNotifications::dispatch($booking, 'cancelled')->onQueue('notifications');
     }
 }

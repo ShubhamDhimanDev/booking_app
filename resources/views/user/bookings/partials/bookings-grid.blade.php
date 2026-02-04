@@ -48,8 +48,7 @@
                     </div>
                     <div>
                         <p class="text-[10px] uppercase font-bold text-slate-400">Date</p>
-                        <p class="text-sm font-semibold dark:text-slate-200">
-                            {{ \Carbon\Carbon::parse($b->booked_at_date)->format('D, d M Y') }}</p>
+                        <p class="text-sm font-semibold dark:text-slate-200">{{ $b->formatted_date }}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -60,20 +59,15 @@
                     <div>
                         <p class="text-[10px] uppercase font-bold text-slate-400">Time</p>
                         <p class="text-sm font-semibold dark:text-slate-200">
-                            {{ \Carbon\Carbon::parse($b->booked_at_time, 'UTC')->format('g:i A') }}
+                            {{ $b->formatted_time }}
                             ({{ optional($b->event)->duration ?? 60 }} min)</p>
                     </div>
                 </div>
             </div>
             <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                 {{-- Primary Action Button --}}
-                @php
-                    $bookingDateTime = \Carbon\Carbon::parse($b->booked_at_date . ' ' . $b->booked_at_time);
-                    $isExpired = $bookingDateTime->isPast();
-                @endphp
-
                 @if ($b->status === 'confirmed' && $b->meet_link)
-                    @if ($isExpired)
+                    @if ($b->is_expired)
                         <div class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-2xl text-sm font-bold">
                             <span class="material-icons-round text-lg">event_busy</span>
                             Expired
@@ -94,7 +88,7 @@
                 @endif
 
                 {{-- Secondary Actions (Reschedule & Cancel) --}}
-                @if (($b->status === 'confirmed' || $b->status === 'pending') && !$isExpired)
+                @if (($b->status === 'confirmed' || $b->status === 'pending') && !$b->is_expired)
                     <div class="grid grid-cols-2 gap-2">
                         <a href="{{ route('user.bookings.reschedule.form', $b->id) }}"
                             class="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all">

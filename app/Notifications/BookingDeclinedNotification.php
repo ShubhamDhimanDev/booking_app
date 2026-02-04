@@ -51,13 +51,16 @@ class BookingDeclinedNotification extends Notification implements ShouldQueue
    */
   public function toMail($notifiable)
   {
+    $startTime = \Carbon\Carbon::parse($this->booked_at_date . ' ' . $this->booked_at_time);
+    $endTime = $startTime->copy()->addMinutes($this->event->duration);
+
     return (new MailMessage)
       ->subject('Booking Declined - ' . $this->event->title)
       ->view('emails.booking-declined', [
         'organizerName' => $this->event->user->name,
         'eventTitle' => $this->event->title,
-        'bookingDate' => $this->booked_at_date,
-        'bookingTime' => $this->booked_at_time,
+        'bookingDate' => $startTime->format('l, M d, Y'),
+        'bookingTime' => $startTime->format('h:i A') . ' - ' . $endTime->format('h:i A'),
         'declineReason' => $this->decline_reason,
         'browseEventsUrl' => url('/e/' . $this->event->slug),
       ]);

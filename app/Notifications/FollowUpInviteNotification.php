@@ -44,6 +44,8 @@ class FollowUpInviteNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         $bookingUrl = url("/followup/{$this->invite->token}");
+        $originalDate = $this->invite->booking->booked_at_date;
+
         // Choose template based on whether this is a normal (non-followup) invite
         if ($this->invite->is_normal_invite) {
             return (new MailMessage)
@@ -56,7 +58,7 @@ class FollowUpInviteNotification extends Notification implements ShouldQueue
                     'bookingUrl' => $bookingUrl,
                     'organizerName' => $this->invite->event->user->name,
                     'expiresAt' => $this->invite->expires_at,
-                    'originalBookingDate' => $this->invite->booking->booked_at_date,
+                    'originalBookingDate' => $originalDate->format('l, M d, Y'),
                 ]);
         }
 
@@ -70,7 +72,7 @@ class FollowUpInviteNotification extends Notification implements ShouldQueue
                 'bookingUrl' => $bookingUrl,
                 'organizerName' => $this->invite->event->user->name,
                 'expiresAt' => $this->invite->expires_at,
-                'originalBookingDate' => $this->invite->booking->booked_at_date,
+                'originalBookingDate' => $originalDate->format('l, M d, Y'),
             ]);
     }
 

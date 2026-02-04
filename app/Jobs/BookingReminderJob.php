@@ -69,7 +69,7 @@ class BookingReminderJob implements ShouldQueue
         if (! $booking->event) continue;
 
         // booking datetime (server timezone)
-        $bookingDateTime = Carbon::createFromFormat('Y-m-d H:i', $booking->booked_at_date . ' ' . $booking->booked_at_time);
+        $bookingDateTime = Carbon::createFromFormat('Y-m-d H:i', $booking->booked_at_date->toDateString() . ' ' . $booking->booked_at_time);
 
         $reminders = $booking->event->reminders()->where('enabled', true)->get();
 

@@ -88,6 +88,11 @@ class Booking extends Model
     'refund_amount' => 'decimal:2',
   ];
 
+  /**
+   * Attributes to append to model's array/JSON form
+   */
+  protected $appends = [];
+
   // ==================== CONSTANTS ====================
 
   public const STATUS_PENDING = 'pending';
@@ -108,8 +113,42 @@ class Booking extends Model
   {
     return Attribute::make(
       get: fn () => $this->booked_at_date && $this->booked_at_time
-        ? Carbon::parse($this->booked_at_date . ' ' . $this->booked_at_time)
+        ? Carbon::parse($this->booked_at_date->toDateString() . ' ' . $this->booked_at_time)
         : null,
+    );
+  }
+
+  /**
+   * Virtual attribute for formatted date (e.g., "Mon, 25 Feb 2026")
+   */
+  protected function formattedDate(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->booked_at_date
+        ? Carbon::parse($this->booked_at_date)->format('D, d M Y')
+        : null,
+    );
+  }
+
+  /**
+   * Virtual attribute for formatted time (e.g., "3:00 PM")
+   */
+  protected function formattedTime(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->booked_at_time
+        ? Carbon::parse($this->booked_at_time, 'UTC')->format('g:i A')
+        : null,
+    );
+  }
+
+  /**
+   * Virtual attribute to check if booking is expired
+   */
+  protected function isExpired(): Attribute
+  {
+    return Attribute::make(
+      get: fn () => $this->scheduled_at ? $this->scheduled_at->isPast() : false,
     );
   }
 
@@ -300,7 +339,7 @@ class Booking extends Model
    */
   public function isCompleted(): bool
   {
-      $bookingDateTime = \Carbon\Carbon::parse($this->booked_at_date . ' ' . $this->booked_at_time);
+      $bookingDateTime = \Carbon\Carbon::parse($this->booked_at_date->toDateString() . ' ' . $this->booked_at_time);
       return $bookingDateTime->isPast() && $this->status !== self::STATUS_CANCELLED;
   }
 

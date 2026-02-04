@@ -137,16 +137,16 @@
                                 <small class="text-muted">Charges: ₹{{ number_format($refund->gateway_charges, 2) }}</small>
                                 @endif
                             </td>
-                            <td><span class="badge bg-secondary">{{ ucfirst($refund->gateway) }}</span></td>
+                            <td><span class="badge bg-secondary text-dark">{{ ucfirst($refund->gateway) }}</span></td>
                             <td>
                                 @if($refund->status === 'completed')
-                                    <span class="badge bg-success">Completed</span>
+                                    <span class="badge bg-success text-white">Completed</span>
                                 @elseif($refund->status === 'processing')
-                                    <span class="badge bg-info">Processing</span>
+                                    <span class="badge bg-info text-white">Processing</span>
                                 @elseif($refund->status === 'pending')
-                                    <span class="badge bg-warning">Pending</span>
+                                    <span class="badge bg-warning text-white">Pending</span>
                                 @else
-                                    <span class="badge bg-danger">Failed</span>
+                                    <span class="badge bg-danger text-white">Failed</span>
                                 @endif
                             </td>
                             <td>

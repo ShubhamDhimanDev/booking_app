@@ -81,6 +81,7 @@ class StoreBookingRequest extends FormRequest
       'booked_at_date' => $dateRules,
       'booked_at_time' => $timeRules,
       'phone' => 'required',
+      'followup_token' => 'nullable|string',
       // 'dob' => 'nullable|date',
     ];
   }

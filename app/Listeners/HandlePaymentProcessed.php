@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\PaymentProcessed;
-use App\Jobs\CreateCalendarEvent;
 use App\Jobs\SendBookingNotifications;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
@@ -13,10 +12,8 @@ class HandlePaymentProcessed implements ShouldQueue
     {
         $booking = $event->booking;
 
-        // Queue calendar event creation
-        CreateCalendarEvent::dispatch($booking)->onQueue('calendar');
-
-        // Queue notifications
+        // Calendar is now created synchronously in PaymentService
+        // Only queue notifications here
         SendBookingNotifications::dispatch($booking, 'confirmed')->onQueue('notifications');
     }
 }
