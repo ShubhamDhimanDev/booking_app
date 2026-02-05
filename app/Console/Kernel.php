@@ -27,6 +27,8 @@ class Kernel extends ConsoleKernel
     // $schedule->command('inspire')->hourly();
     // $schedule->job(new BookingReminderJob())->hourly();
     $schedule->job(new BookingReminderJob())->everyMinute();
+
+    $schedule->command('google:refresh-tokens')->hourly();
   }
 
   /**
