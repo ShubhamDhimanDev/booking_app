@@ -5,7 +5,7 @@
 @section('content')
 <div class="mb-10">
     <h2 class="font-display text-4xl font-semibold text-slate-900 dark:text-white mb-2">Create Account</h2>
-    <p class="text-slate-500 dark:text-slate-400">Please enter your details to create your account.</p>
+    <p class="text-slate-500 dark:text-slate-400">Join MeetFlow to browse and book amazing events.</p>
 </div>
 
 @if($errors->any())
@@ -53,6 +53,7 @@
                 id="phone" name="phone" placeholder="+1 234 567 8900" type="tel" value="{{ old('phone') }}" />
         </div>
     </div>
+
     <div>
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" for="password">Password</label>
         <div class="relative">
@@ -90,10 +91,37 @@
     </button>
 </form>
 
-<p class="mt-10 text-center text-slate-500 dark:text-slate-400">
-    Already have an account?
-    <a class="font-semibold text-primary hover:underline" href="{{ route('login') }}">Sign in</a>
-</p>
+<div class="mt-10 space-y-4">
+    <p class="text-center text-slate-500 dark:text-slate-400">
+        Already have an account?
+        <a class="font-semibold text-primary hover:underline" href="{{ route('login') }}">Sign in</a>
+    </p>
+
+    <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+            <span class="px-4  dark:bg-slate-900 bg-background-dark">or</span>
+        </div>
+    </div>
+
+    <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                <span class="material-icons-outlined text-white text-xl">business_center</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-slate-900 dark:text-white mb-1">Want to create events?</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">Start your organization with a 14-day free trial</p>
+                <a href="{{ route('organization.register') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark transition-colors">
+                    Create Organization
+                    <span class="material-icons-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -111,3 +139,5 @@ function togglePassword(fieldId) {
 }
 </script>
 @endpush
+
+

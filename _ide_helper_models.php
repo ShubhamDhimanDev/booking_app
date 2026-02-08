@@ -51,6 +51,7 @@ namespace App\Models{
  * @property-read \App\Models\User|null $cancelledBy
  * @property-read \App\Models\Event $event
  * @property-read \App\Models\FollowUpInvite|null $followUpInvite
+ * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\Payment|null $payment
  * @property-read \App\Models\Refund|null $refund
  * @property-read \App\Models\BookingTracking|null $tracking
@@ -197,6 +198,7 @@ namespace App\Models{
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\EventExclusion[] $exclusions
  * @property-read int|null $exclusions_count
  * @property-read array $timeslots
+ * @property-read \App\Models\Organization|null $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\EventReminder[] $reminders
  * @property-read int|null $reminders_count
  * @property-read \App\Models\User $user
@@ -317,6 +319,7 @@ namespace App\Models{
  * @property-read \App\Models\Booking $booking
  * @property-read \App\Models\Event $event
  * @property-read \App\Models\User $inviter
+ * @property-read \App\Models\Organization|null $organization
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite accepted()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite active()
  * @method static \Illuminate\Database\Eloquent\Builder|FollowUpInvite expired()
@@ -352,6 +355,7 @@ namespace App\Models{
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Organization|null $organization
  * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest query()
@@ -365,6 +369,157 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|HelpRequest whereUpdatedAt($value)
  */
 	class HelpRequest extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * Invoice Model
+ * 
+ * Manages subscription invoices and payments
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int|null $subscription_id
+ * @property string $invoice_number
+ * @property Carbon $invoice_date
+ * @property Carbon|null $due_date
+ * @property array $line_items
+ * @property float $subtotal
+ * @property float $tax_amount
+ * @property float $discount_amount
+ * @property float $total_amount
+ * @property string $currency
+ * @property string $status
+ * @property Carbon|null $paid_at
+ * @property string|null $razorpay_payment_id
+ * @property string|null $razorpay_order_id
+ * @property string|null $razorpay_invoice_id
+ * @property array|null $payment_metadata
+ * @property string|null $pdf_path
+ * @property string|null $billing_address
+ * @property string|null $billing_email
+ * @property string|null $gstin
+ * @property-read string $formatted_subtotal
+ * @property-read string $formatted_tax
+ * @property-read string $formatted_total
+ * @property-read string|null $pdf_url
+ * @property-read \App\Models\Organization|null $organization
+ * @property-read \App\Models\Subscription|null $subscription
+ * @method static \Illuminate\Database\Eloquent\Builder|Invoice newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Invoice newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Invoice overdue()
+ * @method static \Illuminate\Database\Eloquent\Builder|Invoice paid()
+ * @method static \Illuminate\Database\Eloquent\Builder|Invoice pending()
+ * @method static \Illuminate\Database\Eloquent\Builder|Invoice query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Invoice recent(int $limit = 10)
+ */
+	class Invoice extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * Organization Model - Multi-Tenant SaaS
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $domain
+ * @property string|null $description
+ * @property int $owner_id
+ * @property string $contact_email
+ * @property string|null $contact_phone
+ * @property string $status
+ * @property int|null $current_plan_id
+ * @property \Carbon\Carbon|null $trial_ends_at
+ * @property \Carbon\Carbon|null $subscribed_at
+ * @property string $timezone
+ * @property string $currency
+ * @property string $locale
+ * @property array|null $branding
+ * @property array|null $settings
+ * @property string|null $razorpay_customer_id
+ * @property string|null $billing_email
+ * @property string|null $billing_address
+ * @property string|null $gstin
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property \Carbon\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationActivityLog[] $activityLogs
+ * @property-read int|null $activity_logs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Booking[] $bookings
+ * @property-read int|null $bookings_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Event[] $events
+ * @property-read int|null $events_count
+ * @property-read string $primary_url
+ * @property-read string $subdomain_url
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationInvitation[] $invitations
+ * @property-read int|null $invitations_count
+ * @property-read \App\Models\User|null $owner
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Payment[] $payments
+ * @property-read int|null $payments_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PromoCode[] $promoCodes
+ * @property-read int|null $promo_codes_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $users
+ * @property-read int|null $users_count
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization active()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Organization onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization suspended()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization trial()
+ * @method static \Illuminate\Database\Query\Builder|Organization withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Organization withoutTrashed()
+ */
+	class Organization extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * Organization Activity Log Model
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int|null $user_id
+ * @property string $action
+ * @property string|null $entity_type
+ * @property int|null $entity_id
+ * @property array|null $metadata
+ * @property string|null $ip_address
+ * @property string|null $user_agent
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read \App\Models\Organization|null $organization
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationActivityLog newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationActivityLog newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationActivityLog query()
+ */
+	class OrganizationActivityLog extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * Organization Invitation Model
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int $invited_by
+ * @property string $email
+ * @property string $token
+ * @property string $role
+ * @property string $status
+ * @property \Carbon\Carbon $expires_at
+ * @property \Carbon\Carbon|null $accepted_at
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read \App\Models\User|null $inviter
+ * @property-read \App\Models\Organization|null $organization
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationInvitation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationInvitation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationInvitation query()
+ */
+	class OrganizationInvitation extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -390,6 +545,7 @@ namespace App\Models{
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read \App\Models\Booking|null $booking
+ * @property-read \App\Models\Organization|null $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Refund[] $refunds
  * @property-read int|null $refunds_count
  * @property-read \App\Models\User|null $user
@@ -422,6 +578,41 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * PaymentAttempt Model
+ * 
+ * Tracks all payment attempts for subscriptions
+ *
+ * @property int $id
+ * @property int $subscription_id
+ * @property int|null $invoice_id
+ * @property string|null $razorpay_payment_id
+ * @property float $amount
+ * @property string $currency
+ * @property string $status
+ * @property string|null $failure_reason
+ * @property array|null $gateway_response
+ * @property string|null $payment_method
+ * @property string|null $card_last4
+ * @property string|null $card_network
+ * @property string|null $ip_address
+ * @property string|null $user_agent
+ * @property-read string $formatted_amount
+ * @property-read string|null $masked_card
+ * @property-read string $payment_method_display
+ * @property-read \App\Models\Invoice|null $invoice
+ * @property-read \App\Models\Subscription|null $subscription
+ * @method static \Illuminate\Database\Eloquent\Builder|PaymentAttempt failed()
+ * @method static \Illuminate\Database\Eloquent\Builder|PaymentAttempt newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PaymentAttempt newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PaymentAttempt query()
+ * @method static \Illuminate\Database\Eloquent\Builder|PaymentAttempt recent(int $days = 30)
+ * @method static \Illuminate\Database\Eloquent\Builder|PaymentAttempt successful()
+ */
+	class PaymentAttempt extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
  * PromoCode Model - SaaS Ready
  * 
  * Recommended Database Indexes:
@@ -443,6 +634,7 @@ namespace App\Models{
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Organization|null $organization
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode active()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode available()
  * @method static \Illuminate\Database\Eloquent\Builder|PromoCode byCode(string $code)
@@ -496,6 +688,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Booking $booking
  * @property-read \App\Models\User|null $initiatedBy
+ * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\Payment $payment
  * @method static \Illuminate\Database\Eloquent\Builder|Refund betweenDates($startDate, $endDate)
  * @method static \Illuminate\Database\Eloquent\Builder|Refund completed()
@@ -538,6 +731,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read mixed $decrypted_value
+ * @property-read \App\Models\Organization|null $organization
  * @method static \Illuminate\Database\Eloquent\Builder|Setting newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Setting newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Setting query()
@@ -549,6 +743,106 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Setting whereValue($value)
  */
 	class Setting extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * Subscription Model
+ * 
+ * Manages organization subscriptions and billing
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int $subscription_plan_id
+ * @property string $billing_cycle
+ * @property string $status
+ * @property string|null $razorpay_subscription_id
+ * @property string|null $razorpay_customer_id
+ * @property string|null $razorpay_plan_id
+ * @property Carbon|null $trial_ends_at
+ * @property Carbon|null $current_period_start
+ * @property Carbon|null $current_period_end
+ * @property Carbon|null $cancelled_at
+ * @property Carbon|null $ends_at
+ * @property float $amount
+ * @property string $currency
+ * @property int $events_used
+ * @property int $bookings_used
+ * @property int $team_members_used
+ * @property Carbon|null $usage_reset_at
+ * @property string|null $cancellation_reason
+ * @property int|null $cancelled_by_user_id
+ * @property-read \App\Models\User|null $cancelledBy
+ * @property-read int|null $days_remaining_in_period
+ * @property-read int|null $days_remaining_in_trial
+ * @property-read string $formatted_amount
+ * @property-read \Carbon\Carbon|null $next_billing_date
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Invoice[] $invoices
+ * @property-read int|null $invoices_count
+ * @property-read \App\Models\Organization|null $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PaymentAttempt[] $paymentAttempts
+ * @property-read int|null $payment_attempts_count
+ * @property-read \App\Models\SubscriptionPlan|null $plan
+ * @method static \Illuminate\Database\Eloquent\Builder|Subscription active()
+ * @method static \Illuminate\Database\Eloquent\Builder|Subscription cancelled()
+ * @method static \Illuminate\Database\Eloquent\Builder|Subscription newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Subscription newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Subscription onGracePeriod()
+ * @method static \Illuminate\Database\Eloquent\Builder|Subscription pastDue()
+ * @method static \Illuminate\Database\Eloquent\Builder|Subscription query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Subscription trialing()
+ */
+	class Subscription extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * SubscriptionPlan Model
+ * 
+ * Defines subscription tiers and their features/limits
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property array|null $features_list
+ * @property float $price_monthly
+ * @property float $price_yearly
+ * @property int $discount_yearly_percent
+ * @property string|null $razorpay_plan_id_monthly
+ * @property string|null $razorpay_plan_id_yearly
+ * @property int $max_events
+ * @property int $max_bookings_per_month
+ * @property int $max_team_members
+ * @property int $max_promo_codes
+ * @property bool $custom_domain
+ * @property bool $white_label
+ * @property bool $api_access
+ * @property bool $priority_support
+ * @property bool $advanced_analytics
+ * @property bool $google_calendar
+ * @property bool $email_reminders
+ * @property bool $remove_branding
+ * @property bool $is_active
+ * @property bool $is_featured
+ * @property int $sort_order
+ * @property array|null $metadata
+ * @property-read string $formatted_monthly_price
+ * @property-read string $formatted_yearly_price
+ * @property-read float $yearly_savings
+ * @property-read int $yearly_savings_percent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
+ * @property-read int|null $organizations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Subscription[] $subscriptions
+ * @property-read int|null $subscriptions_count
+ * @method static \Illuminate\Database\Eloquent\Builder|SubscriptionPlan active()
+ * @method static \Illuminate\Database\Eloquent\Builder|SubscriptionPlan featured()
+ * @method static \Illuminate\Database\Eloquent\Builder|SubscriptionPlan newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|SubscriptionPlan newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|SubscriptionPlan ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder|SubscriptionPlan query()
+ */
+	class SubscriptionPlan extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -571,6 +865,30 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|SystemSetting whereUserId($value)
  */
 	class SystemSetting extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * UsageRecord Model
+ * 
+ * Tracks daily/monthly usage metrics for organizations
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property string $period_date
+ * @property string $metric
+ * @property int $value
+ * @property array|null $metadata
+ * @property-read \App\Models\Organization|null $organization
+ * @method static \Illuminate\Database\Eloquent\Builder|UsageRecord currentMonth()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsageRecord forMetric(string $metric)
+ * @method static \Illuminate\Database\Eloquent\Builder|UsageRecord forPeriod($startDate, $endDate)
+ * @method static \Illuminate\Database\Eloquent\Builder|UsageRecord last30Days()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsageRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsageRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsageRecord query()
+ */
+	class UsageRecord extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -599,6 +917,7 @@ namespace App\Models{
  * @property-read int|null $my_bookings_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
  * @property-read int|null $notifications_count
+ * @property-read \App\Models\Organization|null $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Payment[] $payments
  * @property-read int|null $payments_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\Spatie\Permission\Models\Permission[] $permissions

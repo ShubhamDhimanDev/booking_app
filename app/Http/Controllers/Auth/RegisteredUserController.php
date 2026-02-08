@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Organization;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Contracts\View\View;
 
@@ -41,31 +44,33 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->input('phone'),
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            // Create user as guest
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->input('phone'),
+                'password' => Hash::make($request->password),
+            ]);
 
-        // Assign default 'user' role if the roles package is available
-        if (method_exists($user, 'assignRole')) {
-            try {
-                $user->assignRole('user');
-            } catch (\Exception $e) {
-                // log and continue if role assignment fails for any reason
-                \Illuminate\Support\Facades\Log::warning('Failed to assign role to new user: ' . $e->getMessage());
-            }
+            // Assign guest role
+            $user->assignRole('guest');
+
+            event(new Registered($user));
+
+            Auth::login($user);
+
+            // Redirect to smart dashboard route
+            return redirect()->route('dashboard');
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Registration failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors([
+                'registration' => 'Registration failed. Please try again.'
+            ])->withInput($request->except('password', 'password_confirmation'));
         }
-
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        // After registration redirect based on role (admin vs regular user)
-        $isAdmin = method_exists($user, 'hasRole') && $user->hasRole('admin');
-        $default = $isAdmin ? '/bookings' : '/user/bookings';
-
-        return redirect($default);
     }
 }

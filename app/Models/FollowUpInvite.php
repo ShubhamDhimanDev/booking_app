@@ -37,6 +37,7 @@ class FollowUpInvite extends Model
      * Mass-assignable attributes
      */
     protected $fillable = [
+        'organization_id',
         'booking_id',
         'event_id',
         'user_id',
@@ -47,6 +48,50 @@ class FollowUpInvite extends Model
         'custom_price',
         'is_normal_invite',
     ];
+
+    /**
+     * Boot the model - Add multi-tenancy scopes
+     */
+    protected static function booted()
+    {
+        // Auto-assign organization_id on creation
+        static::creating(function ($invite) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (!$invite->organization_id && app()->has('currentOrganization')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $invite->organization_id = $org->id;
+                }
+            }
+        });
+
+        // Global scope to filter by organization (except for super-admin)
+        static::addGlobalScope('organization', function (Builder $builder) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (app()->has('currentOrganization') && !app()->has('bypassTenantScope')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $builder->where('follow_up_invites.organization_id', $org->id);
+                }
+            }
+        });
+    }
+
+    /**
+     * Relationship: FollowUpInvite belongs to an Organization
+     */
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
 
     /**
      * Attributes that should be cast

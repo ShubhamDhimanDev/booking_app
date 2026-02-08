@@ -1,14 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\EventController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\TestController;
-use App\Http\Controllers\TransactionsController;
-use App\Http\Controllers\HelpController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -21,52 +13,24 @@ use App\Http\Controllers\HelpController;
 |
 */
 
-// Route::redirect('/', '/events')->name('dashboard');
+// Public landing page
+Route::get('/', function () {
+    return view('welcome');
+})->name('home');
 
-Route::middleware('auth')->group(function () {
-  Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-  Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-  Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// Redirect authenticated users based on their role
+Route::get('/dashboard', function () {
+    $user = auth()->user();
 
-  // Transactions for regular users
-  Route::get('/user/transactions', [TransactionsController::class, 'index'])->name('transactions.index');
-  // Bookings for regular users (bookers)
-  Route::get('/user/bookings', [BookingController::class, 'userIndex'])->name('user.bookings.index');
-  Route::get('/user/bookings/{booking}/reschedule', [BookingController::class, 'showRescheduleForm'])->name('user.bookings.reschedule.form');
-  Route::post('/user/bookings/{booking}/reschedule', [BookingController::class, 'reschedule'])->name('user.bookings.reschedule');
-  Route::post('/user/bookings/{booking}/cancel', [BookingController::class, 'cancelBooking'])->name('user.bookings.cancel');
-});
+    if ($user->hasRole('super-admin')) {
+        return redirect()->route('super-admin.dashboard');
+    }
 
-// Theme toggle API (for authenticated users)
-Route::post('/api/theme/toggle', [ProfileController::class, 'toggleTheme'])->middleware('auth')->name('theme.toggle');
+    if ($user->organization_id) {
+        return redirect()->route('organization.dashboard');
+    }
 
-Route::get('/payment/{booking?}', [PaymentController::class, 'showPaymentPage'])->name('payment.page');
-Route::get('/payment/thankyou/{booking}', [PaymentController::class, 'thankYouPage'])->name('payment.thankyou');
-Route::post('/create-order', [PaymentController::class, 'createOrder']);
-Route::post('/verify-payment', [PaymentController::class, 'verifyPayment']);
-Route::post('/validate-promo', [PaymentController::class, 'validatePromoCode']);
+    return redirect()->route('user.dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-// PayU callback routes
-Route::post('/payment/payu/callback', [PaymentController::class, 'payuCallback'])->name('payment.payu.callback');
-Route::get('/payment/failed/{booking?}', [PaymentController::class, 'paymentFailedPage'])->name('payment.failed');
-
-// Multi-page booking flow
-Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->name('events.show.public');
-Route::get('/e/{event:slug}/details', [BookingController::class, 'showDetailsForm'])->name('bookings.details');
-Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->name('bookings.store');
-
-// Follow-up booking flow
-Route::get('/followup/{token}', [BookingController::class, 'showFollowUpBooking'])->name('bookings.followup.show');
-
-Route::get('/welcome', [TestController::class, 'welcome'])->name('test.welcome');
-Route::get('/test', [TestController::class, 'test'])->name('test.test');
-
-require __DIR__ . '/auth.php';
-require __DIR__ . '/admin.php';
-
-// Static public pages: Privacy Policy, Terms of Service, Help Center
-Route::view('/privacy', 'static.privacy')->name('privacy');
-Route::view('/terms', 'static.terms')->name('terms');
-
-Route::get('/help', [HelpController::class, 'index'])->name('help');
-Route::post('/help', [HelpController::class, 'store'])->name('help.submit');
+require __DIR__.'/auth.php';

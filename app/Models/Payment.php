@@ -36,6 +36,7 @@ class Payment extends Model
      * Mass-assignable attributes
      */
     protected $fillable = [
+        'organization_id',
         'booking_id',
         'user_id',
         'transaction_id',
@@ -46,6 +47,50 @@ class Payment extends Model
         'promo_code',
         'metadata',
     ];
+
+    /**
+     * Boot the model - Add multi-tenancy scopes
+     */
+    protected static function booted()
+    {
+        // Auto-assign organization_id on creation
+        static::creating(function ($payment) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (!$payment->organization_id && app()->has('currentOrganization')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $payment->organization_id = $org->id;
+                }
+            }
+        });
+
+        // Global scope to filter by organization (except for super-admin)
+        static::addGlobalScope('organization', function (Builder $builder) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (app()->has('currentOrganization') && !app()->has('bypassTenantScope')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $builder->where('payments.organization_id', $org->id);
+                }
+            }
+        });
+    }
+
+    /**
+     * Relationship: Payment belongs to an Organization
+     */
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
 
     /**
      * Attributes that should be cast

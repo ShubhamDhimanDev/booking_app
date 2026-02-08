@@ -19,10 +19,8 @@ class AuthenticatedSessionController extends Controller
     public function create()
     {
         if (auth()->check()) {
-            // redirect based on role if already logged in
-            $user = auth()->user();
-            $isAdmin = method_exists($user, 'hasRole') && $user->hasRole('admin');
-            return redirect($isAdmin ? '/bookings' : '/user/bookings');
+            // Redirect to smart dashboard route
+            return redirect()->route('dashboard');
         }
 
         return view('auth.login', [
@@ -32,7 +30,7 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request.
+     * Handle an incoming authentication request (SaaS-ready).
      *
      * @param  \App\Http\Requests\Auth\LoginRequest  $request
      * @return \Illuminate\Http\RedirectResponse
@@ -43,23 +41,20 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-            // Redirect based on role: admin -> /bookings, other users -> /user/bookings
-            $isAdmin = $request->user() && method_exists($request->user(), 'hasRole') && $request->user()->hasRole('admin');
-            $default = $isAdmin ? '/bookings' : '/user/bookings';
-
-            // Respect intended URL where safe: only allow redirecting to admin paths when user is admin.
-            $intended = $request->session()->pull('url.intended');
-            if ($intended) {
-                $path = parse_url($intended, PHP_URL_PATH) ?: '';
-                // If intended path is under /bookings but current user is not admin, ignore it
-                if (! $isAdmin && str_starts_with($path, '/bookings')) {
-                    return redirect($default);
-                }
-
-                return redirect()->to($intended);
+        // Check if user's organization is active (if they belong to one)
+        $user = $request->user();
+        if ($user->organization_id) {
+            $organization = $user->organization;
+            if ($organization && $organization->status !== 'active') {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Your organization account is ' . $organization->status . '. Please contact support.'
+                ]);
             }
+        }
 
-            return redirect($default);
+        // Redirect to smart dashboard route (handles role-based routing)
+        return redirect()->intended(route('dashboard'));
     }
 
     /**

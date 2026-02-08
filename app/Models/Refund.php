@@ -38,6 +38,7 @@ class Refund extends Model
      * Mass-assignable attributes
      */
     protected $fillable = [
+        'organization_id',
         'booking_id',
         'payment_id',
         'amount',
@@ -52,6 +53,50 @@ class Refund extends Model
         'gateway_response',
         'processed_at',
     ];
+
+    /**
+     * Boot the model - Add multi-tenancy scopes
+     */
+    protected static function booted()
+    {
+        // Auto-assign organization_id on creation
+        static::creating(function ($refund) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (!$refund->organization_id && app()->has('currentOrganization')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $refund->organization_id = $org->id;
+                }
+            }
+        });
+
+        // Global scope to filter by organization (except for super-admin)
+        static::addGlobalScope('organization', function (Builder $builder) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (app()->has('currentOrganization') && !app()->has('bypassTenantScope')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $builder->where('refunds.organization_id', $org->id);
+                }
+            }
+        });
+    }
+
+    /**
+     * Relationship: Refund belongs to an Organization
+     */
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
 
     /**
      * Attributes that should be cast

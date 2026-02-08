@@ -2,7 +2,7 @@
 
 return [
 
-  /*
+    /*
     |--------------------------------------------------------------------------
     | Third Party Services
     |--------------------------------------------------------------------------
@@ -14,7 +14,10 @@ return [
     |
     */
 
-  'mailgun' => [
+    // Default Payment Gateway (razorpay, stripe, paypal, etc.)
+    'default_payment_gateway' => env('DEFAULT_PAYMENT_GATEWAY', 'razorpay'),
+
+    'mailgun' => [
     'domain' => env('MAILGUN_DOMAIN'),
     'secret' => env('MAILGUN_SECRET'),
     'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
@@ -35,5 +38,11 @@ return [
     'client_id' => env('GOOGLE_CLIENT_ID'),
     'client_secret' => env('GOOGLE_CLIENT_SECRET'),
     'redirect' => env('GOOGLE_REDIRECT'),
+  ],
+
+  'razorpay' => [
+    'key' => env('RAZORPAY_KEY_ID'),
+    'secret' => env('RAZORPAY_KEY_SECRET'),
+    'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
   ],
 ];

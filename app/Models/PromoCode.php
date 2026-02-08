@@ -37,6 +37,7 @@ class PromoCode extends Model
      * Mass-assignable attributes
      */
     protected $fillable = [
+        'organization_id',
         'code',
         'description',
         'discount_type',
@@ -49,6 +50,50 @@ class PromoCode extends Model
         'valid_until',
         'is_active',
     ];
+
+    /**
+     * Boot the model - Add multi-tenancy scopes
+     */
+    protected static function booted()
+    {
+        // Auto-assign organization_id on creation
+        static::creating(function ($promoCode) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (!$promoCode->organization_id && app()->has('currentOrganization')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $promoCode->organization_id = $org->id;
+                }
+            }
+        });
+
+        // Global scope to filter by organization (except for super-admin)
+        static::addGlobalScope('organization', function (Builder $builder) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (app()->has('currentOrganization') && !app()->has('bypassTenantScope')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $builder->where('promo_codes.organization_id', $org->id);
+                }
+            }
+        });
+    }
+
+    /**
+     * Relationship: PromoCode belongs to an Organization
+     */
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
 
     /**
      * Attributes that should be cast

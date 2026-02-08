@@ -269,82 +269,213 @@ return new class extends Migration
     {
         // ==================== USERS TABLE ====================
         Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex('idx_users_email');
-            $table->dropIndex('idx_users_username');
-            $table->dropIndex('idx_users_email_verified_at');
-            $table->dropIndex('idx_users_created_at');
+            if ($this->indexExists('users', 'idx_users_email')) {
+                $table->dropIndex('idx_users_email');
+            }
+            if ($this->indexExists('users', 'idx_users_username')) {
+                $table->dropIndex('idx_users_username');
+            }
+            if ($this->indexExists('users', 'idx_users_email_verified_at')) {
+                $table->dropIndex('idx_users_email_verified_at');
+            }
+            if ($this->indexExists('users', 'idx_users_created_at')) {
+                $table->dropIndex('idx_users_created_at');
+            }
         });
 
         // ==================== BOOKINGS TABLE ====================
-        Schema::table('bookings', function (Blueprint $table) {
-            $table->dropIndex('idx_bookings_event_scheduled');
-            $table->dropIndex('idx_bookings_user_status');
-            $table->dropIndex('idx_bookings_status_scheduled');
-            $table->dropIndex('idx_bookings_confirmation_token');
-            $table->dropIndex('idx_bookings_email_status');
-        });
+        if (Schema::hasTable('bookings')) {
+            try {
+                Schema::table('bookings', function (Blueprint $table) {
+                    // idx_bookings_event_scheduled may be used by foreign key, skip it
+                    // idx_bookings_user_status may be used by foreign key on user_id, skip it
+
+                    if ($this->indexExists('bookings', 'idx_bookings_status_scheduled')) {
+                        $table->dropIndex('idx_bookings_status_scheduled');
+                    }
+
+                    if ($this->indexExists('bookings', 'idx_bookings_confirmation_token')) {
+                        $table->dropIndex('idx_bookings_confirmation_token');
+                    }
+
+                    if ($this->indexExists('bookings', 'idx_bookings_email_status')) {
+                        $table->dropIndex('idx_bookings_email_status');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
 
         // ==================== EVENTS TABLE ====================
-        Schema::table('events', function (Blueprint $table) {
-            $table->dropIndex('idx_events_user_id');
-            $table->dropIndex('idx_events_user_active');
-            $table->dropIndex('idx_events_active_public');
-            $table->dropIndex('idx_events_slug');
-            $table->dropIndex('idx_events_created_at');
-        });
+        if (Schema::hasTable('events')) {
+            try {
+                Schema::table('events', function (Blueprint $table) {
+                    // idx_events_user_id may be used by foreign key on user_id, skip it
+
+                    if ($this->indexExists('events', 'idx_events_user_active')) {
+                        $table->dropIndex('idx_events_user_active');
+                    }
+
+                    if ($this->indexExists('events', 'idx_events_active_public')) {
+                        $table->dropIndex('idx_events_active_public');
+                    }
+
+                    if ($this->indexExists('events', 'idx_events_slug')) {
+                        $table->dropIndex('idx_events_slug');
+                    }
+
+                    if ($this->indexExists('events', 'idx_events_created_at')) {
+                        $table->dropIndex('idx_events_created_at');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
 
         // ==================== PAYMENTS TABLE ====================
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropIndex('idx_payments_transaction_id');
-            $table->dropIndex('idx_payments_booking_id');
-            $table->dropIndex('idx_payments_user_status');
-            $table->dropIndex('idx_payments_status_created');
-            $table->dropIndex('idx_payments_gateway');
-        });
+        if (Schema::hasTable('payments')) {
+            try {
+                Schema::table('payments', function (Blueprint $table) {
+                    // idx_payments_booking_id may be used by foreign key, skip it
+
+                    if ($this->indexExists('payments', 'idx_payments_transaction_id')) {
+                        $table->dropIndex('idx_payments_transaction_id');
+                    }
+
+                    if ($this->indexExists('payments', 'idx_payments_user_status')) {
+                        $table->dropIndex('idx_payments_user_status');
+                    }
+
+                    if ($this->indexExists('payments', 'idx_payments_status_created')) {
+                        $table->dropIndex('idx_payments_status_created');
+                    }
+
+                    if ($this->indexExists('payments', 'idx_payments_gateway')) {
+                        $table->dropIndex('idx_payments_gateway');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
 
         // ==================== REFUNDS TABLE ====================
-        Schema::table('refunds', function (Blueprint $table) {
-            $table->dropIndex('idx_refunds_booking_id');
-            $table->dropIndex('idx_refunds_payment_id');
-            $table->dropIndex('idx_refunds_status_created');
-            $table->dropIndex('idx_refunds_user_id');
-        });
+        if (Schema::hasTable('refunds')) {
+            try {
+                Schema::table('refunds', function (Blueprint $table) {
+                    // idx_refunds_booking_id and idx_refunds_payment_id may be used by foreign keys, skip them
+
+                    if ($this->indexExists('refunds', 'idx_refunds_status_created')) {
+                        $table->dropIndex('idx_refunds_status_created');
+                    }
+
+                    if ($this->indexExists('refunds', 'idx_refunds_user_id')) {
+                        $table->dropIndex('idx_refunds_user_id');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
 
         // ==================== PROMO_CODES TABLE ====================
-        Schema::table('promo_codes', function (Blueprint $table) {
-            $table->dropUnique('idx_promo_codes_code');
-            $table->dropIndex('idx_promo_codes_active');
-            $table->dropIndex('idx_promo_codes_active_valid');
-            $table->dropIndex('idx_promo_codes_expires_at');
-        });
+        if (Schema::hasTable('promo_codes')) {
+            try {
+                Schema::table('promo_codes', function (Blueprint $table) {
+                    if ($this->indexExists('promo_codes', 'idx_promo_codes_code')) {
+                        $table->dropUnique('idx_promo_codes_code');
+                    }
+
+                    if ($this->indexExists('promo_codes', 'idx_promo_codes_active')) {
+                        $table->dropIndex('idx_promo_codes_active');
+                    }
+
+                    if ($this->indexExists('promo_codes', 'idx_promo_codes_active_valid')) {
+                        $table->dropIndex('idx_promo_codes_active_valid');
+                    }
+
+                    if ($this->indexExists('promo_codes', 'idx_promo_codes_expires_at')) {
+                        $table->dropIndex('idx_promo_codes_expires_at');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
 
         // ==================== FOLLOW_UP_INVITES TABLE ====================
-        Schema::table('follow_up_invites', function (Blueprint $table) {
-            $table->dropUnique('idx_follow_up_invites_token');
-            $table->dropIndex('idx_follow_up_invites_booking');
-            $table->dropIndex('idx_follow_up_invites_event');
-            $table->dropIndex('idx_follow_up_invites_status');
-            $table->dropIndex('idx_follow_up_invites_expires');
-        });
+        if (Schema::hasTable('follow_up_invites')) {
+            try {
+                Schema::table('follow_up_invites', function (Blueprint $table) {
+                    // idx_follow_up_invites_booking and idx_follow_up_invites_event may be used by foreign keys, skip them
+
+                    if ($this->indexExists('follow_up_invites', 'idx_follow_up_invites_token')) {
+                        $table->dropUnique('idx_follow_up_invites_token');
+                    }
+
+                    if ($this->indexExists('follow_up_invites', 'idx_follow_up_invites_status')) {
+                        $table->dropIndex('idx_follow_up_invites_status');
+                    }
+
+                    if ($this->indexExists('follow_up_invites', 'idx_follow_up_invites_expires')) {
+                        $table->dropIndex('idx_follow_up_invites_expires');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
 
         // ==================== EVENT_REMINDERS TABLE ====================
-        Schema::table('event_reminders', function (Blueprint $table) {
-            $table->dropIndex('idx_event_reminders_event_enabled');
-            $table->dropIndex('idx_event_reminders_minutes');
-        });
+        if (Schema::hasTable('event_reminders')) {
+            try {
+                Schema::table('event_reminders', function (Blueprint $table) {
+                    // idx_event_reminders_event may be used by foreign key, skip it
+
+                    if ($this->indexExists('event_reminders', 'idx_event_reminders_active_time')) {
+                        $table->dropIndex('idx_event_reminders_active_time');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
 
         // ==================== BOOKING_TRACKINGS TABLE ====================
-        Schema::table('booking_trackings', function (Blueprint $table) {
-            $table->dropIndex('idx_booking_trackings_booking_id');
-            $table->dropIndex('idx_booking_trackings_utm_campaign');
-            $table->dropIndex('idx_booking_trackings_utm_source');
-        });
+        if (Schema::hasTable('booking_trackings')) {
+            try {
+                Schema::table('booking_trackings', function (Blueprint $table) {
+                    // idx_booking_trackings_booking may be used by foreign key, skip it
+
+                    if ($this->indexExists('booking_trackings', 'idx_booking_trackings_session')) {
+                        $table->dropIndex('idx_booking_trackings_session');
+                    }
+
+                    if ($this->indexExists('booking_trackings', 'idx_booking_trackings_referrer')) {
+                        $table->dropIndex('idx_booking_trackings_referrer');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
 
         // ==================== EVENT_EXCLUSIONS TABLE ====================
-        Schema::table('event_exclusions', function (Blueprint $table) {
-            $table->dropIndex('idx_event_exclusions_event_id');
-            $table->dropIndex('idx_event_exclusions_event_date');
-        });
+        if (Schema::hasTable('event_exclusions')) {
+            try {
+                Schema::table('event_exclusions', function (Blueprint $table) {
+                    // idx_event_exclusions_event_id may be used by foreign key, skip it
+
+                    if ($this->indexExists('event_exclusions', 'idx_event_exclusions_event_date')) {
+                        $table->dropIndex('idx_event_exclusions_event_date');
+                    }
+                });
+            } catch (\Throwable $e) {
+                // Ignore errors when dropping indexes that are used by foreign keys
+            }
+        }
     }
 
     /**

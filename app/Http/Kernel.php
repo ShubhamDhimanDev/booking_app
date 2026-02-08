@@ -39,6 +39,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\CaptureUtmParameters::class,
+            \App\Http\Middleware\TenantMiddleware::class, // Multi-tenancy
         ],
 
         'api' => [
@@ -69,5 +70,11 @@ class Kernel extends HttpKernel
         // Spatie permission middleware
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+        // Multi-tenancy middleware
+        'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+        'subscription' => \App\Http\Middleware\CheckSubscription::class,
+        'usage.limit' => \App\Http\Middleware\CheckUsageLimits::class,
+        'super.admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+        'has.organization' => \App\Http\Middleware\EnsureUserHasOrganization::class,
     ];
 }

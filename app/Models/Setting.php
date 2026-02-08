@@ -7,7 +7,51 @@ use Illuminate\Support\Facades\Crypt;
 
 class Setting extends Model
 {
-    protected $fillable = ['key', 'value', 'is_encrypted'];
+    protected $fillable = ['organization_id', 'key', 'value', 'is_encrypted'];
+
+    /**
+     * Boot the model - Add multi-tenancy scopes
+     */
+    protected static function booted()
+    {
+        // Auto-assign organization_id on creation
+        static::creating(function ($setting) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (!$setting->organization_id && app()->has('currentOrganization')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $setting->organization_id = $org->id;
+                }
+            }
+        });
+
+        // Global scope to filter by organization (except for super-admin)
+        static::addGlobalScope('organization', function ($builder) {
+            // Skip during bootstrap
+            if (!app()->isBooted()) {
+                return;
+            }
+
+            if (app()->has('currentOrganization') && !app()->has('bypassTenantScope')) {
+                $org = app('currentOrganization');
+                if ($org && is_object($org) && property_exists($org, 'id')) {
+                    $builder->where('settings.organization_id', $org->id);
+                }
+            }
+        });
+    }
+
+    /**
+     * Relationship: Setting belongs to an Organization
+     */
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
 
     /**
      * Get the decrypted value if encrypted

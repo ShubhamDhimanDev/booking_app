@@ -8,6 +8,12 @@
     <p class="text-slate-500 dark:text-slate-400">Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you?</p>
 </div>
 
+@if($errors->has('verification'))
+    <div class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300">
+        {{ $errors->first('verification') }}
+    </div>
+@endif
+
 @if(session('status') === 'verification-link-sent')
     <div class="mb-6 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300">
         A new verification link has been sent to your email address.

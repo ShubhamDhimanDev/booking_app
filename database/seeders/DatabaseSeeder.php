@@ -17,9 +17,11 @@ class DatabaseSeeder extends Seeder
         // \App\Models\User::factory(10)->create();
 
         $this->call([
-            \Database\Seeders\RoleAndAdminSeeder::class,
-            \Database\Seeders\SuperAdminSeeder::class,
-            \Database\Seeders\TrackingSettingsSeeder::class,
+            // Multi-tenant roles and permissions
+            \Database\Seeders\RoleSeeder::class,
+
+            // Subscription plans (Phase 2)
+            \Database\Seeders\SubscriptionPlanSeeder::class,
         ]);
     }
 }

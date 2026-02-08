@@ -43,6 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
     'email',
     'phone',
     'password',
+    'organization_id',
   ];
 
   /**
@@ -82,10 +83,49 @@ class User extends Authenticatable implements MustVerifyEmail
    */
   protected static function booted(): void
   {
-    // Add global scope for soft-deleted users if needed
-    // static::addGlobalScope('active', fn(Builder $builder) => $builder->whereNull('deleted_at'));
+    // Auto-scope queries to current organization (except for super admins)
+    static::addGlobalScope('organization', function (Builder $builder) {
+      // Skip during bootstrap or if not in web context
+      if (!app()->isBooted() || !auth()->hasUser()) {
+        return;
+      }
+
+      try {
+        $user = auth()->user();
+        if ($user && $user->organization_id && !$user->is_super_admin) {
+          $builder->where('organization_id', $user->organization_id);
+        }
+      } catch (\Exception $e) {
+        // Silently skip if user cannot be loaded
+      }
+    });
+
+    // Auto-assign organization_id on create
+    static::creating(function ($model) {
+      // Skip during bootstrap
+      if (!app()->isBooted() || !auth()->hasUser()) {
+        return;
+      }
+
+      try {
+        if (!$model->organization_id && auth()->user()->organization_id) {
+          $model->organization_id = auth()->user()->organization_id;
+        }
+      } catch (\Exception $e) {
+        // Silently skip if user cannot be loaded
+      }
+    });
   }
 
+  // ==================== RELATIONSHIPS ====================
+
+  /**
+   * The organization this user belongs to
+   */
+  public function organization()
+  {
+    return $this->belongsTo(Organization::class);
+  }
 
   /**
    * Get gravatar

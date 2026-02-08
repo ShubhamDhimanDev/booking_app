@@ -54,6 +54,7 @@ class Event extends Model
    * Mass-assignable attributes
    */
   protected $fillable = [
+    'organization_id',
     'user_id',
     'title',
     'slug',
@@ -70,6 +71,50 @@ class Event extends Model
     'refund_rules',
     'deduct_gateway_charges',
   ];
+
+  /**
+   * Boot the model - Add multi-tenancy scopes
+   */
+  protected static function booted()
+  {
+      // Auto-assign organization_id on creation
+      static::creating(function ($event) {
+          // Skip during bootstrap
+          if (!app()->isBooted()) {
+              return;
+          }
+
+          if (!$event->organization_id && app()->has('currentOrganization')) {
+              $org = app('currentOrganization');
+              if ($org && is_object($org) && property_exists($org, 'id')) {
+                  $event->organization_id = $org->id;
+              }
+          }
+      });
+
+      // Global scope to filter by organization (except for super-admin)
+      static::addGlobalScope('organization', function (Builder $builder) {
+          // Skip during bootstrap
+          if (!app()->isBooted()) {
+              return;
+          }
+
+          if (app()->has('currentOrganization') && !app()->has('bypassTenantScope')) {
+              $org = app('currentOrganization');
+              if ($org && is_object($org) && property_exists($org, 'id')) {
+                  $builder->where('events.organization_id', $org->id);
+              }
+          }
+      });
+  }
+
+  /**
+   * Relationship: Event belongs to an Organization
+   */
+  public function organization()
+  {
+      return $this->belongsTo(Organization::class);
+  }
 
   /**
    * Attributes that should be cast
@@ -91,9 +136,10 @@ class Event extends Model
   ];
 
   /**
-   * Count bookings by default
+   * Count bookings by default (DISABLED - load explicitly when needed to avoid memory issues)
+   * Use Event::withCount('bookings')->get() when you need the count
    */
-  protected $withCount = ['bookings'];
+  // protected $withCount = ['bookings'];
 
   // ==================== ATTRIBUTES/ACCESSORS ====================
 
