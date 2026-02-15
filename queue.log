@@ -33814,3 +33814,35 @@ nohup: ignoring input
   2026-02-15 11:10:02 App\Jobs\BookingReminderJob ............... 25.14ms DONE
   2026-02-15 11:11:02 App\Jobs\BookingReminderJob .................... RUNNING
   2026-02-15 11:11:02 App\Jobs\BookingReminderJob ............... 76.80ms DONE
+  2026-02-15 11:12:02 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:12:02 App\Jobs\BookingReminderJob ............... 41.73ms DONE
+  2026-02-15 11:13:02 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:13:02 App\Jobs\BookingReminderJob .............. 123.80ms DONE
+  2026-02-15 11:14:01 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:14:01 App\Jobs\BookingReminderJob ............... 68.76ms DONE
+  2026-02-15 11:15:01 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:15:02 App\Jobs\BookingReminderJob ............... 88.88ms DONE
+  2026-02-15 11:16:01 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:16:01 App\Jobs\BookingReminderJob ............... 46.67ms DONE
+  2026-02-15 11:17:02 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:17:02 App\Jobs\BookingReminderJob ............... 58.67ms DONE
+  2026-02-15 11:18:02 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:18:02 App\Jobs\BookingReminderJob ............... 41.50ms DONE
+  2026-02-15 11:19:02 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:19:02 App\Jobs\BookingReminderJob ............... 57.71ms DONE
+  2026-02-15 11:20:03 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:20:03 App\Jobs\BookingReminderJob ............... 80.32ms DONE
+  2026-02-15 11:21:04 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:21:04 App\Jobs\BookingReminderJob .............. 115.09ms DONE
+  2026-02-15 11:22:01 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:22:01 App\Jobs\BookingReminderJob ............... 44.04ms DONE
+  2026-02-15 11:23:01 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:23:01 App\Jobs\BookingReminderJob ............... 29.33ms DONE
+  2026-02-15 11:24:00 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:24:00 App\Jobs\BookingReminderJob ............... 31.59ms DONE
+  2026-02-15 11:25:03 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:25:03 App\Jobs\BookingReminderJob ............... 35.15ms DONE
+  2026-02-15 11:26:03 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:26:03 App\Jobs\BookingReminderJob ............... 32.15ms DONE
+  2026-02-15 11:27:02 App\Jobs\BookingReminderJob .................... RUNNING
+  2026-02-15 11:27:02 App\Jobs\BookingReminderJob ............... 69.77ms DONE

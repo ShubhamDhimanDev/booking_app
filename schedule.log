@@ -33911,3 +33911,35 @@ nohup: ignoring input
 
   2026-02-15 11:11:00 Running [App\Jobs\BookingReminderJob] ........ 47ms DONE
 
+  2026-02-15 11:12:01 Running [App\Jobs\BookingReminderJob] ........ 47ms DONE
+
+  2026-02-15 11:13:00 Running [App\Jobs\BookingReminderJob] ........ 42ms DONE
+
+  2026-02-15 11:14:00 Running [App\Jobs\BookingReminderJob] ........ 30ms DONE
+
+  2026-02-15 11:15:00 Running [App\Jobs\BookingReminderJob] ........ 18ms DONE
+
+  2026-02-15 11:16:00 Running [App\Jobs\BookingReminderJob] ........ 37ms DONE
+
+  2026-02-15 11:17:00 Running [App\Jobs\BookingReminderJob] ........ 22ms DONE
+
+  2026-02-15 11:18:00 Running [App\Jobs\BookingReminderJob] ........ 22ms DONE
+
+  2026-02-15 11:19:00 Running [App\Jobs\BookingReminderJob] ........ 49ms DONE
+
+  2026-02-15 11:20:00 Running [App\Jobs\BookingReminderJob] ........ 41ms DONE
+
+  2026-02-15 11:21:00 Running [App\Jobs\BookingReminderJob] ........ 33ms DONE
+
+  2026-02-15 11:22:00 Running [App\Jobs\BookingReminderJob] ........ 17ms DONE
+
+  2026-02-15 11:23:00 Running [App\Jobs\BookingReminderJob] ........ 34ms DONE
+
+  2026-02-15 11:24:00 Running [App\Jobs\BookingReminderJob] ........ 16ms DONE
+
+  2026-02-15 11:25:00 Running [App\Jobs\BookingReminderJob] ........ 18ms DONE
+
+  2026-02-15 11:26:00 Running [App\Jobs\BookingReminderJob] ........ 22ms DONE
+
+  2026-02-15 11:27:00 Running [App\Jobs\BookingReminderJob] ........ 28ms DONE
+
