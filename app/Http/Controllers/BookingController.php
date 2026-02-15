@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Notifications\BookingDeclinedNotification;
 use App\Notifications\BookingRescheduledNotification;
 use App\Notifications\FollowUpInviteNotification;
+use App\Notifications\BookingRescheduleRequestNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -40,7 +41,7 @@ class BookingController extends Controller
     $query = Booking::whereHas('event', function ($q) use ($user) {
         $q->where('user_id', $user->id);
     })
-    ->with(['event', 'booker', 'tracking'])
+    ->with(['event', 'booker', 'tracking', 'payment'])
     ->where('user_id', '!=', NULL);
 
     // Apply UTM filters if provided (using relationship)
@@ -376,6 +377,7 @@ if ($ownerHasBooking) {
       'status' => 'pending',
       'is_followup' => $followUpInvite ? true : false,
       'followup_invite_id' => $followUpInvite ? $followUpInvite->id : null,
+      'additional_notes' => $request->input('additional_notes', null),
     ]);
 
     // Create tracking record with UTM parameters from session
@@ -826,16 +828,41 @@ if ($ownerHasBooking) {
     $request->validate([
       'reason' => 'required|string|max:500',
       'force' => 'nullable|boolean', // Allow admin to force cancel even if canCancel() returns false
+      'refund_option' => 'nullable|in:policy,full,custom',
+      'refund_percentage' => 'nullable|required_if:refund_option,custom|numeric|min:0|max:100',
     ]);
 
-    $force = $request->input('force', false);
+    $refundOption = $request->input('refund_option', 'policy');
+    $force = $request->boolean('force');
+    $refundPercentage = null;
 
-    // Check if booking can be cancelled (admin can override)
-    if (!$force && !$booking->canCancel()) {
+    if ($refundOption === 'full') {
+      $force = true;
+      $refundPercentage = 100;
+    } elseif ($refundOption === 'custom') {
+      $force = true;
+      $refundPercentage = (float) $request->refund_percentage;
+    }
+
+    // Prevent double cancellation
+    if ($booking->cancelled_at) {
       return back()->with([
         'alert_type' => 'warning',
-        'alert_message' => 'This booking does not meet the standard cancellation criteria. Use "Force Cancel" to proceed.',
+        'alert_message' => 'This booking is already cancelled.',
       ]);
+    }
+
+    // Check cancellation criteria when not forcing.
+    // If admin selected 'policy' we must respect event refund policy (canCancel()).
+    // If admin selected 'full' or 'custom' they explicitly chose another refund behavior and
+    // therefore we allow cancellation to proceed (unless booking already cancelled).
+    if (!$force) {
+      if ($refundOption === 'policy' && ! $booking->canCancel()) {
+        return back()->with([
+          'alert_type' => 'warning',
+          'alert_message' => 'This booking does not meet the standard cancellation criteria. Use "Force Cancel" to proceed.',
+        ]);
+      }
     }
 
     // Calculate refund amount BEFORE cancelling (admin can issue full refund regardless of policy)
@@ -860,12 +887,15 @@ if ($ownerHasBooking) {
         ]);
       }
     }
-    $refundAmount = $force && $request->has('refund_percentage')
-      ? ($booking->payment->amount * $request->refund_percentage) / 100
-      : $refundDetails['amount'];
+    $refundAmount = $refundDetails['amount'];
+    if ($force && $refundPercentage !== null) {
+      $refundAmount = $booking->payment
+        ? ($booking->payment->amount * $refundPercentage) / 100
+        : 0;
+    }
 
     // Create refund record if there's a payment and refund is requested
-    if ($booking->payment && $refundAmount > 0) {
+    if ($booking->payment && $booking->payment->amount > 0 && $refundAmount > 0) {
       $refund = Refund::create([
         'booking_id' => $booking->id,
         'payment_id' => $booking->payment->id,
@@ -888,7 +918,13 @@ if ($ownerHasBooking) {
 
     // Notify booker
     if ($booking->booker) {
-      $booking->booker->notify(new BookingDeclinedNotification($booking));
+      $booking->booker->notify(new BookingDeclinedNotification(
+        $booking->event,
+        $booking->booker_name,
+        $booking->booked_at_date,
+        $booking->booked_at_time,
+        $request->input('reason') ?? null
+      ));
     }
 
     // Delete Google Calendar event
@@ -906,6 +942,74 @@ if ($ownerHasBooking) {
     return back()->with([
       'alert_type' => 'success',
       'alert_message' => $message,
+    ]);
+  }
+
+  /**
+   * Admin: Request booker to reschedule (remove calendar/meet links and notify booker)
+   *
+   * @param Request $request
+   * @param Booking $booking
+   * @return \Illuminate\Http\RedirectResponse
+   */
+  public function adminRequestReschedule(Request $request, Booking $booking)
+  {
+    $admin = auth()->user();
+
+    // only allow for confirmed bookings
+    if ($booking->status !== 'confirmed') {
+      return back()->with([
+        'alert_type' => 'warning',
+        'alert_message' => 'Re-schedule is only available for confirmed bookings.'
+      ]);
+    }
+
+    $booking->load('event', 'payment', 'booker');
+
+    // validate optional note
+    $request->validate([
+      'note' => 'nullable|string|max:500',
+    ]);
+
+    $note = $request->input('note');
+
+    // attempt to delete google calendar event if present
+    if ($booking->calendar_id && $booking->event && $booking->event->user) {
+      try {
+        $this->deleteGoogleEvent($booking->event, $booking);
+      } catch (Exception $e) {
+        Log::error('Admin: Failed to delete Google Calendar event for reschedule', [
+          'booking_id' => $booking->id,
+          'error' => $e->getMessage(),
+        ]);
+      }
+    }
+
+    // remove links from DB but keep payment intact so re-scheduling doesn't require payment
+    $booking->update([
+      'calendar_id' => null,
+      'calendar_link' => null,
+      'meet_link' => null,
+    ]);
+
+    // notify booker with link to reschedule (user must login as booker)
+    try {
+      if ($booking->booker) {
+        $booking->booker->notify(new BookingRescheduleRequestNotification($booking, $note));
+      } else {
+        Notification::route('mail', [$booking->booker_email => $booking->booker_name])
+          ->notify(new BookingRescheduleRequestNotification($booking, $note));
+      }
+    } catch (Exception $e) {
+      Log::error('Admin: Failed to send reschedule notification', [
+        'booking_id' => $booking->id,
+        'error' => $e->getMessage(),
+      ]);
+    }
+
+    return back()->with([
+      'alert_type' => 'success',
+      'alert_message' => 'Booker has been notified to re-schedule the meeting.'
     ]);
   }
 

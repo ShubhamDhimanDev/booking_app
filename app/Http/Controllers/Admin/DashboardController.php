@@ -18,7 +18,7 @@ class DashboardController extends Controller
         // Upcoming sessions (confirmed or pending)
         $upcoming = Booking::with('event')
             ->whereDate('booked_at_date', '>=', $today)
-            ->whereIn('status', ['confirmed', 'pending'])
+            ->whereIn('status', ['confirmed'])
             ->orderBy('booked_at_date')
             ->limit(15)
             ->get();

@@ -11,24 +11,49 @@
 @section('badge-text', 'Booking Confirmed')
 
 @push('head-scripts')
-    {!! \App\Services\TrackingService::getEventScript('Purchase', [
-        'content_name' => $booking->event->title,
-        'content_ids' => [$booking->event->id],
-        'value' => $booking->payment->amount ?? $booking->event->price ?? 500,
-        'currency' => 'INR',
-        'transaction_id' => $booking->payment->transaction_id ?? $booking->id
-    ]) !!}
-    {!! \App\Services\TrackingService::getGoogleEventScript('purchase', [
-        'transaction_id' => $booking->payment->transaction_id ?? $booking->id,
-        'value' => $booking->payment->amount ?? $booking->event->price ?? 500,
-        'currency' => 'INR',
-        'items' => [[
-            'item_id' => $booking->event->id,
-            'item_name' => $booking->event->title,
-            'price' => $booking->payment->amount ?? $booking->event->price ?? 500,
-            'quantity' => 1
-        ]]
-    ]) !!}
+    @php
+        $purchaseValue = $booking->payment->amount ?? $booking->event->price ?? 500;
+    @endphp
+
+    @if($purchaseValue > 0)
+        {!! \App\Services\TrackingService::getEventScript('Purchase', [
+            'content_name' => $booking->event->title,
+            'content_ids' => [$booking->event->id],
+            'value' => $purchaseValue,
+            'currency' => 'INR',
+            'transaction_id' => $booking->payment->transaction_id ?? $booking->id
+        ]) !!}
+        {!! \App\Services\TrackingService::getGoogleEventScript('purchase', [
+            'transaction_id' => $booking->payment->transaction_id ?? $booking->id,
+            'value' => $purchaseValue,
+            'currency' => 'INR',
+            'items' => [[
+                'item_id' => $booking->event->id,
+                'item_name' => $booking->event->title,
+                'price' => $purchaseValue,
+                'quantity' => 1
+            ]]
+        ]) !!}
+    @else
+        {!! \App\Services\TrackingService::getEventScript('FreeBooking', [
+            'content_name' => $booking->event->title,
+            'content_ids' => [$booking->event->id],
+            'value' => 0,
+            'currency' => 'INR',
+            'transaction_id' => $booking->payment->transaction_id ?? $booking->id
+        ]) !!}
+        {!! \App\Services\TrackingService::getGoogleEventScript('free_booking', [
+            'transaction_id' => $booking->payment->transaction_id ?? $booking->id,
+            'value' => 0,
+            'currency' => 'INR',
+            'items' => [[
+                'item_id' => $booking->event->id,
+                'item_name' => $booking->event->title,
+                'price' => 0,
+                'quantity' => 1
+            ]]
+        ]) !!}
+    @endif
 @endpush
 
 @section('additional-styles')

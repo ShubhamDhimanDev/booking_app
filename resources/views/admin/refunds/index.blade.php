@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4>Refunds Management</h4>
         <a href="{{ route('admin.refunds.export', request()->query()) }}" class="btn btn-success btn-sm">
-            <i class="bi bi-download"></i> Export CSV
+            <i class="fa fa-download"></i> Export CSV
         </a>
     </div>
 
@@ -158,13 +158,13 @@
                             <td>{{ $refund->created_at->format('d M Y, h:i A') }}</td>
                             <td>
                                 <a href="{{ route('admin.refunds.show', $refund) }}" class="btn btn-sm btn-outline-primary" title="View Details">
-                                    <i class="bi bi-eye"></i>
+                                    <i class="fa fa-eye"></i>
                                 </a>
                                 @if(in_array($refund->status, ['failed', 'pending']))
                                 <form action="{{ route('admin.refunds.retry', $refund) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-outline-warning" title="Retry Refund">
-                                        <i class="bi bi-arrow-clockwise"></i>
+                                        <i class="fa fa-refresh"></i>
                                     </button>
                                 </form>
                                 @endif

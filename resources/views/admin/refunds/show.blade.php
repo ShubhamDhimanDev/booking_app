@@ -7,16 +7,16 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4>Refund Details #{{ $refund->id }}</h4>
         <div>
-            @if(in_array($refund->status, ['failed', 'pending']))
+                @if(in_array($refund->status, ['failed', 'pending']))
             <form action="{{ route('admin.refunds.retry', $refund) }}" method="POST" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-warning btn-sm">
-                    <i class="bi bi-arrow-clockwise"></i> Retry Refund
+                    <i class="fa fa-refresh"></i> Retry Refund
                 </button>
             </form>
             @endif
             <a href="{{ route('admin.refunds.index') }}" class="btn btn-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> Back to List
+                <i class="fa fa-arrow-left"></i> Back to List
             </a>
         </div>
     </div>

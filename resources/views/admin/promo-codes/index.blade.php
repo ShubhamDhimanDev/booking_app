@@ -54,15 +54,15 @@
 
                             <td>
                                 @if($promoCode->discount_type === 'percentage')
-                                    <span class="badge bg-info">{{ $promoCode->discount_value }}% OFF</span>
+                                    <span class="badge bg-info text-white">{{ $promoCode->discount_value }}% OFF</span>
                                     @if($promoCode->max_discount_amount)
-                                        <br><small class="text-muted">Max: ₹{{ number_format($promoCode->max_discount_amount, 2) }}</small>
+                                        <br><small class="text-muted text-white">Max: ₹{{ number_format($promoCode->max_discount_amount, 2) }}</small>
                                     @endif
                                 @else
-                                    <span class="badge bg-success">₹{{ number_format($promoCode->discount_value, 2) }} OFF</span>
+                                    <span class="badge bg-success text-white">₹{{ number_format($promoCode->discount_value, 2) }} OFF</span>
                                 @endif
                                 @if($promoCode->min_booking_amount)
-                                    <br><small class="text-muted">Min: ₹{{ number_format($promoCode->min_booking_amount, 2) }}</small>
+                                    <br><small class="text-muted text-white">Min: ₹{{ number_format($promoCode->min_booking_amount, 2) }}</small>
                                 @endif
                             </td>
 
@@ -105,7 +105,7 @@
                                     <a href="{{ route('admin.promo-codes.edit', $promoCode) }}"
                                        class="btn btn-sm btn-outline-primary"
                                        title="Edit">
-                                        <i class="fas fa-edit"></i>
+                                        <i class="fa fa-edit"></i>
                                     </a>
 
                                     <form action="{{ route('admin.promo-codes.destroy', $promoCode) }}"
@@ -117,7 +117,7 @@
                                         <button type="submit"
                                                 class="btn btn-sm btn-outline-danger"
                                                 title="Delete">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fa fa-trash"></i>
                                         </button>
                                     </form>
                                 </div>

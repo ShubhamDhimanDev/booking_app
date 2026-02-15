@@ -230,11 +230,11 @@
                         </span>
                     </label>
                     <textarea
-                        name="notes"
+                        name="additional_notes"
                         rows="3"
                         placeholder="Any specific agenda or requirements?"
                         class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-                    >{{ old('notes') }}</textarea>
+                    >{{ old('additional_notes') }}</textarea>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3 pt-4">

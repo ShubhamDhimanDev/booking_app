@@ -79,13 +79,9 @@
                             <th>#</th>
                             <th>Event</th>
                             <th>Booker</th>
-                            <th>Email</th>
-                            <th>Phone</th>
                             <th>Booked Date</th>
                             <th>Booked Time</th>
-                            <th>Meet Link</th>
-                            <th>Calendar Link</th>
-                            <th>Created At</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -95,6 +91,33 @@
                         @php $i = ($bookings->currentPage() - 1) * $bookings->perPage() + 1; @endphp
 
                         @forelse ($bookings as $booking)
+                            @php
+                                $bookingDateTime = \Carbon\Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
+                                $bookingStatus = $booking->status;
+                                $statusLabel = ucfirst($bookingStatus);
+                                $statusBadgeClass = 'bg-secondary text-white';
+
+                                if ($bookingStatus === 'cancelled') {
+                                    $statusLabel = 'Cancelled';
+                                    $statusBadgeClass = 'bg-warning text-dark';
+                                } elseif ($bookingStatus === 'confirmed') {
+                                    $statusLabel = 'Scheduled';
+                                    $statusBadgeClass = 'bg-primary text-white';
+                                } elseif ($bookingStatus === 'pending') {
+                                    $statusLabel = 'Pending';
+                                    $statusBadgeClass = 'bg-secondary text-white';
+                                }
+
+                                if ($bookingStatus !== 'cancelled' && $bookingDateTime->isPast()) {
+                                    $statusLabel = 'Completed';
+                                    $statusBadgeClass = 'bg-success text-white';
+                                }
+
+                                $additionalNotes = trim((string) $booking->additional_notes);
+                                $isCancelled = in_array($bookingStatus, ['cancelled', 'declined'], true);
+                                $hasPaidAmount = $booking->payment && $booking->payment->amount > 0;
+                                $eventHasRefund = $booking->event && ($booking->event->refund_enabled ?? false);
+                            @endphp
                             <tr>
                                 <td>{{ $i++ }}</td>
 
@@ -112,12 +135,6 @@
                                 {{-- Booker --}}
                                 <td>{{ $booking->booker_name }}</td>
 
-                                {{-- Email --}}
-                                <td>{{ $booking->booker_email }}</td>
-
-                                {{-- Phone --}}
-                                <td>{{ $booking->phone }}</td>
-
                                 {{-- Booked date --}}
                                 <td>
                                     {{ \Carbon\Carbon::parse($booking->booked_at_date)->format('d M Y') }}
@@ -126,44 +143,37 @@
                                 {{-- booked time (from accessor) --}}
                                 <td>{{ $booking->booked_at_time }}</td>
 
-                                {{-- Meet link --}}
-                                @php
-                                    $bookingDateTime = \Carbon\Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
-                                @endphp
+                                {{-- status --}}
                                 <td>
-                                    @if($booking->status === 'cancelled')
-                                        <span class="text-warning">Cancelled</span>
-                                    @elseif($booking->meet_link && $bookingDateTime->isFuture())
-                                        <a href="{{ $booking->meet_link }}" target="_blank">
-                                            <i class="fa fa-external-link"></i>
-                                        </a>
-                                    @elseif($booking->meet_link)
-                                        <span class="text-muted">Completed</span>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
+                                    <span class="badge {{ $statusBadgeClass }}">{{ $statusLabel }}</span>
                                 </td>
-
-                                {{-- calendar link --}}
-                                <td>
-                                    @if($booking->status === 'cancelled')
-                                        <span class="text-warning">Cancelled</span>
-                                    @elseif($booking->calendar_link && $bookingDateTime->isFuture())
-                                        <a href="{{ $booking->calendar_link }}" target="_blank">
-                                            <i class="fa fa-external-link"></i>
-                                        </a>
-                                    @elseif($booking->calendar_link)
-                                        <span class="text-muted">Completed</span>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-
-                                {{-- created at --}}
-                                <td>{{ $booking->created_at->format('d M Y H:i') }}</td>
 
                                 {{-- Actions --}}
                                 <td>
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-primary me-1"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#bookingModal{{ $booking->id }}">
+                                        <i class="fa fa-eye"></i> View
+                                    </button>
+
+                                    @if($bookingStatus === 'confirmed')
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger me-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#cancelModal{{ $booking->id }}">
+                                            <i class="fa fa-times"></i> Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-secondary me-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#rescheduleModal{{ $booking->id }}">
+                                            <i class="fa fa-calendar-alt"></i> Re-Schedule
+                                        </button>
+                                    @endif
                                     {{-- @if($booking->isCompleted() && !$booking->is_followup) --}}
                                     @if($booking->calendar_link && !$bookingDateTime->isFuture())
                                         <button
@@ -175,8 +185,6 @@
                                         </button>
                                     @elseif($booking->is_followup)
                                         <span class="badge bg-info text-white">Follow-up Session</span>
-                                    @else
-                                        <span class="text-muted">-</span>
                                     @endif
 
                                     <button
@@ -188,6 +196,241 @@
                                     </button>
                                 </td>
                             </tr>
+
+                            {{-- Details Modal --}}
+                            <div class="modal fade" id="bookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                    <div class="modal-content bg-dark border-secondary">
+                                        <div class="modal-header border-secondary">
+                                            <h5 class="modal-title text-white">Booking Details</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="border border-secondary rounded p-3 h-100">
+                                                        <h6 class="text-uppercase text-muted small mb-3">Overview</h6>
+                                                        <dl class="row mb-0">
+                                                            <dt class="col-5 text-muted">Event</dt>
+                                                            <dd class="col-7 text-white">{{ $booking->event->title }}</dd>
+                                                            <dt class="col-5 text-muted">Booked Date</dt>
+                                                            <dd class="col-7 text-white">{{ \Carbon\Carbon::parse($booking->booked_at_date)->format('d M Y') }}</dd>
+                                                            <dt class="col-5 text-muted">Booked Time</dt>
+                                                            <dd class="col-7 text-white">{{ $booking->booked_at_time }}</dd>
+                                                            <dt class="col-5 text-muted">Status</dt>
+                                                            <dd class="col-7"><span class="badge {{ $statusBadgeClass }}">{{ $statusLabel }}</span></dd>
+                                                            <dt class="col-5 text-muted">Created At</dt>
+                                                            <dd class="col-7 text-white">{{ $booking->created_at->format('d M Y H:i') }}</dd>
+                                                        </dl>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="border border-secondary rounded p-3 h-100">
+                                                        <h6 class="text-uppercase text-muted small mb-3">Contact</h6>
+                                                        <dl class="row mb-0">
+                                                            <dt class="col-5 text-muted">Booker</dt>
+                                                            <dd class="col-7 text-white">{{ $booking->booker_name }}</dd>
+                                                            <dt class="col-5 text-muted">Email</dt>
+                                                            <dd class="col-7 text-white">{{ $booking->booker_email }}</dd>
+                                                            <dt class="col-5 text-muted">Phone</dt>
+                                                            <dd class="col-7 text-white">{{ $booking->phone ?? '-' }}</dd>
+                                                        </dl>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="border border-secondary rounded p-3">
+                                                        <h6 class="text-uppercase text-muted small mb-3">Links</h6>
+                                                        <dl class="row mb-0">
+                                                            <dt class="col-3 text-muted">Meet Link</dt>
+                                                            <dd class="col-9 text-white">
+                                                                @if($isCancelled)
+                                                                    <span class="text-muted">-</span>
+                                                                @else
+                                                                    @if($booking->meet_link && $bookingDateTime->isFuture())
+                                                                        <a href="{{ $booking->meet_link }}" target="_blank" rel="noopener">Open Meet Link</a>
+                                                                    @elseif($booking->meet_link)
+                                                                        <span class="text-muted">Completed</span>
+                                                                    @else
+                                                                        <span class="text-muted">-</span>
+                                                                    @endif
+                                                                @endif
+                                                            </dd>
+                                                            <dt class="col-3 text-muted">Calendar Link</dt>
+                                                            <dd class="col-9 text-white">
+                                                                @if($isCancelled)
+                                                                    <span class="text-muted">-</span>
+                                                                @else
+                                                                    @if($booking->calendar_link && $bookingDateTime->isFuture())
+                                                                        <a href="{{ $booking->calendar_link }}" target="_blank" rel="noopener">Open Calendar Link</a>
+                                                                    @elseif($booking->calendar_link)
+                                                                        <span class="text-muted">Completed</span>
+                                                                    @else
+                                                                        <span class="text-muted">-</span>
+                                                                    @endif
+                                                                @endif
+                                                            </dd>
+                                                        </dl>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="border border-secondary rounded p-3">
+                                                        <h6 class="text-uppercase text-muted small mb-3">Notes</h6>
+                                                        @if($additionalNotes !== '')
+                                                            <p class="mb-0 text-white">{{ $additionalNotes }}</p>
+                                                        @else
+                                                            <p class="text-muted mb-0">-</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="border border-secondary rounded p-3">
+                                                        <h6 class="text-uppercase text-muted small mb-3">Tracking</h6>
+                                                        <dl class="row mb-0">
+                                                            <dt class="col-3 text-muted">UTM Source</dt>
+                                                            <dd class="col-9 text-white">{{ optional($booking->tracking)->utm_source ?? '-' }}</dd>
+                                                            <dt class="col-3 text-muted">UTM Medium</dt>
+                                                            <dd class="col-9 text-white">{{ optional($booking->tracking)->utm_medium ?? '-' }}</dd>
+                                                            <dt class="col-3 text-muted">UTM Campaign</dt>
+                                                            <dd class="col-9 text-white">{{ optional($booking->tracking)->utm_campaign ?? '-' }}</dd>
+                                                        </dl>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-secondary">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Cancel Modal --}}
+                            @if($bookingStatus === 'confirmed')
+                                <div class="modal fade" id="cancelModal{{ $booking->id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content bg-dark border-secondary">
+                                            <div class="modal-header border-secondary">
+                                                <h5 class="modal-title text-white">
+                                                    <i class="fa fa-times me-2"></i>Cancel Booking
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form method="POST" action="{{ route('admin.bookings.cancel', $booking) }}">
+                                                @csrf
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning bg-warning bg-opacity-10 border-warning text-warning mb-4">
+                                                        <i class="fa fa-triangle-exclamation me-2"></i>
+                                                        This will cancel the booking, remove it from Google Calendar, and process a refund if applicable.
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label text-white fw-semibold">Reason <span class="text-danger">*</span></label>
+                                                        <textarea
+                                                            name="reason"
+                                                            class="form-control bg-dark text-white border-secondary"
+                                                            rows="3"
+                                                            required
+                                                            placeholder="Reason for cancellation..."></textarea>
+                                                    </div>
+
+                                                    @if($hasPaidAmount)
+                                                        <div class="mb-3">
+                                                            <label class="form-label text-white fw-semibold">Refund Option</label>
+                                                            <select
+                                                                name="refund_option"
+                                                                class="form-select bg-dark text-white border-secondary refund-option"
+                                                                data-target="refund-custom-{{ $booking->id }}">
+                                                                @if($eventHasRefund)
+                                                                    <option value="policy" selected>Use refund policy</option>
+                                                                    <option value="full">100% refund</option>
+                                                                @else
+                                                                    <option value="full" selected>100% refund</option>
+                                                                @endif
+                                                                <option value="custom">Custom percentage</option>
+                                                            </select>
+                                                            <small class="form-text text-muted">Custom percentage overrides the event refund policy.</small>
+                                                        </div>
+                                                        <div id="refund-custom-{{ $booking->id }}" class="mb-3 d-none">
+                                                            <label class="form-label text-white fw-semibold">Refund Percentage</label>
+                                                            <input
+                                                                type="number"
+                                                                name="refund_percentage"
+                                                                class="form-control bg-dark text-white border-secondary"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.01"
+                                                                placeholder="e.g. 75">
+                                                        </div>
+                                                        <div class="form-check form-switch mb-3">
+                                                            <input class="form-check-input" type="checkbox" name="force" value="1" id="forceCancel{{ $booking->id }}">
+                                                            <label class="form-check-label text-white" for="forceCancel{{ $booking->id }}">Force Cancel (override policy)</label>
+                                                            <div class="form-text text-muted">Use this to cancel even if the event policy would prevent cancellation.</div>
+                                                        </div>
+
+                                                        @else
+                                                            <input type="hidden" name="refund_option" value="policy">
+                                                            <div class="alert alert-info bg-info bg-opacity-10 border-info text-info mb-3">
+                                                                <i class="fa fa-info-circle me-2"></i>
+                                                                This booking has no paid amount. No refund will be processed for free bookings.
+                                                            </div>
+
+                                                            <div class="form-check form-switch mb-3">
+                                                                <input class="form-check-input" type="checkbox" role="switch" id="force-{{ $booking->id }}" name="force" value="1">
+                                                                <label class="form-check-label text-white" for="force-{{ $booking->id }}">Force Cancel (override policy)</label>
+                                                            </div>
+                                                        @endif
+                                                </div>
+                                                <div class="modal-footer border-secondary">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                        <i class="fa fa-times me-1"></i>Close
+                                                    </button>
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fa fa-times"></i> Cancel Booking
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                                    {{-- Reschedule Modal --}}
+                                    @if($bookingStatus === 'confirmed')
+                                        <div class="modal fade" id="rescheduleModal{{ $booking->id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content bg-dark border-secondary">
+                                                    <div class="modal-header border-secondary">
+                                                        <h5 class="modal-title text-white">
+                                                            <i class="fa fa-calendar-alt me-2"></i>Request Re-Schedule
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <form method="POST" action="{{ route('admin.bookings.request-reschedule', $booking) }}">
+                                                        @csrf
+                                                        <div class="modal-body">
+                                                            <div class="alert alert-warning bg-warning bg-opacity-10 border-warning text-warning mb-4">
+                                                                <i class="fa fa-info-circle me-2"></i>
+                                                                This will cancel the existing Google Calendar event and remove the meeting links. The booker will receive an email with a link to reschedule.
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label text-white fw-semibold">Optional Note</label>
+                                                                <textarea name="note" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="Optional message to the booker (appears in email)"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-secondary">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                <i class="fa fa-times me-1"></i>Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-primary">
+                                                                <i class="fa fa-paper-plane"></i> Notify Booker
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
 
                             {{-- Follow-up Modal --}}
                             @if($booking->isCompleted() && !$booking->is_followup)
@@ -327,7 +570,7 @@
                             </div>
                         @empty
                         <tr>
-                            <td colspan="10" class="text-center py-4 text-muted">
+                            <td colspan="7" class="text-center py-4 text-muted">
                                 No bookings found.
                             </td>
                         </tr>
@@ -352,4 +595,31 @@
 
 
 @push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.refund-option').forEach(function (select) {
+            var targetId = select.getAttribute('data-target');
+            var target = targetId ? document.getElementById(targetId) : null;
+
+            var toggleCustom = function () {
+                if (!target) {
+                    return;
+                }
+
+                if (select.value === 'custom') {
+                    target.classList.remove('d-none');
+                } else {
+                    target.classList.add('d-none');
+                    var input = target.querySelector('input[name="refund_percentage"]');
+                    if (input) {
+                        input.value = '';
+                    }
+                }
+            };
+
+            select.addEventListener('change', toggleCustom);
+            toggleCustom();
+        });
+    });
+</script>
 @endpush
