@@ -194,16 +194,29 @@ class Event extends Model
 
       case 'custom':
         // Custom: Use refund_rules JSON
-        if (!empty($this->refund_rules) && is_array($this->refund_rules)) {
-          // Sort rules by hours in descending order
-          usort($this->refund_rules, function ($a, $b) {
-            return ($b['hours'] ?? 0) - ($a['hours'] ?? 0);
-          });
+        $refundRules = $this->refund_rules;
 
-          foreach ($this->refund_rules as $rule) {
-            if ($hoursUntilEvent >= ($rule['hours'] ?? 0)) {
-              $refundPercentage = $rule['percentage'] ?? 0;
-              break;
+        if (!empty($refundRules)) {
+          // Convert to array if it's a string (JSON)
+          if (is_string($refundRules)) {
+            $refundRules = json_decode($refundRules, true);
+          }
+
+          // If it's an object with timestamp keys, convert to indexed array
+          if (is_array($refundRules) && !empty($refundRules)) {
+            // Extract values if it has non-numeric keys (timestamps)
+            $rules = array_values($refundRules);
+
+            // Sort rules by hours in descending order
+            usort($rules, function ($a, $b) {
+              return ((int)($b['hours'] ?? 0)) - ((int)($a['hours'] ?? 0));
+            });
+
+            foreach ($rules as $rule) {
+              if ($hoursUntilEvent >= ((int)($rule['hours'] ?? 0))) {
+                $refundPercentage = (int)($rule['percentage'] ?? 0);
+                break;
+              }
             }
           }
         }
@@ -256,14 +269,31 @@ class Event extends Model
         break;
 
       case 'custom':
-        if (!empty($this->refund_rules) && is_array($this->refund_rules)) {
+        $refundRules = $this->refund_rules;
+
+        // Handle empty or null rules
+        if (empty($refundRules)) {
+          $description = 'Custom refund policy (contact organizer for details).';
+          break;
+        }
+
+        // Convert to array if it's a string (JSON)
+        if (is_string($refundRules)) {
+          $refundRules = json_decode($refundRules, true);
+        }
+
+        // If it's an object with timestamp keys, convert to indexed array
+        if (is_array($refundRules) && !empty($refundRules)) {
+          // Extract values if it has non-numeric keys (timestamps)
+          $rules = array_values($refundRules);
+
           // Sort rules by hours in descending order
-          usort($this->refund_rules, function ($a, $b) {
-            return ($b['hours'] ?? 0) - ($a['hours'] ?? 0);
+          usort($rules, function ($a, $b) {
+            return ((int)($b['hours'] ?? 0)) - ((int)($a['hours'] ?? 0));
           });
 
           $parts = [];
-          foreach ($this->refund_rules as $rule) {
+          foreach ($rules as $rule) {
             $hours = $rule['hours'] ?? 0;
             $percentage = $rule['percentage'] ?? 0;
             $parts[] = "{$percentage}% refund if cancelled {$hours}+ hours before";

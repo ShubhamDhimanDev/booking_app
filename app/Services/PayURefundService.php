@@ -15,7 +15,7 @@ class PayURefundService implements RefundServiceInterface
     {
         $this->merchantKey = Setting::getSetting('payu_merchant_key') ?? env('PAYU_MERCHANT_KEY');
         $this->merchantSalt = Setting::getSetting('payu_merchant_salt') ?? env('PAYU_MERCHANT_SALT');
-        $this->baseUrl = env('PAYU_BASE_URL', 'https://info.payu.in/merchant');
+        $this->baseUrl = env('PAYU_BASE_URL', 'https://info.payu.in/merchant/postservice.php?form=2');
     }
 
     /**
@@ -37,19 +37,24 @@ class PayURefundService implements RefundServiceInterface
     public function processRefund(string $paymentId, float $amount, array $options = []): array
     {
         try {
-            $refundUrl = $this->baseUrl . '/refundPayment';
+            // Generate unique token for this refund request (max 23 chars)
+            $token = $options['token'] ?? 'refund_' . substr(uniqid(), -16);
+
+            // Callback URL for refund notifications
+            $callbackUrl = $options['callback_url'] ?? route('payment.payu.callback');
 
             $postData = [
                 'key' => $this->merchantKey,
                 'command' => 'cancel_refund_transaction',
-                'var1' => $paymentId, // PayU transaction ID
-                'var2' => $options['token'] ?? '', // Bank reference number
-                'var3' => $amount,
-                'hash' => $this->generateRefundHash($paymentId, $amount),
+                'var1' => $paymentId, // PayU mihpayid
+                'var2' => $token, // Unique token for this refund (NOT bank ref)
+                'var3' => number_format($amount, 2, '.', ''), // Amount with 2 decimals
+                'var5' => $callbackUrl, // Refund callback URL (mandatory)
+                'hash' => $this->generateRefundHash($paymentId, $token),
             ];
 
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $refundUrl);
+            curl_setopt($ch, CURLOPT_URL, $this->baseUrl);
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -64,10 +69,12 @@ class PayURefundService implements RefundServiceInterface
             if ($httpCode == 200 && isset($responseData['status']) && $responseData['status'] == 1) {
                 return [
                     'success' => true,
-                    'refund_id' => $responseData['request_id'] ?? uniqid('payu_'),
+                    'refund_id' => $responseData['request_id'] ?? $responseData['txn_update_id'] ?? uniqid('payu_'),
                     'amount' => $amount,
                     'status' => 'initiated',
                     'message' => $responseData['msg'] ?? 'Refund initiated successfully',
+                    'mihpayid' => $responseData['mihpayid'] ?? $paymentId,
+                    'bank_ref_num' => $responseData['bank_ref_num'] ?? null,
                     'raw_response' => $responseData,
                 ];
             }
@@ -144,10 +151,11 @@ class PayURefundService implements RefundServiceInterface
 
     /**
      * Generate hash for refund request
+     * Format: sha512(key|command|var1|salt)
      */
-    protected function generateRefundHash(string $paymentId, float $amount): string
+    protected function generateRefundHash(string $paymentId, string $token): string
     {
-        $hashString = $this->merchantKey . '|cancel_refund_transaction|' . $paymentId . '|' . $amount . '|' . $this->merchantSalt;
+        $hashString = $this->merchantKey . '|cancel_refund_transaction|' . $paymentId . '|' . $this->merchantSalt;
         return hash('sha512', $hashString);
     }
 

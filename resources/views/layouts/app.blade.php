@@ -16,6 +16,14 @@
     {!! \App\Services\TrackingService::getBaseScript() !!}
     {!! \App\Services\TrackingService::getGoogleBaseScript() !!}
 
+    <!-- Google Tag Manager -->
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-WJ33CG57');</script>
+        <!-- End Google Tag Manager -->
+
     @stack('head-scripts')
 
     <style>
@@ -79,6 +87,10 @@
 </head>
 <body class="@auth bg-background-light dark:bg-background-dark @else bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 @endauth min-h-screen antialiased text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
+    <!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WJ33CG57"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
     @stack('body-scripts')
 
     <!-- Modern Header -->
@@ -86,8 +98,8 @@
         <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
                 <a href="/" class="flex items-center space-x-3 group">
-                    <div class="w-11 h-11 bg-gradient-to-br from-primary to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-xl group-hover:shadow-primary/40 transition-all">
-                        <span class="material-icons-round text-white text-xl">event_available</span>
+                    <div class="w-11 h-17 flex items-center justify-center">
+                        <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-11 h-17 object-cover" />
                     </div>
                     <span class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{{ config('app.name') }}</span>
                 </a>
@@ -185,9 +197,8 @@
             <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
                 <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">© {{ date('Y') }} {{ config('app.name') }}@auth  Platform @endauth. All rights reserved.</p>
                 <div class="flex items-center space-x-6 text-sm">
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@auth Support @else Help @endauth</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@guest Contact @endguest Privacy</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">@guest Privacy @else Terms @endauth</a>
+                    For Help Contact : &nbsp;&nbsp;<a href="tel:+916366282505" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">+91 6366282505</a>
+                    <a href="https://astrochaitanya.com/privacy-policy/" target="_blank" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Privacy Policy</a>
                 </div>
             </div>
         </div>

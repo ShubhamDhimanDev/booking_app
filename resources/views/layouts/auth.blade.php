@@ -13,6 +13,14 @@
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
 
+    <!-- Google Tag Manager -->
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-WJ33CG57');</script>
+        <!-- End Google Tag Manager -->
+
     @vite(['resources/css/app.css'])
 
     <style>
@@ -29,6 +37,10 @@
 
 <body
     class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-300">
+     <!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WJ33CG57"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
     <div class="min-h-screen flex">
         <!-- Left Side - Hero Section -->
         <div class="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden">
@@ -38,13 +50,12 @@
             <div class="relative z-10 w-full flex flex-col justify-center items-center p-16 text-white text-center">
                 <div class="mb-12">
                     <div
-                        class="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-2xl mb-6">
-                        <span class="material-icons-outlined text-5xl">event_available</span>
+                        class="inline-flex items-center justify-center mb-6">
+                        <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-24  object-cover" />
                     </div>
-                    <h1 class="font-display text-6xl mb-4 leading-tight">Master Your <br />Time and Craft.</h1>
+                    <h1 class="font-display text-6xl mb-4 leading-tight">Transform Your Life <br />Through Energy.</h1>
                     <p class="text-xl text-indigo-100 max-w-md mx-auto font-light leading-relaxed">
-                        Join our community of professionals and enthusiasts. Seamlessly book sessions, manage events,
-                        and grow with us.
+                        Experience energy-based astrology with no birth charts needed. Join thousands who discovered clarity, purpose, and transformation through personalized guidance.
                     </p>
                 </div>
                 <div class="mt-auto bg-white/5 backdrop-blur-sm p-8 rounded-3xl border border-white/10 max-w-sm">
@@ -56,14 +67,14 @@
                         <span class="material-icons-outlined text-sm">star</span>
                     </div>
                     <p class="text-lg italic text-indigo-50 leading-snug mb-4">
-                        "The most elegant booking experience I've used in years. It just works and looks beautiful."
+                        "Chaitanya revealed truths I never knew and transformed my life with powerful energy work. His guidance continues to light my path."
                     </p>
                     <div class="flex items-center gap-3">
                         <img alt="User avatar" class="w-10 h-10 rounded-full bg-white/20"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuAD9KEzF-zAORGc2JdMozYOq4lAwMd-mcXj2xQz-4xlUEbVVEMEFpYedWMymi2Hos9NmQmJ7ctf9viyMEJE6RXvKvQrG3gPF_rFAagnKEVpL3a8ZNwTZEEWwyvOuy-jvey3vNDKKIwhyoph3WIsl6MaMRF4o9ektO8xLFBjKAO8Vw_6nVPvNphjz-FvWwRRWPtSCHjMq-BScKwAOrpnz0FCZxoVaPkcYuvrGQ6ZRYtEKz7LyPD_nGPjJ-xUy4WLZdGMeBaVpMd6CBM" />
                         <div class="text-left">
-                            <p class="font-semibold text-sm">Shubham Dhiman</p>
-                            <p class="text-xs text-indigo-200">Creative Director</p>
+                            <p class="font-semibold text-sm">Sweekrutha</p>
+                            <p class="text-xs text-indigo-200">Verified Client</p>
                         </div>
                     </div>
                 </div>
@@ -78,8 +89,8 @@
                 <div class="mb-10 flex items-center justify-between">
                     <div class="flex items-center gap-2 group cursor-pointer">
                         <div
-                            class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                            <span class="material-icons-outlined">insights</span>
+                            class="inline-flex items-center justify-center">
+                            <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-12  object-cover" />
                         </div>
                         <span
                             class="font-display text-2xl font-bold tracking-tight text-slate-800 dark:text-white">{{ config('app.name', 'MeetFlow') }}</span>
@@ -92,9 +103,8 @@
                 <!-- Footer Links -->
                 <div
                     class="mt-16 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-center gap-6 text-xs text-slate-400 uppercase tracking-widest">
-                    <a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
-                    <a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
-                    <a class="hover:text-primary transition-colors" href="#">Help Center</a>
+                     For Help Contact - <a href="tel:+916366282505" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">+91 6366282505</a>
+                    <a href="https://astrochaitanya.com/privacy-policy/" target="_blank" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Privacy Policy</a>
                 </div>
             </div>
         </div>

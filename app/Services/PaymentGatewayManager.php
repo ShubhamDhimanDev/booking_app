@@ -22,6 +22,18 @@ class PaymentGatewayManager
     }
 
     /**
+     * Get a specific gateway by name.
+     */
+    public function getGateway(string $name): PaymentGatewayInterface
+    {
+        $service = $this->gateways[$name] ?? null;
+        if (!$service) {
+            throw new \Exception("Payment gateway '{$name}' not found");
+        }
+        return app($service);
+    }
+
+    /**
      * Expose public-safe config for the active gateway (used by frontend).
      */
     public function getActiveGatewayConfig(): array

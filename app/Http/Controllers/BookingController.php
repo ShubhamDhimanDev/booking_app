@@ -60,7 +60,7 @@ class BookingController extends Controller
       });
     }
 
-    $bookings = $query->orderBy('booked_at_date', 'asc')->paginate(10);
+    $bookings = $query->orderBy('created_at', 'DESC')->paginate(10);
 
     // Get unique values for filter dropdowns from tracking table
     $utmSources = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
@@ -919,12 +919,12 @@ if ($ownerHasBooking) {
   public function sendFollowUpInvite(Request $request, Booking $booking)
   {
     // Validate that booking is completed
-    if (!$booking->isCompleted()) {
-      return back()->with([
-        'alert_type' => 'error',
-        'alert_message' => 'Follow-up invites can only be sent for completed sessions.',
-      ]);
-    }
+    // if (!$booking->isCompleted()) {
+    //   return back()->with([
+    //     'alert_type' => 'error',
+    //     'alert_message' => 'Follow-up invites can only be sent for completed sessions.',
+    //   ]);
+    // }
 
     // Validate request
     $request->validate([

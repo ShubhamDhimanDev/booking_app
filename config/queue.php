@@ -89,5 +89,20 @@ return [
         'database' => env('DB_CONNECTION', 'mysql'),
         'table' => 'failed_jobs',
     ],
+'worker' => [
+    'options' => [
+        'max_jobs' => 0,
+        'max_time' => 0,
+        'sleep' => 3,
+        'tries' => 3,
+        'timeout' => 60,
+        'force' => false,
+        'stop_when_empty' => false,
+        'backoff' => 0,
+        'memory' => 128,
+        'without_overlapping' => false,
+        'no_signal_handling' => true,
+    ],
+],
 
 ];

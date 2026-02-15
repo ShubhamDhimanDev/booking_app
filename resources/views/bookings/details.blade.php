@@ -101,7 +101,7 @@
 
                         <div class="pt-2">
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Description</h3>
-                            <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{!! $event->description !!}</div>
+                            <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{!! nl2br($event->description) !!}</div>
                         </div>
                     </div>
                 </div>
@@ -202,6 +202,7 @@
                         name="phone"
                         value="{{ old('phone', auth()->user()->phone ?? '') }}"
                         placeholder="+91 XXXXXXXXXX"
+                        required
                         class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     >
                 </div>

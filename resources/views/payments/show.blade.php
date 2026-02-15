@@ -275,7 +275,7 @@
                             About this event
                         </h3>
                         <div class="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-700/50 dark:to-slate-600/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-600">
-                            <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{!! nl2br(e($booking->event->description)) !!}</p>
+                            <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{!! nl2br($booking->event->description) !!}</p>
                         </div>
                     </div>
                     @endif
@@ -393,8 +393,8 @@
                         @else
                             <!-- Pay Button -->
                             <button id="payBtn" class="w-full gradient-bg hover:opacity-95 text-white font-extrabold py-5 rounded-2xl transition-all duration-300 flex items-center justify-center space-x-3 mb-5 shadow-2xl shadow-primary/40 hover:shadow-3xl hover:shadow-primary/50 transform hover:-translate-y-1 hover:scale-[1.02] relative overflow-hidden group">
-                                <span class="material-icons-round text-xl">lock</span>
-                                <span class="text-xl">Pay ₹<span id="payBtnAmount">{{ $actualPrice }}</span></span>
+                                <span class="material-icons-round text-xl" id="payBtnIcon">lock</span>
+                                <span class="text-xl" id="payBtnText">Pay ₹<span id="payBtnAmount">{{ $actualPrice }}</span></span>
                             </button>
 
                             <!-- Security Badge -->
@@ -449,13 +449,13 @@
         </div>
 
         <!-- Footer Note -->
-        <div class="mt-12 text-center">
+        {{-- <div class="mt-12 text-center">
             <p class="text-xs text-slate-500 dark:text-slate-400">
                 By completing this payment, you agree to our
                 <a href="#" class="text-primary hover:underline">Terms of Service</a> and
                 <a href="#" class="text-primary hover:underline">Privacy Policy</a>
             </p>
-        </div>
+        </div> --}}
     </main>
 @endsection
 
@@ -478,13 +478,13 @@
     <div id="verifyingOverlay" class="hidden fixed inset-0 z-50 flex items-center justify-center verifying-overlay">
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-12 shadow-2xl text-center max-w-md mx-4 border-2 border-slate-200 dark:border-slate-700">
             <div class="spinner mx-auto mb-8"></div>
-            <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight">Verifying Payment</h3>
-            <p class="text-base text-slate-600 dark:text-slate-400 mb-3 font-medium">Please wait while we confirm your transaction...</p>
+            <h3 id="verifyingTitle" class="text-3xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight">Verifying Payment</h3>
+            <p id="verifyingMessage" class="text-base text-slate-600 dark:text-slate-400 mb-3 font-medium">Please wait while we confirm your transaction...</p>
             <div class="flex items-center justify-center space-x-2 mt-6 bg-emerald-50 dark:bg-emerald-900/30 px-4 py-3 rounded-xl border border-emerald-100 dark:border-emerald-700">
                 <span class="material-icons-round text-emerald-600 dark:text-emerald-400">lock</span>
                 <p class="text-sm font-bold text-emerald-700 dark:text-emerald-300">Secure payment processing</p>
             </div>
-            <div class="flex items-center justify-center space-x-2 mt-6 bg-amber-50 dark:bg-amber-900/30 px-4 py-3 rounded-xl border border-amber-200 dark:border-amber-700">
+            <div id="verifyingWarning" class="flex items-center justify-center space-x-2 mt-6 bg-amber-50 dark:bg-amber-900/30 px-4 py-3 rounded-xl border border-amber-200 dark:border-amber-700">
                 <span class="material-icons-round text-amber-600 dark:text-amber-400 text-lg">warning</span>
                 <p class="text-sm text-amber-800 dark:text-amber-300 font-bold">Do not close or refresh this page</p>
             </div>
@@ -522,6 +522,8 @@
     const originalPriceEl = document.getElementById('originalPrice');
     const finalAmountEl = document.getElementById('finalAmount');
     const payBtnAmountEl = document.getElementById('payBtnAmount');
+    const payBtnTextEl = document.getElementById('payBtnText');
+    const payBtnIconEl = document.getElementById('payBtnIcon');
     const discountBadge = document.getElementById('discountBadge');
     const discountText = document.getElementById('discountText');
 
@@ -614,11 +616,19 @@
 
             // Update final amount
             finalAmountEl.textContent = discountedAmount;
-            payBtnAmountEl.textContent = discountedAmount;
 
             // Show discount badge
             discountBadge.classList.remove('hidden');
             discountText.textContent = `Saved ₹${discountValue}`;
+
+            // Update button based on amount
+            if (discountedAmount === 0) {
+                payBtnTextEl.textContent = 'Confirm Booking (FREE)';
+                payBtnIconEl.textContent = 'check_circle';
+            } else {
+                payBtnTextEl.innerHTML = `Pay ₹<span id="payBtnAmount">${discountedAmount}</span>`;
+                payBtnIconEl.textContent = 'lock';
+            }
         } else {
             // Hide discount UI
             originalPriceSection.classList.add('hidden');
@@ -626,7 +636,8 @@
 
             // Reset to original amount
             finalAmountEl.textContent = originalAmount;
-            payBtnAmountEl.textContent = originalAmount;
+            payBtnTextEl.innerHTML = `Pay ₹<span id="payBtnAmount">${originalAmount}</span>`;
+            payBtnIconEl.textContent = 'lock';
         }
     }
 
@@ -646,6 +657,16 @@
         payBtn.addEventListener('click', async function () {
             payBtn.disabled = true;
             errorBox.classList.add('hidden');
+            
+            // Show loader immediately
+            const verifyingTitle = document.getElementById('verifyingTitle');
+            const verifyingMessage = document.getElementById('verifyingMessage');
+            const verifyingWarning = document.getElementById('verifyingWarning');
+
+            verifyingTitle.textContent = 'Processing...';
+            verifyingMessage.textContent = 'Please wait while we process your request...';
+            verifyingWarning.classList.remove('hidden');
+            verifyingOverlay.classList.remove('hidden');
 
             try {
                 const requestBody = {
@@ -673,6 +694,33 @@
 
                 const data = await response.json();
 
+
+                if (!data.success && data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Check if this is a free booking (100% discount)
+                if (data.free_booking && data.success) {
+                    // Update loader message for free booking
+                    verifyingTitle.textContent = 'Confirming Booking';
+                    verifyingMessage.textContent = 'Your free booking is being confirmed...';
+                    verifyingWarning.classList.add('hidden');
+
+                    // Redirect to thank you page
+                    setTimeout(() => {
+                        window.location.href = '/payment/thankyou/' + bookingId;
+                    }, 1000);
+                    return;
+                }
+
+                // Use validated amount from backend
+                if (data.validated_amount) {
+                    discountedAmount = data.validated_amount;
+                }
+
+                // Hide loader before opening payment gateway
+                verifyingOverlay.classList.add('hidden');
+
                 if (data.gateway === 'payu') {
                     handlePayUPayment(data);
                 } else {
@@ -680,6 +728,7 @@
                 }
 
             } catch (error) {
+                verifyingOverlay.classList.add('hidden');
                 errorMessage.textContent = error.message || 'Payment failed. Please try again.';
                 errorBox.classList.remove('hidden');
                 payBtn.disabled = false;

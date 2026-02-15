@@ -77,14 +77,14 @@
     </div>
 </div>
 
-<div class="grid grid-cols-1 gap-4">
+{{-- <div class="grid grid-cols-1 gap-4">
     <button
         class="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium">
         <img alt="Google" class="w-5 h-5"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHiexu7A4DsB_wR5W10RKtGeyk42TookyjMNFUq9fdInsV9NDjZbay6pXj5RG4GZjsq7vM7qKjVhITD4d1gzHhrR8h4aZVeilr57RB8pY2FLJ0uoNroqPhaIMpAJ_iqfOU0-MzR44YJ6rG0JQ0-wAK6KjKzA6XD3KhuHLJ-NysipLQORGOeS988wmM1M6Rg2qM-aBvbHzss31CXmXH2yKGfhTWEbw0b-4tPjF7wbfd-_6pVkcvZ6LWiGfFXds56yhhHRurtIVxMgE" />
         <span>Continue with Google</span>
     </button>
-</div>
+</div> --}}
 
 <p class="mt-10 text-center text-slate-500 dark:text-slate-400">
     Don't have an account?

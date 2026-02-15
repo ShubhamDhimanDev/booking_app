@@ -116,7 +116,7 @@
                                                                     <img src="{{ asset('images/email-icons/video_call.png') }}" alt="Join" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;">
                                                                     Join Session
                                                                 </a>
-                                                                <span style="color:#ffffff;">Or use meeting link: <a href="https://meet.astrochaitanya.com/j-2410" style="color:#6467f2; text-decoration:none;">meet.astrochaitanya.com/j-2410</a></span>
+                                                                <span style="color:#ffffff;">Or use meeting link: <a href="{{ $meetingLink ?? '#' }}" style="color:#6467f2; text-decoration:none;">{{ $meetingLink ?? '#' }}</a></span>
                                                             </td>
                                                         </tr>
                                                     </table>

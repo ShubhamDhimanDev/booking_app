@@ -68,9 +68,9 @@ class BookingCreatedNotification extends Notification implements ShouldQueue
         'eventTitle' => $this->booking->event->title,
         'bookingDate' => $this->booking->booked_at_date,
         'bookingTime' => $this->booking->booked_at_time,
-        'confirmUrl' => url("/admin/bookings/{$this->booking->id}?action=confirm"),
-        'rescheduleUrl' => url("/admin/bookings/{$this->booking->id}/reschedule"),
-        'declineUrl' => url("/admin/bookings/{$this->booking->id}?action=decline"),
+        'confirmUrl' => url("/bookings"),
+        'rescheduleUrl' => url("/bookings"),
+        'declineUrl' => url("/bookings"),
       ]);
   }
 
