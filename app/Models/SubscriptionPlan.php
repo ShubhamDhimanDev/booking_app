@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $price_monthly
  * @property float $price_yearly
  * @property int $discount_yearly_percent
+ * @property int $trial_days
  * @property array|null $gateway_plan_ids
  * @property int $max_events
  * @property int $max_bookings_per_month
@@ -48,6 +49,7 @@ class SubscriptionPlan extends Model
         'price_monthly',
         'price_yearly',
         'discount_yearly_percent',
+        'trial_days',
         'gateway_plan_ids',
         'max_events',
         'max_bookings_per_month',
@@ -73,6 +75,7 @@ class SubscriptionPlan extends Model
         'price_monthly' => 'decimal:2',
         'price_yearly' => 'decimal:2',
         'discount_yearly_percent' => 'integer',
+        'trial_days' => 'integer',
         'max_events' => 'integer',
         'max_bookings_per_month' => 'integer',
         'max_team_members' => 'integer',

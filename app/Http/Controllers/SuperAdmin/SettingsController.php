@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -14,7 +15,14 @@ class SettingsController extends Controller
      */
     public function index()
     {
-        return view('super-admin.settings.index');
+        $settings = [
+            'default_payment_gateway' => AppSetting::get('default_payment_gateway', 'razorpay'),
+            'razorpay_enabled' => AppSetting::get('razorpay_enabled', true),
+            'stripe_enabled' => AppSetting::get('stripe_enabled', false),
+            'paypal_enabled' => AppSetting::get('paypal_enabled', false),
+        ];
+
+        return view('super-admin.settings.index', compact('settings'));
     }
 
     /**
@@ -60,16 +68,22 @@ class SettingsController extends Controller
     public function updatePayment(Request $request)
     {
         $validated = $request->validate([
-            'razorpay_key' => 'nullable|string',
-            'razorpay_secret' => 'nullable|string',
-            'stripe_key' => 'nullable|string',
-            'stripe_secret' => 'nullable|string',
-            'paypal_client_id' => 'nullable|string',
-            'paypal_secret' => 'nullable|string',
+            'default_payment_gateway' => 'required|in:razorpay,stripe,paypal',
+            'razorpay_enabled' => 'nullable|boolean',
+            'stripe_enabled' => 'nullable|boolean',
+            'paypal_enabled' => 'nullable|boolean',
         ]);
 
-        // Update payment config
-        return back()->with('success', 'Payment settings updated successfully!');
+        // Update settings
+        AppSetting::set('default_payment_gateway', $validated['default_payment_gateway'], 'string');
+        AppSetting::set('razorpay_enabled', $validated['razorpay_enabled'] ?? false, 'boolean');
+        AppSetting::set('stripe_enabled', $validated['stripe_enabled'] ?? false, 'boolean');
+        AppSetting::set('paypal_enabled', $validated['paypal_enabled'] ?? false, 'boolean');
+
+        // Clear settings cache
+        AppSetting::clearCache();
+
+        return back()->with('success', 'Payment gateway settings updated successfully!');
     }
 
     /**

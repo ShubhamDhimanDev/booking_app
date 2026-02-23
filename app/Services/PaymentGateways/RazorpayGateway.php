@@ -27,7 +27,7 @@ class RazorpayGateway implements PaymentGatewayInterface
             config('services.razorpay.key'),
             config('services.razorpay.secret')
         );
-        $this->webhookSecret = config('services.razorpay.webhook_secret');
+        // $this->webhookSecret = config('services.razorpay.webhook_secret');
     }
 
     /**
@@ -142,7 +142,7 @@ class RazorpayGateway implements PaymentGatewayInterface
             $subscriptionData = [
                 'plan_id' => $planId,
                 'customer_id' => $customerId,
-                'total_count' => 0, // Infinite billing cycles
+                'total_count' => 12, // Infinite billing cycles
                 'quantity' => 1,
                 'start_at' => $options['start_at'] ?? now()->addDays(14)->timestamp, // 14-day trial
                 'notes' => [

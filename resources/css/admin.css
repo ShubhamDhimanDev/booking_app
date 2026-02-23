@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .admin-layout button:not(:disabled),
+  .admin-layout [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  .admin-layout body {
+    @apply relative font-normal font-outfit z-1 bg-gray-50;
+  }
+  .admin-layout *,
+  .admin-layout ::after,
+  .admin-layout ::before,
+  .admin-layout ::backdrop {
+    border-color: theme('colors.gray.200');
+  }
+}
+
+@layer components {
+  .admin-layout .menu-item {
+    @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+  }
+
+  .admin-layout .menu-item-active {
+    @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  }
+
+  .admin-layout .menu-item-inactive {
+    @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+  }
+
+  .admin-layout .menu-item-text {
+    @apply text-theme-sm;
+  }
+
+  .admin-layout .menu-item-icon-active {
+    @apply text-brand-500 dark:text-brand-400;
+  }
+
+  .admin-layout .menu-item-icon-inactive {
+    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+  }
+
+  .admin-layout .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .admin-layout .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-layout .custom-scrollbar::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+
+  .admin-layout .custom-scrollbar::-webkit-scrollbar-track {
+    @apply rounded-full;
+  }
+
+  .admin-layout .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+  }
+
+  .dark .admin-layout .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #344054;
+  }
+}

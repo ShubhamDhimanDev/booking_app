@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
@@ -12,23 +12,46 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=outfit:300,400,500,600,700,800,900" rel="stylesheet" />
 
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+
     <!-- Styles -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/admin.css', 'resources/js/app.js'])
     @stack('styles')
+
+    <!-- Apply dark mode immediately to prevent flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const theme = savedTheme || systemTheme;
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.body.classList.add('dark', 'bg-gray-900');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.body.classList.remove('dark', 'bg-gray-900');
+            }
+        })();
+    </script>
 </head>
 <body
+    class="admin-layout antialiased bg-gray-50 dark:bg-gray-950 font-outfit"
     x-data="{
         page: '{{ $page ?? 'dashboard' }}',
-        loaded: true,
-        darkMode: false,
-        stickyMenu: false,
-        sidebarToggle: false,
-        scrollTop: false
+        loaded: true
     }"
     x-init="
-        darkMode = JSON.parse(localStorage.getItem('darkMode'));
-        $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
-    :class="{'dark bg-gray-900': darkMode === true}"
+        $store.sidebar.isExpanded = window.innerWidth >= 1024;
+        const checkMobile = () => {
+            if (window.innerWidth < 1024) {
+                $store.sidebar.setMobileOpen(false);
+                $store.sidebar.isExpanded = false;
+            } else {
+                $store.sidebar.isMobileOpen = false;
+                $store.sidebar.isExpanded = true;
+            }
+        };
+        window.addEventListener('resize', checkMobile);"
 >
     <!-- ===== Preloader Start ===== -->
     <div
@@ -41,22 +64,27 @@
     <!-- ===== Preloader End ===== -->
 
     <!-- ===== Page Wrapper Start ===== -->
-    <div class="flex h-screen overflow-hidden">
+    <div class="min-h-screen lg:flex">
+        <!-- ===== Backdrop Start ===== -->
+        <div
+            x-cloak
+            :class="$store.sidebar.isMobileOpen ? 'block lg:hidden' : 'hidden'"
+            @click="$store.sidebar.toggleMobileOpen()"
+            class="fixed inset-0 z-9998 bg-black/40 transition-all duration-200"
+        ></div>
+        <!-- ===== Backdrop End ===== -->
+
         <!-- ===== Sidebar Start ===== -->
         @yield('sidebar')
         <!-- ===== Sidebar End ===== -->
 
         <!-- ===== Content Area Start ===== -->
-        <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
-            <!-- Small Device Overlay Start -->
-            <div
-                x-cloak
-                :class="sidebarToggle ? 'translate-x-0' : '-translate-x-full'"
-                @click="sidebarToggle = !sidebarToggle"
-                class="fixed inset-0 z-9998 bg-black/40 transition-all duration-200 lg:hidden"
-            ></div>
-            <!-- Small Device Overlay End -->
-
+        <div class="flex-1 transition-all duration-300 ease-in-out"
+            :class="{
+                'lg:ml-[290px]': $store.sidebar.isExpanded || $store.sidebar.isHovered,
+                'lg:ml-[90px]': !$store.sidebar.isExpanded && !$store.sidebar.isHovered,
+                'ml-0': $store.sidebar.isMobileOpen
+            }">
             <!-- ===== Header Start ===== -->
             @include('partials.header')
             <!-- ===== Header End ===== -->

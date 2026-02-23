@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\PaymentGatewayInterface;
+use App\Models\AppSetting;
 use App\Services\PaymentGateways\RazorpayGateway;
 use InvalidArgumentException;
 
@@ -70,6 +71,7 @@ class PaymentGatewayFactory
      */
     public static function getDefaultGateway(): string
     {
-        return config('services.default_payment_gateway', 'razorpay');
+        // Try to get from AppSetting first, fallback to config
+        return AppSetting::get('default_payment_gateway', config('services.default_payment_gateway', 'razorpay'));
     }
 }

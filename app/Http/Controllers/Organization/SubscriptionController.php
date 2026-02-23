@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
+use App\Models\AppSetting;
+use App\Services\SubscriptionService;
 use App\Services\PaymentGatewayFactory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionController extends Controller
 {
-    protected $paymentGatewayFactory;
+    protected $subscriptionService;
 
-    public function __construct(PaymentGatewayFactory $paymentGatewayFactory)
+    public function __construct(SubscriptionService $subscriptionService)
     {
-        $this->paymentGatewayFactory = $paymentGatewayFactory;
+        $this->subscriptionService = $subscriptionService;
     }
 
     /**
@@ -22,14 +25,14 @@ class SubscriptionController extends Controller
     public function show()
     {
         $organization = auth()->user()->organization;
-        $subscription = $organization->activeSubscription;
+        $subscription = $organization->subscription;
 
         $plans = null;
 
         // If no subscription, show available plans
         if (!$subscription) {
-            $plans = SubscriptionPlan::where('status', 'active')
-                ->orderBy('monthly_price')
+            $plans = SubscriptionPlan::where('is_active', true)
+                ->orderBy('price_monthly')
                 ->get();
         }
 
@@ -42,73 +45,188 @@ class SubscriptionController extends Controller
     public function changePlan()
     {
         $organization = auth()->user()->organization;
-        $currentSubscription = $organization->activeSubscription;
+        $currentSubscription = $organization->subscription;
 
         if (!$currentSubscription) {
             return redirect()->route('organization.subscription');
         }
 
-        $plans = SubscriptionPlan::where('status', 'active')
+        $plans = SubscriptionPlan::where('is_active', true)
             ->where('id', '!=', $currentSubscription->subscription_plan_id)
-            ->orderBy('monthly_price')
+            ->orderBy('price_monthly')
             ->get();
 
         return view('organization.billing.change-plan', compact('currentSubscription', 'plans'));
     }
 
     /**
-     * Subscribe to a plan
+     * Subscribe to a plan - Create payment order and redirect to checkout
      */
     public function subscribe(Request $request)
     {
         $validated = $request->validate([
             'plan' => 'required|exists:subscription_plans,id',
             'cycle' => 'required|in:monthly,yearly',
-            'gateway' => 'required|in:razorpay,stripe,paypal',
         ]);
 
         $organization = auth()->user()->organization;
         $plan = SubscriptionPlan::findOrFail($validated['plan']);
 
         // Check if organization already has an active subscription
-        if ($organization->activeSubscription) {
+        if ($organization->subscription) {
             return back()->with('error', 'You already have an active subscription!');
         }
 
-        $amount = $validated['cycle'] === 'monthly' ? $plan->monthly_price : $plan->yearly_price;
+        // Get default payment gateway from system settings
+        $gateway = AppSetting::get('default_payment_gateway', 'razorpay');
 
-        // Create subscription via payment gateway
-        $gateway = $this->paymentGatewayFactory->make($validated['gateway']);
+        $amount = $validated['cycle'] === 'monthly' ? $plan->price_monthly : $plan->price_yearly;
 
         try {
-            $subscriptionData = $gateway->createSubscription([
-                'plan_id' => $plan->id,
-                'customer_email' => auth()->user()->email,
+            // Create Razorpay order for payment
+            $gatewayService = PaymentGatewayFactory::make($gateway);
+
+            $orderData = $gatewayService->createPaymentIntent(
+                $organization,
+                $amount,
+                'INR',
+                [
+                    'plan_id' => $plan->id,
+                    'billing_cycle' => $validated['cycle'],
+                    'type' => 'subscription_payment',
+                ]
+            );
+
+            // Store order data in session for checkout page
+            session()->put('subscription_checkout', [
+                'order_id' => $orderData['order_id'],
                 'amount' => $amount,
-                'billing_cycle' => $validated['cycle'],
+                'plan_id' => $plan->id,
+                'cycle' => $validated['cycle'],
+                'gateway' => $gateway,
             ]);
 
-            // Create subscription record
-            $subscription = $organization->subscriptions()->create([
-                'subscription_plan_id' => $plan->id,
-                'gateway' => $validated['gateway'],
-                'gateway_subscription_id' => $subscriptionData['subscription_id'],
-                'gateway_customer_id' => $subscriptionData['customer_id'] ?? null,
-                'status' => 'trial', // Start with trial if applicable
-                'billing_cycle' => $validated['cycle'],
-                'amount' => $amount,
-                'started_at' => now(),
-                'current_period_start' => now(),
-                'current_period_end' => now()->addMonth(),
-                'trial_ends_at' => $plan->trial_days ? now()->addDays($plan->trial_days) : null,
+            return redirect()->route('organization.subscription.checkout');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create payment order', [
+                'organization_id' => $organization->id,
+                'plan_id' => $plan->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Failed to initiate payment: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show checkout page
+     */
+    public function checkout()
+    {
+        $checkoutData = session('subscription_checkout');
+
+        if (!$checkoutData) {
+            return redirect()->route('organization.subscription')
+                ->with('error', 'No pending subscription order found.');
+        }
+
+        $plan = SubscriptionPlan::findOrFail($checkoutData['plan_id']);
+        $organization = auth()->user()->organization;
+
+        return view('organization.billing.checkout', [
+            'plan' => $plan,
+            'cycle' => $checkoutData['cycle'],
+            'amount' => $checkoutData['amount'],
+            'orderId' => $checkoutData['order_id'],
+            'gateway' => $checkoutData['gateway'],
+            'organization' => $organization,
+        ]);
+    }
+
+    /**
+     * Handle payment success callback
+     */
+    public function paymentCallback(Request $request)
+    {
+        $validated = $request->validate([
+            'razorpay_order_id' => 'required|string',
+            'razorpay_payment_id' => 'required|string',
+            'razorpay_signature' => 'required|string',
+        ]);
+
+        $checkoutData = session('subscription_checkout');
+
+        if (!$checkoutData) {
+            return redirect()->route('organization.subscription')
+                ->with('error', 'Invalid payment session.');
+        }
+
+        try {
+            // Verify payment signature
+            $gateway = PaymentGatewayFactory::make($checkoutData['gateway']);
+
+            $secret = config('services.razorpay.secret');
+            $expectedSignature = hash_hmac('sha256',
+                $validated['razorpay_order_id'] . '|' . $validated['razorpay_payment_id'],
+                $secret
+            );
+
+            if (!hash_equals($expectedSignature, $validated['razorpay_signature'])) {
+                throw new \Exception('Payment signature verification failed');
+            }
+
+            $organization = auth()->user()->organization;
+            $plan = SubscriptionPlan::findOrFail($checkoutData['plan_id']);
+
+            // Payment verified - Create subscription
+            $subscription = $this->subscriptionService->createSubscription(
+                $organization,
+                $plan,
+                $checkoutData['cycle'],
+                $checkoutData['gateway']
+            );
+
+            // Since payment is already received, activate subscription immediately
+            $subscription->update([
+                'status' => \App\Models\Subscription::STATUS_ACTIVE,
+                'trial_ends_at' => null, // No trial since payment is upfront
+                'gateway_metadata' => [
+                    'first_payment_id' => $validated['razorpay_payment_id'],
+                    'first_order_id' => $validated['razorpay_order_id'],
+                ]
+            ]);
+
+            // Update organization status to active
+            $organization->update([
+                'status' => 'active',
+                'subscribed_at' => now(),
+                'trial_ends_at' => null,
+            ]);
+
+            // Clear checkout session
+            session()->forget('subscription_checkout');
+
+            Log::info('Subscription payment successful', [
+                'subscription_id' => $subscription->id,
+                'payment_id' => $validated['razorpay_payment_id'],
+                'order_id' => $validated['razorpay_order_id'],
             ]);
 
             return redirect()
                 ->route('organization.subscription')
-                ->with('success', 'Subscription created successfully!');
+                ->with('success', 'Payment successful! Your subscription is now active.');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to create subscription: ' . $e->getMessage());
+            Log::error('Payment callback failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->route('organization.subscription')
+                ->with('error', 'Payment verification failed: ' . $e->getMessage());
         }
     }
 
@@ -122,7 +240,7 @@ class SubscriptionController extends Controller
         ]);
 
         $organization = auth()->user()->organization;
-        $subscription = $organization->activeSubscription;
+        $subscription = $organization->subscription;
 
         if (!$subscription) {
             return back()->with('error', 'No active subscription found!');
@@ -130,26 +248,21 @@ class SubscriptionController extends Controller
 
         $newPlan = SubscriptionPlan::findOrFail($validated['plan']);
 
-        // Update subscription via payment gateway
-        $gateway = $this->paymentGatewayFactory->make($subscription->gateway);
-
         try {
-            $gateway->updateSubscription($subscription->gateway_subscription_id, [
-                'plan_id' => $newPlan->id,
-            ]);
-
-            $subscription->update([
-                'subscription_plan_id' => $newPlan->id,
-                'amount' => $subscription->billing_cycle === 'monthly'
-                    ? $newPlan->monthly_price
-                    : $newPlan->yearly_price,
-            ]);
+            // Update subscription via SubscriptionService
+            $this->subscriptionService->changePlan($subscription, $newPlan);
 
             return redirect()
                 ->route('organization.subscription')
                 ->with('success', 'Subscription plan changed successfully!');
 
         } catch (\Exception $e) {
+            Log::error('Failed to change plan', [
+                'subscription_id' => $subscription->id,
+                'new_plan_id' => $newPlan->id,
+                'error' => $e->getMessage(),
+            ]);
+
             return back()->with('error', 'Failed to change plan: ' . $e->getMessage());
         }
     }
@@ -160,26 +273,24 @@ class SubscriptionController extends Controller
     public function cancel(Request $request)
     {
         $organization = auth()->user()->organization;
-        $subscription = $organization->activeSubscription;
+        $subscription = $organization->subscription;
 
         if (!$subscription) {
             return back()->with('error', 'No active subscription found!');
         }
 
-        // Cancel subscription via payment gateway
-        $gateway = $this->paymentGatewayFactory->make($subscription->gateway);
-
         try {
-            $gateway->cancelSubscription($subscription->gateway_subscription_id);
-
-            $subscription->update([
-                'cancel_at_period_end' => true,
-                'cancelled_at' => now(),
-            ]);
+            // Cancel subscription via SubscriptionService
+            $this->subscriptionService->cancelSubscription($subscription, true);
 
             return back()->with('success', 'Subscription will be cancelled at the end of billing period.');
 
         } catch (\Exception $e) {
+            Log::error('Failed to cancel subscription', [
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage(),
+            ]);
+
             return back()->with('error', 'Failed to cancel subscription: ' . $e->getMessage());
         }
     }
@@ -190,26 +301,24 @@ class SubscriptionController extends Controller
     public function resume(Request $request)
     {
         $organization = auth()->user()->organization;
-        $subscription = $organization->activeSubscription;
+        $subscription = $organization->subscription;
 
-        if (!$subscription || !$subscription->cancel_at_period_end) {
+        if (!$subscription || !$subscription->cancelled_at) {
             return back()->with('error', 'No cancelled subscription found!');
         }
 
-        // Resume subscription via payment gateway
-        $gateway = $this->paymentGatewayFactory->make($subscription->gateway);
-
         try {
-            $gateway->resumeSubscription($subscription->gateway_subscription_id);
-
-            $subscription->update([
-                'cancel_at_period_end' => false,
-                'cancelled_at' => null,
-            ]);
+            // Resume subscription via SubscriptionService
+            $this->subscriptionService->resumeSubscription($subscription);
 
             return back()->with('success', 'Subscription resumed successfully!');
 
         } catch (\Exception $e) {
+            Log::error('Failed to resume subscription', [
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage(),
+            ]);
+
             return back()->with('error', 'Failed to resume subscription: ' . $e->getMessage());
         }
     }

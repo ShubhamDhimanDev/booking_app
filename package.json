@@ -22,6 +22,7 @@
         "vite": "^3.0.0"
     },
     "dependencies": {
+        "alpinejs": "^3.14.9",
         "react-datepicker": "^4.8.0"
     }
 }

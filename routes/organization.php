@@ -58,7 +58,9 @@ Route::middleware(['auth', 'verified', 'has.organization'])
         // Subscription Management
         Route::get('subscription', [SubscriptionController::class, 'show'])->name('subscription');
         Route::get('subscription/change-plan', [SubscriptionController::class, 'changePlan'])->name('subscription.change-plan');
+        Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');
         Route::post('subscription/subscribe', [SubscriptionController::class, 'subscribe'])->name('subscription.subscribe');
+        Route::post('subscription/payment-callback', [SubscriptionController::class, 'paymentCallback'])->name('subscription.payment-callback');
         Route::post('subscription/change', [SubscriptionController::class, 'change'])->name('subscription.change');
         Route::post('subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
         Route::post('subscription/resume', [SubscriptionController::class, 'resume'])->name('subscription.resume');

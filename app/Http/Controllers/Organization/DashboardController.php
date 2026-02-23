@@ -17,9 +17,9 @@ class DashboardController extends Controller
         $stats = [
             'total_events' => $organization->events()->count(),
             'total_bookings' => $organization->bookings()->count(),
-            'revenue' => $organization->bookings()
-                ->where('payment_status', 'completed')
-                ->sum('amount'),
+            'revenue' => $organization->payments()
+                                      ->successful()
+                                      ->sum('amount'),
             'team_members' => $organization->users()->count(),
         ];
 

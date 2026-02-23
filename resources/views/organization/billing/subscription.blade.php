@@ -42,7 +42,7 @@
                 <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Started</p>
-                        <p class="mt-1 font-medium text-gray-900 dark:text-white">{{ $subscription->started_at->format('M d, Y') }}</p>
+                        <p class="mt-1 font-medium text-gray-900 dark:text-white">{{ $subscription->current_period_start->format('M d, Y') }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Next Billing Date</p>
@@ -64,7 +64,7 @@
                 <div class="mt-6">
                     <h5 class="font-semibold text-gray-900 dark:text-white">Plan Features</h5>
                     <ul class="mt-3 space-y-2">
-                        @foreach($subscription->plan->features as $feature)
+                        @foreach($subscription->plan->features_list as $feature)
                         <li class="flex items-start">
                             <svg class="mr-2 h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -151,19 +151,19 @@
                 <!-- Monthly Pricing -->
                 <div class="mt-4">
                     <div class="flex items-baseline">
-                        <span class="text-3xl font-bold text-gray-900 dark:text-white">₹{{ number_format($plan->monthly_price) }}</span>
+                        <span class="text-3xl font-bold text-gray-900 dark:text-white">₹{{ number_format($plan->price_monthly) }}</span>
                         <span class="ml-2 text-gray-500 dark:text-gray-400">/ month</span>
                     </div>
-                    @if($plan->yearly_price)
+                    @if($plan->price_yearly)
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        or ₹{{ number_format($plan->yearly_price) }}/year <span class="text-green-600 dark:text-green-400">(Save {{ round((1 - ($plan->yearly_price / 12) / $plan->monthly_price) * 100) }}%)</span>
+                        or ₹{{ number_format($plan->price_yearly) }}/year <span class="text-green-600 dark:text-green-400">(Save {{ round((1 - ($plan->price_yearly / 12) / $plan->price_monthly) * 100) }}%)</span>
                     </p>
                     @endif
                 </div>
 
                 <!-- Features -->
                 <ul class="mt-6 space-y-2">
-                    @foreach($plan->features as $feature)
+                    @foreach($plan->features_list as $feature)
                     <li class="flex items-start">
                         <svg class="mr-2 h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -174,13 +174,23 @@
                 </ul>
 
                 <!-- Subscribe Button -->
-                <a href="{{ route('organization.subscription.subscribe', ['plan' => $plan->id, 'cycle' => 'monthly']) }}" class="mt-6 inline-block w-full rounded-lg bg-brand-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600">
-                    Subscribe Monthly
-                </a>
-                @if($plan->yearly_price)
-                <a href="{{ route('organization.subscription.subscribe', ['plan' => $plan->id, 'cycle' => 'yearly']) }}" class="mt-2 inline-block w-full rounded-lg border border-brand-600 px-4 py-2 text-center text-sm font-medium text-brand-600 hover:bg-brand-50 dark:border-brand-400 dark:text-brand-400 dark:hover:bg-brand-900/30">
-                    Subscribe Yearly
-                </a>
+                <form method="POST" action="{{ route('organization.subscription.subscribe') }}" class="mt-6">
+                    @csrf
+                    <input type="hidden" name="plan" value="{{ $plan->id }}">
+                    <input type="hidden" name="cycle" value="monthly">
+                    <button type="submit" class="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600">
+                        Subscribe Monthly
+                    </button>
+                </form>
+                @if($plan->price_yearly)
+                <form method="POST" action="{{ route('organization.subscription.subscribe') }}" class="mt-2">
+                    @csrf
+                    <input type="hidden" name="plan" value="{{ $plan->id }}">
+                    <input type="hidden" name="cycle" value="yearly">
+                    <button type="submit" class="w-full rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50 dark:border-brand-400 dark:text-brand-400 dark:hover:bg-brand-900/30">
+                        Subscribe Yearly
+                    </button>
+                </form>
                 @endif
             </div>
             @empty

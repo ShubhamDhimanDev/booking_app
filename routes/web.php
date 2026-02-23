@@ -34,3 +34,8 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 require __DIR__.'/auth.php';
+
+// Webhook Routes (No Authentication Required)
+Route::post('/webhooks/{gateway}/subscription', [\App\Http\Controllers\WebhookController::class, 'handleSubscriptionWebhook'])
+    ->name('webhooks.subscription')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);

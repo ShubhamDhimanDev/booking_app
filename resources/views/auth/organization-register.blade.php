@@ -168,15 +168,15 @@
                 <h4 class="font-semibold text-slate-900 dark:text-white mb-1">14-Day Free Trial</h4>
                 <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-1">
                     <li class="flex items-center gap-2">
-                        <span class="material-icons text-sm text-green-600">check_circle</span>
+                        <span class="material-icons-outlined text-sm text-green-600">check_circle</span>
                         Full access to all features
                     </li>
                     <li class="flex items-center gap-2">
-                        <span class="material-icons text-sm text-green-600">check_circle</span>
+                        <span class="material-icons-outlined text-sm text-green-600">check_circle</span>
                         No credit card required
                     </li>
                     <li class="flex items-center gap-2">
-                        <span class="material-icons text-sm text-green-600">check_circle</span>
+                        <span class="material-icons-outlined text-sm text-green-600">check_circle</span>
                         Cancel anytime
                     </li>
                 </ul>
