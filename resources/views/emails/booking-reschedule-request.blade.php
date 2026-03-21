@@ -22,9 +22,9 @@
 	<div class="container">
 		<div class="card">
 			<div class="card-header">
-				<div class="brand">
+				{{-- <div class="brand">
 					<img src="{{ asset('images/AC-Logo.png') }}" alt="Logo">
-				</div>
+				</div> --}}
 				<h1 class="title">Re-schedule Meeting Request</h1>
 				<p class="lead">Hi {{ $bookerName }}, the meeting for <strong style="color:#f8fafc">{{ $eventTitle }}</strong> needs to be re-scheduled.</p>
 			</div>
@@ -50,7 +50,7 @@
 
 			<div class="footer">
 				<p style="margin:0 0 8px;">If you have questions, please reply to this email.</p>
-				<p style="margin:0;color:#475569;">© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+				 <p style="color:#94a3b8;font-size:12px;margin:0 0 8px;">© Powered By <a href="https://sessionora.com" style="color:#94a3b8;font-size:12px;text-decoration:none;">Sessionora</a></p>
 			</div>
 		</div>
 	</div>

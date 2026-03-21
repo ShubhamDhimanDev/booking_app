@@ -10,7 +10,7 @@
         <tr>
             <td>
                 <!-- Header Branding -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;padding:0 24px;">
+                {{-- <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;padding:0 24px;">
                     <tr>
                         <td style="vertical-align:middle;">
                             <table cellpadding="0" cellspacing="0">
@@ -25,7 +25,7 @@
                             </table>
                         </td>
                     </tr>
-                </table>
+                </table> --}}
 
                 <!-- Main Card -->
                 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#1e293b;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.3);overflow:hidden;border:1px solid #334155;">
@@ -127,9 +127,7 @@
                             <p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">
                                 If you have any questions, please reply to this email.
                             </p>
-                            <p style="color:#475569;font-size:12px;margin:16px 0 0;">
-                                © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-                            </p>
+                             <p style="color:#94a3b8;font-size:12px;margin:0 0 8px;">© Powered By <a href="https://sessionora.com" style="color:#94a3b8;font-size:12px;text-decoration:none;">Sessionora</a></p>
                         </td>
                     </tr>
 

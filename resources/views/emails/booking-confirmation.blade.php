@@ -10,7 +10,7 @@
         <tr>
             <td>
                 <!-- Header Branding -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;padding:0 24px;">
+                {{-- <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;padding:0 24px;">
                     <tr>
                         <td style="vertical-align:middle;">
                             <table cellpadding="0" cellspacing="0">
@@ -25,7 +25,7 @@
                             </table>
                         </td>
                     </tr>
-                </table>
+                </table> --}}
 
                 <!-- Main Confirmation Card -->
                 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#1e293b;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.3);overflow:hidden;border:1px solid #334155;">
@@ -36,7 +36,7 @@
                             <div style="display:inline-block;width:64px;height:64px;background-color:rgba(16,185,129,0.1);border-radius:50%;padding:0;margin-bottom:24px;line-height:60px;text-align:center;">
                                 <img src="{{ asset('images/email-icons/check_circle.png') }}" alt="Success" style="width:40px;height:40px;vertical-align:middle;">
                             </div>
-                            <h1 style="color:#f8fafc;font-size:36px;font-weight:800;line-height:1.1;margin:0 0 12px;letter-spacing:-0.02em;">Hi from {{ config('app.name') }} Team!</h1>
+                            <h1 style="color:#f8fafc;font-size:36px;font-weight:800;line-height:1.1;margin:0 0 12px;letter-spacing:-0.02em;">Hi!</h1>
                             <p style="color:#cbd5e1;font-size:18px;font-weight:400;line-height:1.5;margin:0;max-width:500px;margin:0 auto;">
                                 Your session with {{ config('app.name') }} has been successfully booked.<br><br>
                             </p>
@@ -153,7 +153,7 @@
                 <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:40px;padding:0 24px 40px;">
                     <tr>
                         <td style="text-align:center;">
-                            <p style="color:#94a3b8;font-size:12px;margin:0 0 8px;">© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                            <p style="color:#94a3b8;font-size:12px;margin:0 0 8px;">© Powered By <a href="https://sessionora.com" style="color:#94a3b8;font-size:12px;text-decoration:none;">Sessionora</a></p>
                             <table cellpadding="0" cellspacing="0" style="display:inline-block;">
                                 <tr>
                                     <td style="padding:0 12px;">
