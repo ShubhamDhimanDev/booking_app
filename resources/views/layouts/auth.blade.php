@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'MeetFlow')</title>
+    <title>@yield('title', 'Sessionora')</title>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
@@ -53,9 +53,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         class="inline-flex items-center justify-center mb-6">
                         <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-24  object-cover" />
                     </div>
-                    <h1 class="font-display text-6xl mb-4 leading-tight">Transform Your Life <br />Through Energy.</h1>
+                    <h1 class="font-display text-6xl mb-4 leading-tight">Book Expert-Led 1:1 Sessions That Drive Real Change</h1>
                     <p class="text-xl text-indigo-100 max-w-md mx-auto font-light leading-relaxed">
-                        Experience energy-based astrology with no birth charts needed. Join thousands who discovered clarity, purpose, and transformation through personalized guidance.
+                        Connect with trusted experts through personalized 1:1 sessions. Gain clarity, direction, and actionable insights tailored just for you.
                     </p>
                 </div>
                 <div class="mt-auto bg-white/5 backdrop-blur-sm p-8 rounded-3xl border border-white/10 max-w-sm">
@@ -67,7 +67,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <span class="material-icons-outlined text-sm">star</span>
                     </div>
                     <p class="text-lg italic text-indigo-50 leading-snug mb-4">
-                        "Chaitanya revealed truths I never knew and transformed my life with powerful energy work. His guidance continues to light my path."
+                        "Sessionora helped me gain clarity when I needed it the most. The personalized session gave me direction and confidence to move forward."
                     </p>
                     <div class="flex items-center gap-3">
                         <img alt="User avatar" class="w-10 h-10 rounded-full bg-white/20"
@@ -93,7 +93,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-12  object-cover" />
                         </div>
                         <span
-                            class="font-display text-2xl font-bold tracking-tight text-slate-800 dark:text-white">{{ config('app.name', 'MeetFlow') }}</span>
+                            class="font-display text-2xl font-bold tracking-tight text-slate-800 dark:text-white">{{ config('app.name', 'Sessionora') }}</span>
                     </div>
                 </div>
 
@@ -103,8 +103,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- Footer Links -->
                 <div
                     class="mt-16 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-center gap-6 text-xs text-slate-400 uppercase tracking-widest">
-                     For Help Contact - <a href="tel:+916366282505" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">+91 6366282505</a>
-                    <a href="https://astrochaitanya.com/privacy-policy/" target="_blank" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Privacy Policy</a>
+                     <span>Powered by <a href="https://ecommlab.in" target="_blank" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Ecommlab</a></span>
+                    <a href="https://sessionora.com/privacy-policy.html" target="_blank" class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium transition-colors">Privacy Policy</a>
                 </div>
             </div>
         </div>

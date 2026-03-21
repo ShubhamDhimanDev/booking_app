@@ -7,21 +7,10 @@ use Exception;
 
 class RefundGatewayManager
 {
-    protected array $gateways = [];
-
-    public function __construct()
-    {
-        $this->registerGateways();
-    }
-
-    /**
-     * Register available refund gateways
-     */
-    protected function registerGateways(): void
-    {
-        $this->gateways['razorpay'] = new RazorpayRefundService();
-        $this->gateways['payu'] = new PayURefundService();
-    }
+    protected array $gateways = [
+        'razorpay' => RazorpayRefundService::class,
+        'payu'     => PayURefundService::class,
+    ];
 
     /**
      * Get refund service for a specific gateway
@@ -36,7 +25,7 @@ class RefundGatewayManager
             throw new Exception("Refund gateway '{$gateway}' is not supported.");
         }
 
-        return $this->gateways[$gateway];
+        return new $this->gateways[$gateway]();
     }
 
     /**

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Reschedule Booking - MeetFlow')
+@section('title', 'Reschedule Booking - Sessionora')
 
 @push('styles')
     <style>

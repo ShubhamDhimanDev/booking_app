@@ -121,21 +121,6 @@
                         </td>
                     </tr>
 
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color:#0f172a;padding:32px 24px;border-top:1px solid #334155;">
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td style="text-align:center;">
-                                        <p style="color:#cbd5e1;font-size:14px;margin:0;">
-                                            If you have any questions, please contact us at <a href="mailto:astrology.chaitanya@gmail.com" style="color:#818cf8;text-decoration:none;">astrology.chaitanya@gmail.com</a>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
                 </table>
 
                 <!-- Legal Footer -->

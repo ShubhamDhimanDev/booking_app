@@ -1,6 +1,6 @@
 ﻿@extends('layouts.auth')
 
-@section('title', 'Reset Password - MeetFlow')
+@section('title', 'Reset Password - Sessionora')
 
 @section('content')
 <div class="mb-10">
@@ -22,7 +22,7 @@
     @csrf
     <input type="hidden" name="token" value="{{ $request->route('token') }}">
     <input type="hidden" name="email" value="{{ $request->email }}">
-    
+
     <div>
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" for="password">New Password</label>
         <div class="relative">

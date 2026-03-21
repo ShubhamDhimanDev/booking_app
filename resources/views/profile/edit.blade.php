@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Profile - MeetFlow')
+@section('title', 'Edit Profile - Sessionora')
 
 @section('content')
 <div class="mb-10">

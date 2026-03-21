@@ -36,10 +36,9 @@
                             <div style="display:inline-block;width:64px;height:64px;background-color:rgba(16,185,129,0.1);border-radius:50%;padding:0;margin-bottom:24px;line-height:60px;text-align:center;">
                                 <img src="{{ asset('images/email-icons/check_circle.png') }}" alt="Success" style="width:40px;height:40px;vertical-align:middle;">
                             </div>
-                            <h1 style="color:#f8fafc;font-size:36px;font-weight:800;line-height:1.1;margin:0 0 12px;letter-spacing:-0.02em;">Namaste from {{ config('app.name') }}!</h1>
+                            <h1 style="color:#f8fafc;font-size:36px;font-weight:800;line-height:1.1;margin:0 0 12px;letter-spacing:-0.02em;">Hi from {{ config('app.name') }} Team!</h1>
                             <p style="color:#cbd5e1;font-size:18px;font-weight:400;line-height:1.5;margin:0;max-width:500px;margin:0 auto;">
                                 Your session with {{ config('app.name') }} has been successfully booked.<br><br>
-                                We are glad you have taken this step towards gaining clarity and understanding the deeper patterns influencing your life.
                             </p>
                         </td>
                     </tr>
@@ -132,153 +131,14 @@
                         </td>
                     </tr>
 
-                    <!-- Informational Grid (2 Columns) -->
-                    <tr>
-                        <td style="padding:48px 24px;">
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <!-- What to Expect -->
-                                    <td style="width:50%;vertical-align:top;padding-right:16px;">
-                                        <table cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-                                            <tr>
-                                                <td style="padding-right:12px;vertical-align:middle;">
-                                                    <div style="width:40px;height:40px;background-color:rgba(100,103,242,0.1);border-radius:8px;display:inline-block;text-align:center;line-height:40px;">
-                                                        <img src="{{ asset('images/email-icons/bolt.png') }}" alt="Expect" style="width:20px;height:20px;vertical-align:middle;">
-                                                    </div>
-                                                </td>
-                                                <td style="vertical-align:middle;">
-                                                    <h4 style="color:#f8fafc;font-size:18px;font-weight:700;margin:0;">What to expect during the session</h4>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                        <table width="100%" cellpadding="0" cellspacing="0">
-                                            <tr>
-                                                <td style="padding:10px 0;">
-                                                    <table cellpadding="0" cellspacing="0">
-                                                        <tr>
-                                                            <td style="vertical-align:top;padding-right:12px;padding-top: 2px;">
-                                                                <img src="{{ asset('images/email-icons/wand_stars.png') }}" alt="Wand Stars" style="width:14px;height:14px;margin-top:4px;">
-                                                            </td>
-                                                            <td>
-                                                                <p style="color:#cbd5e1;font-size:16px;line-height:1.6;margin:0;">Chaitanya will read your energy in real time, no date of birth, charts, or prior details required.</p>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:10px 0;">
-                                                    <table cellpadding="0" cellspacing="0">
-                                                        <tr>
-                                                            <td style="vertical-align:top;padding-right:12px;padding-top: 2px;">
-                                                                <img src="{{ asset('images/email-icons/wand_stars.png') }}" alt="Wand Stars" style="width:14px;height:14px;margin-top:4px;">
-                                                            </td>
-                                                            <td>
-                                                                <p style="color:#cbd5e1;font-size:16px;line-height:1.6;margin:0;">The focus will be on identifying the root cause of the challenges you are currently facing.</p>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:10px 0;">
-                                                    <table cellpadding="0" cellspacing="0">
-                                                        <tr>
-                                                            <td style="vertical-align:top;padding-right:12px;padding-top: 2px;">
-                                                                <img src="{{ asset('images/email-icons/wand_stars.png') }}" alt="Wand Stars" style="width:14px;height:14px;margin-top:4px;">
-                                                            </td>
-                                                            <td>
-                                                                <p style="color:#cbd5e1;font-size:16px;line-height:1.6;margin:0;">You will receive clear insights and guidance based on your energy right now.</p>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-
-                                    <!-- Before the Session -->
-                                    <td style="width:50%;vertical-align:top;padding-left:16px;">
-                                        <table cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-                                            <tr>
-                                                <td style="padding-right:12px;vertical-align:middle;">
-                                                    <div style="width:40px;height:40px;background-color:rgba(100,103,242,0.1);border-radius:8px;display:inline-block;text-align:center;line-height:40px;">
-                                                        <img src="{{ asset('images/email-icons/potted_plant.png') }}" alt="Potted Plant" style="width:20px;height:20px;vertical-align:middle;">
-                                                    </div>
-                                                </td>
-                                                <td style="vertical-align:middle;">
-                                                    <h4 style="color:#f8fafc;font-size:18px;font-weight:700;margin:0;">Before the session</h4>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                        <table width="100%" cellpadding="0" cellspacing="0">
-                                            <tr>
-                                                <td style="padding:10px 0;">
-                                                    <table cellpadding="0" cellspacing="0">
-                                                        <tr>
-                                                            <td style="vertical-align:top;padding-right:12px;padding-top: 2px;">
-                                                                <img src="{{ asset('images/email-icons/check.png') }}" alt="Check" style="width:14px;height:14px;margin-top:4px;">
-                                                            </td>
-                                                            <td>
-                                                                <p style="color:#cbd5e1;font-size:16px;line-height:1.6;margin:0;">No preparation is required.</p>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:10px 0;">
-                                                    <table cellpadding="0" cellspacing="0">
-                                                        <tr>
-                                                            <td style="vertical-align:top;padding-right:12px;padding-top: 2px;">
-                                                                <img src="{{ asset('images/email-icons/check.png') }}" alt="Check" style="width:14px;height:14px;margin-top:4px;">
-                                                            </td>
-                                                            <td>
-                                                                <p style="color:#cbd5e1;font-size:16px;line-height:1.6;margin:0;">Please join the call with an open mind and avoid distractions.</p>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:10px 0;">
-                                                    <table cellpadding="0" cellspacing="0">
-                                                        <tr>
-                                                            <td style="vertical-align:top;padding-right:12px;padding-top: 2px;">
-                                                                <img src="{{ asset('images/email-icons/check.png') }}" alt="Check" style="width:14px;height:14px;margin-top:4px;">
-                                                            </td>
-                                                            <td>
-                                                                <p style="color:#cbd5e1;font-size:16px;line-height:1.6;margin:0;">If possible, log in 2–3 minutes early.</p>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
                     <!-- Footer Section within card -->
                     <tr>
         <td style="background-color:#0f172a;padding:32px 24px;border-top:1px solid #334155;">
                             <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <!-- Questions Section -->
-                                    <td style="width:50%;vertical-align:top;text-align:left;padding-right:24px;">
-                                        <p style="color:#f8fafc;font-size:16px;font-weight:700;margin:0 0 8px;">Questions?</p>
-                                        <p style="color:#cbd5e1;font-size:14px;margin:0 0 4px;">
-                                            Email: <a href="mailto:astrology.chaitanya@gmail.com" style="color:#818cf8;text-decoration:none;">astrology.chaitanya@gmail.com</a>
-                                        </p>
-                                        <p style="color:#cbd5e1;font-size:14px;margin:0;">
-                                            Call: <a href="tel:+916366282505" style="color:#818cf8;text-decoration:none;">+91 63662 82505</a>
-                                        </p>
-                                    </td>
                                     <!-- Closing Message -->
                                     <td style="width:50%;vertical-align:top;text-align:right;padding-left:24px;">
-                                        <p style="color:#94a3b8;font-size:14px;margin:0 0 8px;font-style:italic;">We look forward to connecting with you and supporting you on this journey.</p>
+                                        <p style="color:#94a3b8;font-size:14px;margin:0 0 8px;font-style:italic;">We look forward to connecting with you.</p>
                                         <p style="color:#f8fafc;font-size:16px;font-weight:700;margin:0;">Warm regards,</p>
                                         <p style="color:#818cf8;font-size:16px;font-weight:700;margin:0;">Team {{ config('app.name') }}</p>
                                     </td>
@@ -297,10 +157,7 @@
                             <table cellpadding="0" cellspacing="0" style="display:inline-block;">
                                 <tr>
                                     <td style="padding:0 12px;">
-                                        <a href="{{ url('/privacy') }}" style="color:#94a3b8;font-size:12px;text-decoration:none;">Privacy Policy</a>
-                                    </td>
-                                    <td style="padding:0 12px;">
-                                        <a href="{{ url('/terms') }}" style="color:#94a3b8;font-size:12px;text-decoration:none;">Terms of Service</a>
+                                        <a href="https://sessionora.com/privacy-policy.html" style="color:#94a3b8;font-size:12px;text-decoration:none;">Privacy Policy</a>
                                     </td>
                                     <td style="padding:0 12px;">
                                         <a href="{{ url('/unsubscribe') }}" style="color:#94a3b8;font-size:12px;text-decoration:none;">Unsubscribe</a>

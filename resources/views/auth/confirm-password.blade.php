@@ -1,6 +1,6 @@
 ﻿@extends('layouts.auth')
 
-@section('title', 'Confirm Password - MeetFlow')
+@section('title', 'Confirm Password - Sessionora')
 
 @section('content')
 <div class="mb-10">

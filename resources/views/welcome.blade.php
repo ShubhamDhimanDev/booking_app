@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MeetFlow - Smart Booking & Calendar Management Platform</title>
+    <title>Sessionora - Smart Booking & Calendar Management Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -74,7 +74,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <img src="{{ asset('admins/assets/images/logo.png') }}" alt="MeetFlow" class="h-20 w-auto">
+                    <img src="{{ asset('admins/assets/images/logo.png') }}" alt="Sessionora" class="h-20 w-auto">
                 </div>
                 <div class="hidden md:flex space-x-8">
                     <a href="#features" class="text-gray-300 hover:text-white transition">Features</a>
@@ -400,7 +400,7 @@
                 Ready to Transform Your <span class="gradient-text">Booking Experience?</span>
             </h2>
             <p class="text-xl text-gray-400 mb-8">
-                Join thousands of professionals who trust MeetFlow for their scheduling needs
+                Join thousands of professionals who trust Sessionora for their scheduling needs
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="{{ route('register') }}" class="px-8 py-4 text-lg font-semibold text-white gradient-bg rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition">
@@ -420,7 +420,7 @@
                 <!-- Brand -->
                 <div class="col-span-1">
                     <div class="flex items-center mb-4">
-                        <img src="{{ asset('admins/assets/images/logo.png') }}" alt="MeetFlow" class="h-20">
+                        <img src="{{ asset('admins/assets/images/logo.png') }}" alt="Sessionora" class="h-20">
                     </div>
                     <p class="text-gray-400 text-sm">
                         Smart booking and calendar management platform for modern businesses.
@@ -462,7 +462,7 @@
             </div>
 
             <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-400 text-sm">© {{ date('Y') }} MeetFlow. All rights reserved.</p>
+                <p class="text-gray-400 text-sm">© {{ date('Y') }} Sessionora. All rights reserved.</p>
                 <div class="flex space-x-6 mt-4 md:mt-0">
                     <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-twitter"></i></a>
                     <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-facebook"></i></a>

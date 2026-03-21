@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'My Bookings - MeetFlow')
+@section('title', 'My Bookings - Sessionora')
 
 @section('content')
 <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">

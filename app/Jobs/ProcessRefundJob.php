@@ -47,6 +47,8 @@ class ProcessRefundJob implements ShouldQueue
 
             $booking = $this->refund->booking;
             $payment = $this->refund->payment;
+            Log::info("$payment->provider");
+
 
             if (!$payment) {
                 throw new Exception('Payment not found for refund');
