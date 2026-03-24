@@ -98,9 +98,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
                 <a href="/" class="flex items-center space-x-3 group">
-                    <div class="w-11 h-17 flex items-center justify-center">
+                    {{-- <div class="w-11 h-17 flex items-center justify-center">
                         <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-11 h-17 object-cover" />
-                    </div>
+                    </div> --}}
                     <span class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{{ config('app.name') }}</span>
                 </a>
 

@@ -51,7 +51,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="mb-12">
                     <div
                         class="inline-flex items-center justify-center mb-6">
-                        <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-24  object-cover" />
+                        {{-- <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-24  object-cover" /> --}}
                     </div>
                     <h1 class="font-display text-6xl mb-4 leading-tight">Book Expert-Led 1:1 Sessions That Drive Real Change</h1>
                     <p class="text-xl text-indigo-100 max-w-md mx-auto font-light leading-relaxed">
@@ -90,7 +90,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <div class="flex items-center gap-2 group cursor-pointer">
                         <div
                             class="inline-flex items-center justify-center">
-                            <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-12  object-cover" />
+                            {{-- <img src="{{ asset('images/AC-Logo.png') }}" alt="logo" class="w-12  object-cover" /> --}}
                         </div>
                         <span
                             class="font-display text-2xl font-bold tracking-tight text-slate-800 dark:text-white">{{ config('app.name', 'Sessionora') }}</span>
