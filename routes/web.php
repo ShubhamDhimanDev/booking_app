@@ -48,6 +48,7 @@ Route::post('/validate-promo', [PaymentController::class, 'validatePromoCode']);
 
 // PayU callback routes
 Route::post('/payment/payu/callback', [PaymentController::class, 'payuCallback'])->name('payment.payu.callback');
+Route::post('/payment/payu/webhook', [PaymentController::class, 'payuWebhook'])->name('payment.payu.webhook');
 Route::get('/payment/failed/{booking?}', [PaymentController::class, 'paymentFailedPage'])->name('payment.failed');
 
 // Multi-page booking flow

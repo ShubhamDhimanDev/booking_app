@@ -657,7 +657,7 @@
         payBtn.addEventListener('click', async function () {
             payBtn.disabled = true;
             errorBox.classList.add('hidden');
-            
+
             // Show loader immediately
             const verifyingTitle = document.getElementById('verifyingTitle');
             const verifyingMessage = document.getElementById('verifyingMessage');
@@ -698,7 +698,7 @@
                 if (!data.success && data.error) {
                     throw new Error(data.error);
                 }
-                
+
                 // Check if this is a free booking (100% discount)
                 if (data.free_booking && data.success) {
                     // Update loader message for free booking
@@ -809,8 +809,11 @@
         form.method = 'POST';
         form.action = data.payu_url || 'https://secure.payu.in/_payment';
 
+        // Skip udf1/udf2 here — they are set explicitly below to guarantee
+        // the correct values reach PayU (and are echoed back in callback + webhook).
+        const skipKeys = new Set(['gateway', 'payu_url', 'success', 'udf1', 'udf2']);
         for (const key in data) {
-            if (key !== 'gateway' && key !== 'payu_url' && key !== 'success' && data[key] !== null) {
+            if (!skipKeys.has(key) && data[key] !== null && data[key] !== undefined) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = key;
@@ -819,20 +822,19 @@
             }
         }
 
+        // udf1 = booking_id (always set — required for webhook to identify the booking)
         const bookingInput = document.createElement('input');
         bookingInput.type = 'hidden';
         bookingInput.name = 'udf1';
         bookingInput.value = bookingId;
         form.appendChild(bookingInput);
 
-        // Add promo code if applied
-        if (appliedPromoCode) {
-            const promoInput = document.createElement('input');
-            promoInput.type = 'hidden';
-            promoInput.name = 'udf2';
-            promoInput.value = appliedPromoCode;
-            form.appendChild(promoInput);
-        }
+        // udf2 = promo_code (always set, empty string if none — keeps hash consistent)
+        const promoInput = document.createElement('input');
+        promoInput.type = 'hidden';
+        promoInput.name = 'udf2';
+        promoInput.value = appliedPromoCode || '';
+        form.appendChild(promoInput);
 
         document.body.appendChild(form);
         form.submit();

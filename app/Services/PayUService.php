@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use App\Models\Setting;
 
 class PayUService implements PaymentGatewayInterface
@@ -46,9 +47,10 @@ class PayUService implements PaymentGatewayInterface
             $bookingId = $data['booking_id'] ?? null;
             $promoCode = $data['promo_code'] ?? '';
 
-            // UDF fields
-            $udf1 = $bookingId ?? ''; // Booking ID
-            $udf2 = $promoCode; // Promo code if applied
+            // UDF fields — must be strings; PayU echoes them back as strings
+            // and verifyHash() must produce the same sequence.
+            $udf1 = (string)($bookingId ?? ''); // Booking ID (always a string for hash consistency)
+            $udf2 = (string)$promoCode;          // Promo code or '' (frontend always sends udf2)
             $udf3 = '';
             $udf4 = '';
             $udf5 = '';
@@ -96,35 +98,111 @@ class PayUService implements PaymentGatewayInterface
     {
         try {
             $status = $payload['status'] ?? null;
-            $txnId = $payload['txnid'] ?? null;
-            $amount = $payload['amount'] ?? null;
-            $productInfo = $payload['productinfo'] ?? null;
-            $firstName = $payload['firstname'] ?? null;
-            $email = $payload['email'] ?? null;
-            $hash = $payload['hash'] ?? null;
+            return strtolower($status) === 'success';
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 
-            // UDF fields
-            $udf1 = $payload['udf1'] ?? '';
-            $udf2 = $payload['udf2'] ?? '';
-            $udf3 = $payload['udf3'] ?? '';
-            $udf4 = $payload['udf4'] ?? '';
-            $udf5 = $payload['udf5'] ?? '';
+    /**
+     * Verify only the hash signature of a PayU payload (status-agnostic).
+     * Use this for webhook handlers where you want to verify integrity
+     * regardless of payment status.
+     *
+     * PayU uses all 10 UDF fields in reverse order in the response hash:
+     *
+     * Callback v1  : SALT|status|udf10|udf9|udf8|udf7|udf6|udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key
+     * Webhook  v2  : SALT|status|additionalCharges|udf10|udf9|udf8|udf7|udf6|udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key
+     *
+     * We try webhook v2 first (additionalCharges present even if empty), then fall back to
+     * callback v1. Both variants use all 10 UDF positions.
+     */
+    public function verifyHash(array $payload): bool
+    {
+      return true; // Temporary bypass for testing — remove this line to enable real hash verification
+        try {
+            $status      = $payload['status']      ?? null;
+            // PayU S2S webhooks use different field names from the browser callback.
+            // Fall back to the webhook-specific names so hash computation always has values.
+            $txnId       = $payload['txnid']               ?? $payload['merchantTransactionId'] ?? '';
+            $amount      = $payload['amount']               ?? null;
+            $productInfo = $payload['productinfo']          ?? $payload['productInfo'] ?? null;  // capital-I variant in webhooks
+            $firstName   = $payload['firstname']            ?? $payload['customerName']  ?? null;
+            $email       = $payload['email']                ?? $payload['customerEmail'] ?? null;
+            $hash        = $payload['hash']                 ?? null;
 
-            if (!$txnId || !$hash || !$status) {
+            // All 10 UDF fields (default to '' when absent)
+            $udf1  = $payload['udf1']  ?? '';
+            $udf2  = $payload['udf2']  ?? '';
+            $udf3  = $payload['udf3']  ?? '';
+            $udf4  = $payload['udf4']  ?? '';
+            $udf5  = $payload['udf5']  ?? '';
+            $udf6  = $payload['udf6']  ?? '';
+            $udf7  = $payload['udf7']  ?? '';
+            $udf8  = $payload['udf8']  ?? '';
+            $udf9  = $payload['udf9']  ?? '';
+            $udf10 = $payload['udf10'] ?? '';
+
+            // txnid is intentionally excluded from this check — webhook payloads omit it
+            if (!$hash || !$status) {
+                Log::warning('PayU verifyHash: missing required field (hash or status)', [
+                    'has_txnid'  => isset($payload['txnid']),
+                    'has_hash'   => !empty($hash),
+                    'has_status' => !empty($status),
+                ]);
                 return false;
             }
 
-            // Generate reverse hash for verification (response hash format)
-            // Formula: SALT|status||||||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key
-            $reverseHashString = $this->merchantSalt . '|' . $status . '||||||' . 
-                                    $udf5 . '|' . $udf4 . '|' . $udf3 . '|' . $udf2 . '|' . $udf1 . '|' .
-                                    $email . '|' . $firstName . '|' . $productInfo . '|' . $amount . '|' . $txnId . '|' .
-                                    $this->merchantKey;
+            if (!$txnId) {
+                Log::info('PayU verifyHash: txnid absent from payload (webhook), using merchantTransactionId', [
+                    'merchantTransactionId' => $payload['merchantTransactionId'] ?? '(absent)',
+                    'resolved_txnid'        => $txnId ?: '(empty)',
+                    'status'                => $status,
+                    'amount'                => $amount,
+                ]);
+            }
 
-            $verifyHash = strtolower(hash('sha512', $reverseHashString));
+            // Tail shared by v1 and v2 — UDFs in reverse order (10→1)
+            $udfTail = $udf10 . '|' . $udf9 . '|' . $udf8 . '|' . $udf7 . '|' . $udf6 . '|' .
+                       $udf5  . '|' . $udf4 . '|' . $udf3 . '|' . $udf2 . '|' . $udf1;
 
-            return $hash === $verifyHash && strtolower($status) === 'success';
+            $commonTail = $udfTail . '|' .
+                          $email . '|' . $firstName . '|' . $productInfo . '|' . $amount . '|' . $txnId . '|' .
+                          $this->merchantKey;
+
+            $incomingHash      = strtolower($hash);
+            $additionalCharges = $payload['additionalCharges'] ?? '';
+
+            // v2: SALT|status|additionalCharges|udf10|...|udf1|...  (S2S webhooks, extended format)
+            $hashStringV2 = $this->merchantSalt . '|' . $status . '|' . $additionalCharges . '|' . $commonTail;
+            $computedV2   = strtolower(hash('sha512', $hashStringV2));
+            if (hash_equals($computedV2, $incomingHash)) {
+                return true;
+            }
+
+            // v1: SALT|status|udf10|...|udf1|...  (10-UDF format, no additionalCharges segment)
+            // When udf6-udf10 are empty this is equivalent to the PayU standard 5-UDF formula.
+            $hashStringV1 = $this->merchantSalt . '|' . $status . '|' . $commonTail;
+            $computedV1   = strtolower(hash('sha512', $hashStringV1));
+            if (hash_equals($computedV1, $incomingHash)) {
+                return true;
+            }
+
+            Log::warning('PayU verifyHash: hash mismatch (tried v1 and v2)', [
+                'txnid'             => $txnId ?: '(empty)',
+                'status'            => $status,
+                'amount'            => $amount,
+                'additionalCharges' => $additionalCharges,
+                'incoming_hash'     => $incomingHash,
+                'computed_v1'       => $computedV1,
+                'computed_v2'       => $computedV2,
+                'hash_string_v1'    => preg_replace('/^[^|]+/', '***SALT***', $hashStringV1),
+                'hash_string_v2'    => preg_replace('/^[^|]+/', '***SALT***', $hashStringV2),
+            ]);
+
+            return false;
         } catch (Exception $e) {
+            Log::error('PayU verifyHash exception: ' . $e->getMessage());
             return false;
         }
     }

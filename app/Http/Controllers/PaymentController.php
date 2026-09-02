@@ -52,7 +52,7 @@ class PaymentController extends Controller
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
-    
+
     /**
      * Process free bookings (0 amount after discount) without payment gateway
      */
@@ -285,6 +285,7 @@ class PaymentController extends Controller
     public function thankYouPage($booking)
     {
         $bookingModel = Booking::with(['event.user', 'booker', 'payment'])->findOrFail($booking);
+        // dd($bookingModel->payment->amount);
 
         return view('payments.thankyou', [
             'booking' => $bookingModel,
@@ -333,67 +334,8 @@ class PaymentController extends Controller
             if ($signatureStatus && strtolower($status) === 'success') {
                 // Payment successful - process it
                 try {
-                    $booking->load(['event.user']);
-
-                    // Update or create payment record
-                    PaymentModel::updateOrCreate(
-                        ['booking_id' => $booking->id],
-                        [
-                            'user_id' => $booking->user_id,
-                            'provider' => 'payu',
-                            'transaction_id' => $request->mihpayid ?? null, // Store mihpayid for refunds
-                            'status' => 'success',
-                            'amount' => $request->amount ?? 0,
-                            'currency' => 'INR',
-                            'promo_code' => $request->udf2 ?? null,
-                            'metadata' => json_encode($request->all()),
-                        ]
-                    );
-
-                    $booking->update(['status' => 'confirmed']);
-
-                    // Mark follow-up invite as accepted if this is a follow-up booking
-                    if ($booking->is_followup && $booking->followUpInvite) {
-                        $booking->followUpInvite->update(['status' => 'accepted']);
-                    }
-
-                    // Create google calendar event and update booking
-                    try {
-                        $bookingController = app(BookingController::class);
-                        $calendarEvent = $bookingController->createGoogleEvent(
-                            $booking->event,
-                            $booking->booked_at_date,
-                            $booking->booked_at_time,
-                            $booking->booker_name,
-                            $booking->booker_email
-                        );
-
-                        $booking->update([
-                            'calendar_id' => $calendarEvent['calendar_id'] ?? null,
-                            'calendar_link' => $calendarEvent['calendar_link'] ?? null,
-                            'meet_link' => $calendarEvent['meet_link'] ?? null,
-                            'status' => 'confirmed',
-                        ]);
-
-                        // Refresh booking with relationships for notification
-                        $booking->refresh();
-                        $booking->load(['event.user']);
-
-                        // Notify owner and booker
-                        $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                        Notification::route('mail', [$booking->booker_email => $booking->booker_name])
-                            ->notify(new \App\Notifications\BookingCreatedNotification($booking));
-                    } catch (Exception $e) {
-                        Log::error('PayU callback - Google event creation failed: ' . $e->getMessage(), [
-                            'booking_id' => $bookingId,
-                            'exception' => $e
-                        ]);
-                        // Don't fail the payment if calendar event creation fails
-                    }
-
-                    Log::info('PayU callback: Payment processed successfully', ['booking_id' => $bookingId]);
+                    $this->processSuccessfulPayuPayment($booking, $request->all(), 'callback');
                     return redirect()->route('payment.thankyou', ['booking' => $bookingId]);
-
                 } catch (Exception $e) {
                     Log::error('PayU callback: Payment processing failed: ' . $e->getMessage(), [
                         'booking_id' => $bookingId,
@@ -440,6 +382,201 @@ class PaymentController extends Controller
             return redirect()->route('payment.failed', ['booking' => $bookingId])
                 ->with('error', 'An error occurred while processing your payment');
         }
+    }
+
+    /**
+     * Handle PayU server-to-server webhook notifications.
+     * PayU sends this independently of the user's browser, ensuring no payment is missed
+     * even if the user closes the browser before the redirect callback fires.
+     *
+     * Configure this URL in the PayU merchant dashboard under "Webhook / IPN Settings".
+     * Webhook URL: POST /payment/payu/webhook
+     */
+    public function payuWebhook(Request $request)
+    {
+        $payload  = $request->all();
+        $bookingId = $payload['udf1'] ?? null;
+        $status   = $payload['status'] ?? null;
+
+        // Temporary: log all payload keys so we can identify the exact webhook body structure
+        Log::info('PayU Webhook Received', $request->all());
+
+        // Verify hash signature before touching any data
+        try {
+            /** @var \App\Services\PayUService $payuService */
+            $payuService = app(\App\Services\PayUService::class);
+            if (!$payuService->verifyHash($payload)) {
+                Log::warning('PayU Webhook: Invalid hash signature', [
+                    'txnid' => $payload['txnid'] ?? null,
+                ]);
+                return response()->json(['status' => 'invalid_signature'], 400);
+            }
+        } catch (Exception $e) {
+            Log::error('PayU Webhook: Hash verification threw an exception: ' . $e->getMessage());
+            return response()->json(['status' => 'error'], 500);
+        }
+
+        // Only act on successful payments
+        if (strtolower($status) !== 'success') {
+            Log::info('PayU Webhook: Non-success status, acknowledging without action', [
+                'status'     => $status,
+                'booking_id' => $bookingId,
+            ]);
+            return response()->json(['status' => 'acknowledged']);
+        }
+
+        if (!$bookingId) {
+            Log::error('PayU Webhook: Missing booking ID in udf1');
+            return response()->json(['status' => 'missing_booking_id'], 400);
+        }
+
+        $booking = Booking::find($bookingId);
+        if (!$booking) {
+            Log::error('PayU Webhook: Booking not found', ['booking_id' => $bookingId]);
+            return response()->json(['status' => 'booking_not_found'], 404);
+        }
+
+        // Idempotency: skip only if payment succeeded AND the meet link was already set.
+        // If the callback fired but the Google Calendar call failed mid-way (network blip on
+        // our server side), meet_link will be null even though the payment row is 'success'.
+        // In that case we let the webhook retry the full processing so nothing is missed.
+        $successPayment = PaymentModel::where('booking_id', $booking->id)
+            ->where('status', 'success')
+            ->exists();
+
+        $booking->refresh();
+        $meetLinkSet = !empty($booking->meet_link);
+
+        if ($successPayment && $meetLinkSet) {
+            Log::info('PayU Webhook: Payment already fully processed, skipping', ['booking_id' => $bookingId]);
+            return response()->json(['status' => 'already_processed']);
+        }
+
+        if ($successPayment && !$meetLinkSet) {
+            Log::info('PayU Webhook: Payment recorded but meet link missing — retrying calendar & notifications', [
+                'booking_id' => $bookingId,
+            ]);
+        }
+
+        try {
+            $this->processSuccessfulPayuPayment($booking, $payload, 'webhook');
+            return response()->json(['status' => 'success']);
+        } catch (Exception $e) {
+            Log::error('PayU Webhook: Payment processing failed: ' . $e->getMessage(), [
+                'booking_id' => $bookingId,
+                'exception'  => $e,
+            ]);
+            // Return 500 so PayU retries the webhook
+            return response()->json(['status' => 'processing_failed'], 500);
+        }
+    }
+
+    /**
+     * Shared logic for processing a successful PayU payment.
+     * Called by both payuCallback (browser redirect) and payuWebhook (server-to-server).
+     *
+     * @param  \App\Models\Booking  $booking
+     * @param  array                $payload   Full PayU response payload
+     * @param  string               $source    'callback' or 'webhook' (recorded in metadata)
+     */
+    private function processSuccessfulPayuPayment(Booking $booking, array $payload, string $source = 'callback'): void
+    {
+        $bookingId = $booking->id;
+
+        $booking->load(['event.user', 'followUpInvite']);
+
+        // Remember whether this is a retry (payment already recorded) so we can skip
+        // re-sending notifications if they were already dispatched by a previous run.
+        $wasAlreadyRecorded = PaymentModel::where('booking_id', $booking->id)
+            ->where('status', 'success')
+            ->exists();
+
+        PaymentModel::updateOrCreate(
+            ['booking_id' => $booking->id],
+            [
+                'user_id'        => $booking->user_id,
+                'provider'       => 'payu',
+                'transaction_id' => $payload['mihpayid'] ?? null,
+                'status'         => 'success',
+                'amount'         => $payload['amount'] ?? 0,
+                'currency'       => 'INR',
+                // udf2 is always present now (frontend always sends it, even as ''); coerce '' → null for DB cleanliness
+                'promo_code'     => ($payload['udf2'] ?? '') ?: null,
+                'metadata'       => json_encode(array_merge($payload, ['source' => $source])),
+            ]
+        );
+
+        if ($booking->is_followup && $booking->followUpInvite) {
+            $booking->followUpInvite->update(['status' => 'accepted']);
+        }
+
+        // Capture whether meet_link was already set BEFORE this call so we can determine
+        // if notifications were previously dispatched (they are only sent after meet link is set).
+        $meetLinkWasSet = !empty($booking->meet_link);
+
+        // Order: payment saved → Google Meet/Calendar created → notification fired → booking confirmed.
+        try {
+            $bookingController = app(BookingController::class);
+            $calendarEvent = $bookingController->createGoogleEvent(
+                $booking->event,
+                $booking->booked_at_date,
+                $booking->booked_at_time,
+                $booking->booker_name,
+                $booking->booker_email
+            );
+
+            // Refresh relationships for notification
+            $booking->refresh();
+            $booking->load(['event.user']);
+
+            // Send notifications if:
+            //   (a) First-time processing — payment was not recorded before this call, OR
+            //   (b) Recovery run — payment was already recorded but meet link was null
+            //       (callback saved payment but Google Calendar failed; webhook is now fixing it).
+            // This prevents double emails on clean runs while ensuring emails aren't permanently
+            // skipped when the callback partially failed.
+            $shouldNotify = !$wasAlreadyRecorded || !$meetLinkWasSet;
+
+            if ($shouldNotify) {
+                // Temporarily attach meet/calendar info to the in-memory model for the email
+                // before the DB update, so the notification carries the links.
+                $booking->calendar_id   = $calendarEvent['calendar_id']   ?? null;
+                $booking->calendar_link = $calendarEvent['calendar_link']  ?? null;
+                $booking->meet_link     = $calendarEvent['meet_link']      ?? null;
+
+                $booking->event->user->notify(new \App\Notifications\BookingCreatedNotification($booking));
+                Notification::route('mail', [$booking->booker_email => $booking->booker_name])
+                    ->notify(new \App\Notifications\BookingCreatedNotification($booking));
+
+                if ($wasAlreadyRecorded) {
+                    Log::info("PayU {$source}: Recovery — meet link set, sending previously-skipped notifications", [
+                        'booking_id' => $bookingId,
+                    ]);
+                }
+            } else {
+                Log::info("PayU {$source}: Meet link already set, skipping duplicate notifications", [
+                    'booking_id' => $bookingId,
+                ]);
+            }
+
+            // Finally persist the calendar info and mark booking confirmed
+            $booking->update([
+                'calendar_id'   => $calendarEvent['calendar_id']   ?? null,
+                'calendar_link' => $calendarEvent['calendar_link']  ?? null,
+                'meet_link'     => $calendarEvent['meet_link']      ?? null,
+                'status'        => 'confirmed',
+            ]);
+
+        } catch (Exception $e) {
+            Log::error("PayU {$source} - Google Calendar event creation failed: " . $e->getMessage(), [
+                'booking_id' => $bookingId,
+                'exception'  => $e,
+            ]);
+            // Calendar failure must not block payment/booking confirmation
+            $booking->update(['status' => 'confirmed']);
+        }
+
+        Log::info("PayU {$source}: Payment processed successfully", ['booking_id' => $bookingId]);
     }
 
     public function paymentFailedPage(Request $request, $booking = null)

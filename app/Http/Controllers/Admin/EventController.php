@@ -169,14 +169,27 @@ class EventController extends Controller
         $startDate = Carbon::parse($event->available_from_date);
         $endDate = Carbon::parse($event->available_to_date);
         $availableSlots = [];
+        $bookingCutoff = now()->addHours(2);
+        
 
         for ($date = $startDate->copy(); $date->lessThanOrEqualTo($endDate); $date->addDay()) {
             $dateStr = $date->toDateString();
+            
             $free = [];
 
             foreach ($event->timeslots as $ts) {
                 $startTime = $ts['start'];
-                $isBooked = isset($bookedSlots[$dateStr]) && in_array($startTime, $bookedSlots[$dateStr]);
+
+                $slotDateTime = Carbon::parse($dateStr . ' ' . $startTime);
+
+                // Hide slots that start within next 2 hours
+                if ($slotDateTime->lte($bookingCutoff)) {
+                    continue;
+                }
+
+                $isBooked = isset($bookedSlots[$dateStr])
+                    && in_array($startTime, $bookedSlots[$dateStr]);
+
                 if (! $isBooked) {
                     $free[] = $ts;
                 }

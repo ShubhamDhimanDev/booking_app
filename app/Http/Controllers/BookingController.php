@@ -21,11 +21,12 @@ use App\Notifications\FollowUpInviteNotification;
 use App\Notifications\BookingRescheduleRequestNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-
+use Illuminate\Support\Facades\Auth;
 use App\Services\PaymentGatewayManager;
 use App\Http\Controllers\Controller;
 use App\Models\Refund;
 use App\Jobs\ProcessRefundJob;
+use Illuminate\Support\MessageBag;
 
 class BookingController extends Controller
 {
@@ -148,13 +149,21 @@ class BookingController extends Controller
      * @param Booking $booking
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
-    public function showRescheduleForm(Booking $booking)
+    public function showRescheduleForm(Request $request, Booking $booking)
     {
     $user = auth()->user();
-
+    
     if ($booking->user_id !== $user->id) {
-      abort(403);
-    }
+
+    Auth::guard('web')->logout();
+
+    return redirect()
+        ->route('login')
+        ->withErrors([
+            'account' => 'To reschedule this booking, please login with the correct account.'
+        ])
+        ->withInput();
+}
 
     // Check if booking has expired (date/time has passed)
     $bookingDateTime = \Carbon\Carbon::parse($booking->booked_at_date . ' ' . $booking->booked_at_time);
