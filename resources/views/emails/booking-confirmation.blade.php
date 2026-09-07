@@ -85,7 +85,7 @@
                                                                 <img src="{{ asset('images/email-icons/schedule.png') }}" alt="Time" style="width:20px;height:20px;">
                                                             </td>
                                                             <td style="vertical-align:middle;">
-                                                                <p style="color:#f8fafc;font-size:16px;font-weight:600;margin:0;">{{ $bookingTime ?? '10:00 AM - 11:00 AM' }}</p>
+                                                                <p style="color:#f8fafc;font-size:16px;font-weight:600;margin:0;">{{ $bookingTime ?? '10:00 AM - 11:00 AM' }} {{ $timezoneAbbr ?? '' }}</p>
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -100,7 +100,7 @@
                                                                 <img src="{{ asset('images/email-icons/public.png') }}" alt="Timezone" style="width:20px;height:20px;">
                                                             </td>
                                                             <td style="vertical-align:middle;">
-                                                                <p style="color:#94a3b8;font-size:14px;font-weight:400;margin:0;">Timezone: {{ $timezone ?? '(GMT+5:30) India Standard Time' }}</p>
+                                                                <p style="color:#94a3b8;font-size:14px;font-weight:400;margin:0;">Your local time — India time: {{ $istDate ?? '' }}, {{ $istTime ?? '' }} IST</p>
                                                             </td>
                                                         </tr>
                                                     </table>

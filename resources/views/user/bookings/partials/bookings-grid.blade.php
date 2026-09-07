@@ -47,9 +47,13 @@
                         <span class="material-icons-round text-xl">calendar_today</span>
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Date</p>
+                        <p class="text-[10px] uppercase font-bold text-slate-400">Date &amp; Time</p>
                         <p class="text-sm font-semibold dark:text-slate-200">
-                            {{ \Carbon\Carbon::parse($b->booked_at_date)->format('D, d M Y') }}</p>
+                            <span data-ist-date="{{ \Carbon\Carbon::parse($b->booked_at_date)->format('Y-m-d') }}"
+                                  data-ist-time="{{ \Carbon\Carbon::parse($b->booked_at_time)->format('H:i') }}">
+                                {{ \Carbon\Carbon::parse($b->booked_at_date)->format('D, d M Y') }}, {{ \Carbon\Carbon::parse($b->booked_at_time)->format('g:i A') }} IST
+                            </span>
+                        </p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -58,10 +62,9 @@
                         <span class="material-icons-round text-xl">schedule</span>
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Time</p>
+                        <p class="text-[10px] uppercase font-bold text-slate-400">Duration</p>
                         <p class="text-sm font-semibold dark:text-slate-200">
-                            {{ \Carbon\Carbon::parse($b->booked_at_time, 'UTC')->format('g:i A') }}
-                            ({{ optional($b->event)->duration ?? 60 }} min)</p>
+                            {{ optional($b->event)->duration ?? 60 }} min</p>
                     </div>
                 </div>
             </div>

@@ -204,11 +204,11 @@
                         <div class="space-y-2 text-sm">
                             <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                                 <span class="material-icons-round text-base text-slate-500">calendar_today</span>
-                                <span class="font-semibold">{{ \Carbon\Carbon::parse($booking->booked_at_date)->format('F j, Y') }}</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                                <span class="material-icons-round text-base text-slate-500">schedule</span>
-                                <span class="font-semibold">{{ \Carbon\Carbon::parse($booking->booked_at_time, 'UTC')->format('g:i A') }}</span>
+                                <span class="font-semibold"
+                                      data-ist-date="{{ \Carbon\Carbon::parse($booking->booked_at_date)->format('Y-m-d') }}"
+                                      data-ist-time="{{ \Carbon\Carbon::parse($booking->booked_at_time)->format('H:i') }}">
+                                    {{ \Carbon\Carbon::parse($booking->booked_at_date)->format('l, F j, Y') }}, {{ \Carbon\Carbon::parse($booking->booked_at_time)->format('g:i A') }} IST
+                                </span>
                             </div>
                             <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                                 <span class="material-icons-round text-base text-slate-500">payments</span>

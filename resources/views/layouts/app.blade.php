@@ -318,6 +318,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         });
     </script>
 
+    @include('partials.timezone-convert')
+
     @stack('scripts')
 </body>
 </html>

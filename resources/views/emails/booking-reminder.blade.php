@@ -86,6 +86,13 @@
                                                     </table>
                                                 </td>
                                             </tr>
+                                            @if(isset($istDate))
+                                            <tr>
+                                                <td colspan="2" style="padding-bottom:8px;">
+                                                    <p style="color:#64748b;font-size:12px;margin:0;">India time: {{ $istDate }}, {{ $istTime }} IST</p>
+                                                </td>
+                                            </tr>
+                                            @endif
                                             <tr>
                                                 <td colspan="2" style="padding:12px 0;">
                                                     <table cellpadding="0" cellspacing="0">

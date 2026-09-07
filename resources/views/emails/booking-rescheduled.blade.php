@@ -86,6 +86,13 @@
                                                     </table>
                                                 </td>
                                             </tr>
+                                            @if(isset($istNewDate))
+                                            <tr>
+                                                <td colspan="2" style="padding-bottom:8px;">
+                                                    <p style="color:#64748b;font-size:12px;margin:0;">India time: {{ $istNewDate }}, {{ $istNewTime }} IST</p>
+                                                </td>
+                                            </tr>
+                                            @endif
                                             <tr>
                                                 <td colspan="2" style="padding-top:20px;border-top:1px solid #334155;">
                                                     <p style="color:#94a3b8;font-size:14px;margin:0 0 4px;font-weight:600;">Previous Schedule:</p>

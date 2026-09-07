@@ -68,13 +68,22 @@ class BookingReminderNotification extends Notification implements ShouldQueue
     $when = $this->humanizeOffset();
 
     if ($notifiable instanceof AnonymousNotifiable) {
+      $visitorTz = $this->booking->timezone ?: 'Asia/Kolkata';
+      $istMoment = \Carbon\Carbon::parse(
+          $this->booking->booked_at_date . ' ' . $this->booking->booked_at_time,
+          'Asia/Kolkata'
+      );
+      $localMoment = $istMoment->copy()->setTimezone($visitorTz);
+
       return (new MailMessage)
         ->subject("Reminder: Your booking is {$when}")
         ->view('emails.booking-reminder', [
           'organizerName' => $this->booking->event->user->name,
           'eventTitle' => $this->booking->event->title,
-          'bookingDate' => $this->booking->booked_at_date,
-          'bookingTime' => $this->booking->booked_at_time,
+          'bookingDate' => $localMoment->format('l, F j, Y'),
+          'bookingTime' => $localMoment->format('g:i A') . ' ' . $localMoment->format('T'),
+          'istDate' => $istMoment->format('l, F j, Y'),
+          'istTime' => $istMoment->format('g:i A'),
           'timeUntil' => $when,
           'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
           'rescheduleUrl' => url("/user/bookings/{$this->booking->id}/reschedule"),

@@ -239,6 +239,7 @@ class BookingController extends Controller
   {
     $date = $request->query('date');
     $time = $request->query('time');
+    $timezone = $request->query('timezone', 'Asia/Kolkata');
 
     // Validate that date and time are provided
     if (!$date || !$time) {
@@ -252,7 +253,7 @@ class BookingController extends Controller
         ->withErrors(['error' => 'Invalid date or time format.']);
     }
 
-    return view('bookings.details', compact('event', 'date', 'time'));
+    return view('bookings.details', compact('event', 'date', 'time', 'timezone'));
   }
 
   /**
@@ -382,6 +383,7 @@ if ($ownerHasBooking) {
       'phone' => $phone,
       'booked_at_date' => $request->validated('booked_at_date'),
       'booked_at_time' => $request->validated('booked_at_time'),
+      'timezone' => $request->input('timezone', 'Asia/Kolkata'),
       'user_id' => $user->id,
       'status' => 'pending',
       'is_followup' => $followUpInvite ? true : false,
@@ -503,7 +505,9 @@ if ($ownerHasBooking) {
       $booking->event,
       $booking->booker_name,
       $booking->booked_at_date,
-      $booking->booked_at_time
+      $booking->booked_at_time,
+      null,
+      $booking->timezone
     ));
 
     return redirect()->back()->with([

@@ -274,7 +274,7 @@
             <div class="flex justify-center">
                 <div class="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-700/50 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600">
                     <span class="material-icons-round text-lg">public</span>
-                    <span>India Standard Time (IST)</span>
+                    <span id="tzLabel">Times shown in your local timezone</span>
                 </div>
             </div>
 
@@ -291,6 +291,7 @@
                 <form method="GET" action="{{ route('bookings.details', $event->slug) }}" id="slotForm">
                     <input type="hidden" name="date" id="selectedDate">
                     <input type="hidden" name="time" id="selectedTime">
+                    <input type="hidden" name="timezone" id="selectedTimezone">
                     @if(isset($isFollowUp) && $isFollowUp && isset($invite))
                         <input type="hidden" name="followup_token" value="{{ $invite->token }}">
                     @endif
@@ -317,6 +318,8 @@
         const slotForm = document.getElementById('slotForm');
         const selectedDateInput = document.getElementById('selectedDate');
         const selectedTimeInput = document.getElementById('selectedTime');
+
+        document.getElementById('selectedTimezone').value = window.__visitorTz || 'Asia/Kolkata';
 
         let currentMonth = new Date();
         let selectedDate = null;
@@ -471,10 +474,9 @@
                 const t = document.createElement('div');
                 t.className = 'time-slot';
 
-                let [hours, minutes] = slot.start.split(':').map(Number);
-                const ampm = hours >= 12 ? 'pm' : 'am';
-                const displayHours = hours % 12 || 12;
-                t.textContent = `${displayHours}:${minutes.toString().padStart(2,'0')}${ampm}`;
+                const conv = window.convertIstToVisitorTz(dateStr, slot.start);
+                t.textContent = conv.local;
+                t.title = `${conv.ist} (India time)`;
 
                 t.dataset.backendTime = slot.start;
                 t.addEventListener('click', () => selectTime(slot.start, t));
@@ -494,12 +496,8 @@
 
             confirmPanel.classList.remove('hidden');
 
-            const [hours, minutes] = time.split(':').map(Number);
-            const ampm = hours >= 12 ? 'pm' : 'am';
-            const displayHours = hours % 12 || 12;
-            const displayTime = `${displayHours}:${minutes.toString().padStart(2,'0')}${ampm}`;
-
-            confirmText.textContent = `You've selected ${selectedDate.toDateString()} at ${displayTime}`;
+            const conv = window.convertIstToVisitorTz(formatLocalDate(selectedDate), time);
+            confirmText.textContent = `You've selected ${conv.localDate} at ${conv.local} (${conv.ist} India time)`;
 
             setTimeout(() => {
                 confirmPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

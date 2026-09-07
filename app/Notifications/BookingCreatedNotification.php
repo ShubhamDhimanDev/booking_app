@@ -46,14 +46,23 @@ class BookingCreatedNotification extends Notification implements ShouldQueue
   {
     // For booker (guest/anonymous notifiable)
     if ($notifiable instanceof AnonymousNotifiable) {
+      $visitorTz = $this->booking->timezone ?: 'Asia/Kolkata';
+      $istMoment = \Carbon\Carbon::parse(
+          $this->booking->booked_at_date . ' ' . $this->booking->booked_at_time,
+          'Asia/Kolkata'
+      );
+      $localMoment = $istMoment->copy()->setTimezone($visitorTz);
+
       return (new MailMessage)
         ->subject("Booking Confirmation - {$this->booking->event->title}")
         ->view('emails.booking-confirmation', [
           'bookerName' => $this->booking->booker_name,
           'eventTitle' => $this->booking->event->title,
-          'bookingDate' => $this->booking->booked_at_date,
-          'bookingTime' => $this->booking->booked_at_time,
-          'timezone' => $this->booking->timezone ?? 'IST',
+          'bookingDate' => $localMoment->format('l, F j, Y'),
+          'bookingTime' => $localMoment->format('g:i A'),
+          'timezoneAbbr' => $localMoment->format('T'),      // e.g. "PDT"
+          'istDate' => $istMoment->format('l, F j, Y'),
+          'istTime' => $istMoment->format('g:i A'),
           'meetingLink' => $this->booking->meet_link ?? $this->booking->calendar_link,
           'organizerName' => $this->booking->event->user->name,
         ]);
