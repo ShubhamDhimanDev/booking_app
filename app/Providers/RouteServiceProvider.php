@@ -13,7 +13,10 @@ class RouteServiceProvider extends ServiceProvider
   /**
    * The path to the "home" route for your application.
    *
-   * Typically, users are redirected here after authentication.
+   * NOT used for post-authentication redirects — see App\Services\PostAuthRedirect,
+   * which sends users to their role-appropriate destination instead (this const can't
+   * express that since it's a fixed string). Kept only because Laravel's framework
+   * scaffolding expects this constant to exist; `/` is now the public marketing homepage.
    *
    * @var string
    */

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Providers\RouteServiceProvider;
+use App\Services\PostAuthRedirect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -20,9 +20,7 @@ class AuthenticatedSessionController extends Controller
     {
         if (auth()->check()) {
             // redirect based on role if already logged in
-            $user = auth()->user();
-            $isAdmin = method_exists($user, 'hasRole') && $user->hasRole('admin');
-            return redirect($isAdmin ? '/bookings' : '/user/bookings');
+            return redirect(PostAuthRedirect::url(auth()->user()));
         }
 
         return view('auth.login', [
@@ -43,16 +41,16 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-            // Redirect based on role: admin -> /bookings, other users -> /user/bookings
-            $isAdmin = $request->user() && method_exists($request->user(), 'hasRole') && $request->user()->hasRole('admin');
-            $default = $isAdmin ? '/bookings' : '/user/bookings';
+            // Redirect based on role: admin/owner/team-member -> /admin, other users -> /user/bookings
+            $default = PostAuthRedirect::url($request->user());
+            $isAdmin = $default === route('admin.dashboard');
 
             // Respect intended URL where safe: only allow redirecting to admin paths when user is admin.
             $intended = $request->session()->pull('url.intended');
             if ($intended) {
                 $path = parse_url($intended, PHP_URL_PATH) ?: '';
-                // If intended path is under /bookings but current user is not admin, ignore it
-                if (! $isAdmin && str_starts_with($path, '/bookings')) {
+                // If intended path is under /admin but current user is not admin, ignore it
+                if (! $isAdmin && str_starts_with($path, '/admin')) {
                     return redirect($default);
                 }
 
