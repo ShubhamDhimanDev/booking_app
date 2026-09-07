@@ -17,6 +17,7 @@ class StoreEventRequest extends FormRequest
       'title' => 'required|string',
       'description' => 'nullable|string',
       'price' => 'required|numeric|min:0',
+      'currency' => 'required|in:INR,USD',
       'slug' => 'required|alpha_dash|unique:events',
       'available_from_date' => 'required|date|after_or_equal:today',
       'available_to_date' => 'required|date|after_or_equal:today|after_or_equal:available_from_date',

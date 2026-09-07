@@ -48,7 +48,7 @@
 
                             <td>{{ $event->duration }} min</td>
 
-                            <td>₹{{ number_format($event->price, 2) }}</td>
+                            <td>{{ $event->currency_symbol ?? '₹' }}{{ number_format($event->price, 2) }}</td>
 
                             <td class="text-center">
                               {{ $event->bookings_count }}

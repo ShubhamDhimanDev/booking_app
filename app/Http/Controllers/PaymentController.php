@@ -27,11 +27,17 @@ class PaymentController extends Controller
                 return $this->processFreeBooking($bookingId, $promoCode);
             }
 
-            $gateway = $gatewayManager->getActiveGateway();
+            $booking = $bookingId ? Booking::with('event')->find($bookingId) : null;
+            $currency = $booking->event->currency ?? 'INR';
+
+            $gateway = $currency === 'USD'
+                ? $gatewayManager->getGateway('payu')
+                : $gatewayManager->getActiveGateway();
             $gatewayName = $gateway->getName();
 
             $paymentData = [
                 'amount' => $amount,
+                'currency' => $currency,
                 'receipt' => 'order_' . time(),
                 'booking_id' => $bookingId,
                 'product_info' => $request->product_info ?? 'Booking Payment',
@@ -90,7 +96,7 @@ class PaymentController extends Controller
                 'transaction_id' => 'FREE_' . time() . rand(1000, 9999),
                 'status' => 'success',
                 'amount' => 0,
-                'currency' => 'INR',
+                'currency' => $booking->event->currency ?? 'INR',
                 'promo_code' => $promoCode,
                 'metadata' => json_encode(['type' => 'free_booking', 'promo_code' => $promoCode]),
             ]);
@@ -209,7 +215,7 @@ class PaymentController extends Controller
                         'transaction_id' => $transactionId,
                         'status' => 'success',
                         'amount' => $request->amount ?? 0,
-                        'currency' => 'INR',
+                        'currency' => $booking->event->currency ?? 'INR',
                         'promo_code' => $request->promo_code ?? null,
                         'metadata' => json_encode($request->all()),
                     ]);
@@ -310,7 +316,7 @@ class PaymentController extends Controller
             return redirect()->route('payment.failed')->with('error', 'Invalid payment data');
         }
 
-        $booking = Booking::find($bookingId);
+        $booking = Booking::with('event')->find($bookingId);
         if (!$booking) {
             Log::error('PayU callback: Booking not found', ['booking_id' => $bookingId]);
             return redirect()->route('payment.failed')->with('error', 'Booking not found');
@@ -363,7 +369,7 @@ class PaymentController extends Controller
                             'transaction_id' => $request->mihpayid ?? null,
                             'status' => 'failed',
                             'amount' => $request->amount ?? 0,
-                            'currency' => 'INR',
+                            'currency' => $booking->event->currency ?? 'INR',
                             'metadata' => json_encode($request->all()),
                         ]
                     );
@@ -499,7 +505,7 @@ class PaymentController extends Controller
                 'transaction_id' => $payload['mihpayid'] ?? null,
                 'status'         => 'success',
                 'amount'         => $payload['amount'] ?? 0,
-                'currency'       => 'INR',
+                'currency'       => $booking->event->currency ?? 'INR',
                 // udf2 is always present now (frontend always sends it, even as ''); coerce '' → null for DB cleanliness
                 'promo_code'     => ($payload['udf2'] ?? '') ?: null,
                 'metadata'       => json_encode(array_merge($payload, ['source' => $source])),
@@ -606,6 +612,9 @@ class PaymentController extends Controller
         $bookingId = $request->booking_id;
         $originalAmount = floatval($request->amount);
 
+        $booking = Booking::with('event')->findOrFail($bookingId);
+        $currencySymbol = $booking->event->currency_symbol ?? '₹';
+
         // Find the promo code
         $promoCode = PromoCode::where('code', $code)->first();
 
@@ -645,7 +654,7 @@ class PaymentController extends Controller
         if ($promoCode->min_booking_amount && $originalAmount < $promoCode->min_booking_amount) {
             return response()->json([
                 'success' => false,
-                'message' => "Minimum booking amount of ₹{$promoCode->min_booking_amount} required"
+                'message' => "Minimum booking amount of {$currencySymbol}{$promoCode->min_booking_amount} required"
             ], 400);
         }
 
@@ -664,7 +673,6 @@ class PaymentController extends Controller
         }
 
         // Check if this booking already used a promo code
-        $booking = Booking::findOrFail($bookingId);
         if ($booking->payment && $booking->payment->promo_code) {
             return response()->json([
                 'success' => false,
@@ -691,7 +699,7 @@ class PaymentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Promo code applied successfully! You saved ₹{$discountValue}",
+            'message' => "Promo code applied successfully! You saved {$currencySymbol}{$discountValue}",
             'promo_code' => $code,
             'discount_type' => $promoCode->discount_type,
             'discount_value' => round($discountValue, 2),

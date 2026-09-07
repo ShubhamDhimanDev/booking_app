@@ -57,7 +57,7 @@
                                             </tr>
                                             <tr>
                                                 <td colspan="2" style="padding-bottom:24px;">
-                                                    <h3 style="color:#10b981;font-size:32px;font-weight:800;margin:0;">₹{{ $refundAmount ?? '999' }}</h3>
+                                                    <h3 style="color:#10b981;font-size:32px;font-weight:800;margin:0;">{{ $currencySymbol ?? '₹' }}{{ $refundAmount ?? '999' }}</h3>
                                                 </td>
                                             </tr>
                                             <tr>

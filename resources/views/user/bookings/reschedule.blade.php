@@ -212,7 +212,7 @@
                             </div>
                             <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                                 <span class="material-icons-round text-base text-slate-500">payments</span>
-                                <span class="font-semibold">₹{{ $booking->payment ? $booking->payment->amount : optional($booking->event)->price }}</span>
+                                <span class="font-semibold">{{ optional($booking->event)->currency_symbol ?? '₹' }}{{ $booking->payment ? $booking->payment->amount : optional($booking->event)->price }}</span>
                             </div>
                         </div>
                         <div class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
@@ -235,7 +235,7 @@
             </div>
 
             <!-- Reschedule Instructions -->
-            <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-3xl shadow-lg border border-amber-100 dark:border-amber-800 p-6">
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-amber-900/20 rounded-3xl shadow-lg border border-amber-100 dark:border-amber-800 p-6">
                 <div class="flex items-start space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
                         <span class="material-icons-round text-amber-600 dark:text-amber-400 text-xl">info</span>

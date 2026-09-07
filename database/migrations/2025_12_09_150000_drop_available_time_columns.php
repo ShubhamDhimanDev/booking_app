@@ -8,14 +8,15 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('events', function (Blueprint $table) {
-            if (Schema::hasColumn('events', 'available_from_time')) {
-                $table->dropColumn('available_from_time');
-            }
-            if (Schema::hasColumn('events', 'available_to_time')) {
-                $table->dropColumn('available_to_time');
-            }
+        $columns = array_filter(['available_from_time', 'available_to_time'], function ($column) {
+            return Schema::hasColumn('events', $column);
         });
+
+        if (! empty($columns)) {
+            Schema::table('events', function (Blueprint $table) use ($columns) {
+                $table->dropColumn($columns);
+            });
+        }
     }
 
     public function down()

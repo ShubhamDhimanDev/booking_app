@@ -72,6 +72,7 @@ class PayUService implements PaymentGatewayInterface
                 'success' => true,
                 'txnid' => $txnId,
                 'amount' => $amount,
+                'currency' => $data['currency'] ?? 'INR',
                 'key' => $this->merchantKey,
                 'merchant_id' => $this->merchantId,
                 'hash' => $hash_v1,

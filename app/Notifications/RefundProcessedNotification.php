@@ -49,13 +49,15 @@ class RefundProcessedNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         $eventName = $this->booking->event->title ?? 'Event';
-        $refundAmount = '₹' . number_format($this->refund->net_refund_amount, 2);
+        $currencySymbol = $this->booking->event->currency_symbol ?? '₹';
+        $refundAmount = number_format($this->refund->net_refund_amount, 2);
         $gateway = ucfirst($this->refund->gateway);
 
         return (new MailMessage)
             ->subject('Refund Processed - ' . $eventName)
             ->view('emails.refund-processed', [
                 'refundAmount' => $refundAmount,
+                'currencySymbol' => $currencySymbol,
                 'transactionId' => $this->refund->transaction_id ?? 'N/A',
                 'processedDate' => $this->refund->created_at->format('M d, Y'),
                 'refundMethod' => $gateway,
@@ -72,13 +74,14 @@ class RefundProcessedNotification extends Notification implements ShouldQueue
      */
     public function toArray($notifiable)
     {
+        $currencySymbol = $this->booking->event->currency_symbol ?? '₹';
         return [
             'booking_id' => $this->booking->id,
             'refund_id' => $this->refund->id,
             'event_name' => $this->booking->event->name ?? 'Event',
             'refund_amount' => $this->refund->net_refund_amount,
             'gateway' => $this->refund->gateway,
-            'message' => 'Your refund of ₹' . number_format($this->refund->net_refund_amount, 2) . ' has been processed.',
+            'message' => 'Your refund of ' . $currencySymbol . number_format($this->refund->net_refund_amount, 2) . ' has been processed.',
         ];
     }
 }

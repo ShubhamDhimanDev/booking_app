@@ -74,7 +74,7 @@
 
                             {{-- Amount --}}
                             <td>
-                                ₹{{ $payment->amount  }}
+                                {{ $payment->currency === 'USD' ? '$' : '₹' }}{{ $payment->amount  }}
                             </td>
 
                             <td>{{ $payment->currency }}</td>

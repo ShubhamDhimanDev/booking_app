@@ -20,14 +20,14 @@
         'content_ids' => [$booking->event->id],
         'booking_id' => $booking->id,
         'value' => $actualPrice,
-        'currency' => 'INR'
+        'currency' => $booking->event->currency ?? 'INR'
     ]) !!}
     {!! \App\Services\TrackingService::getGoogleEventScript('view_payment_page', [
         'event_name' => $booking->event->title,
         'event_id' => $booking->event->id,
         'booking_id' => $booking->id,
         'value' => $actualPrice,
-        'currency' => 'INR'
+        'currency' => $booking->event->currency ?? 'INR'
     ]) !!}
 @endpush
 
@@ -313,11 +313,11 @@
 
                             <!-- Original Price (shown when discount applied) -->
                             <div id="originalPriceSection" class="hidden mb-2">
-                                <p class="text-2xl font-bold text-slate-400 dark:text-slate-500 line-through">₹<span id="originalPrice">{{ $actualPrice }}</span></p>
+                                <p class="text-2xl font-bold text-slate-400 dark:text-slate-500 line-through">{{ $booking->event->currency_symbol ?? '₹' }}<span id="originalPrice">{{ $actualPrice }}</span></p>
                             </div>
 
                             <!-- Final Price -->
-                            <h3 class="text-5xl font-black amount-display mb-2">₹<span id="finalAmount">{{ $actualPrice }}</span></h3>
+                            <h3 class="text-5xl font-black amount-display mb-2">{{ $booking->event->currency_symbol ?? '₹' }}<span id="finalAmount">{{ $actualPrice }}</span></h3>
                             @if($booking->is_followup)
                                 <p class="text-sm text-emerald-500 dark:text-emerald-400 font-semibold">Follow-up Session Price</p>
                             @endif
@@ -326,7 +326,7 @@
                             <div id="discountBadge" class="hidden mb-3">
                                 <span class="inline-flex items-center gap-1 bg-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold">
                                     <span class="material-icons-round text-sm">local_offer</span>
-                                    <span id="discountText">Saved ₹0</span>
+                                    <span id="discountText">Saved {{ $booking->event->currency_symbol ?? '₹' }}0</span>
                                 </span>
                             </div>
 
@@ -394,7 +394,7 @@
                             <!-- Pay Button -->
                             <button id="payBtn" class="w-full gradient-bg hover:opacity-95 text-white font-extrabold py-5 rounded-2xl transition-all duration-300 flex items-center justify-center space-x-3 mb-5 shadow-2xl shadow-primary/40 hover:shadow-3xl hover:shadow-primary/50 transform hover:-translate-y-1 hover:scale-[1.02] relative overflow-hidden group">
                                 <span class="material-icons-round text-xl" id="payBtnIcon">lock</span>
-                                <span class="text-xl" id="payBtnText">Pay ₹<span id="payBtnAmount">{{ $actualPrice }}</span></span>
+                                <span class="text-xl" id="payBtnText">Pay {{ $booking->event->currency_symbol ?? '₹' }}<span id="payBtnAmount">{{ $actualPrice }}</span></span>
                             </button>
 
                             <!-- Security Badge -->
@@ -494,6 +494,8 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://secure.payu.in/_payment_options_v2.js"></script>
     <script>
+    const currencySymbol = @json($booking->event->currency_symbol ?? '₹');
+    const eventCurrency = @json($booking->event->currency ?? 'INR');
     const payBtn = document.getElementById('payBtn');
     const errorBox = document.getElementById('errorBox');
     const errorMessage = document.getElementById('errorMessage');
@@ -619,14 +621,14 @@
 
             // Show discount badge
             discountBadge.classList.remove('hidden');
-            discountText.textContent = `Saved ₹${discountValue}`;
+            discountText.textContent = `Saved ${currencySymbol}${discountValue}`;
 
             // Update button based on amount
             if (discountedAmount === 0) {
                 payBtnTextEl.textContent = 'Confirm Booking (FREE)';
                 payBtnIconEl.textContent = 'check_circle';
             } else {
-                payBtnTextEl.innerHTML = `Pay ₹<span id="payBtnAmount">${discountedAmount}</span>`;
+                payBtnTextEl.innerHTML = `Pay ${currencySymbol}<span id="payBtnAmount">${discountedAmount}</span>`;
                 payBtnIconEl.textContent = 'lock';
             }
         } else {
@@ -636,7 +638,7 @@
 
             // Reset to original amount
             finalAmountEl.textContent = originalAmount;
-            payBtnTextEl.innerHTML = `Pay ₹<span id="payBtnAmount">${originalAmount}</span>`;
+            payBtnTextEl.innerHTML = `Pay ${currencySymbol}<span id="payBtnAmount">${originalAmount}</span>`;
             payBtnIconEl.textContent = 'lock';
         }
     }
@@ -741,7 +743,7 @@
         const options = {
             key: data.key,
             amount: discountedAmount * 100,
-            currency: 'INR',
+            currency: eventCurrency,
             name: '{{ addslashes($booking->event->title) }}',
             description: 'Booking #' + bookingId,
             order_id: data.order_id,

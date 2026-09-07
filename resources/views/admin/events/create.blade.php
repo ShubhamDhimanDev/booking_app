@@ -69,9 +69,22 @@
                     @enderror
                 </div>
 
+                {{-- Currency --}}
+                <div class="mb-3">
+                    <label class="form-label">Currency</label>
+                    <select name="currency" class="form-control @error('currency') is-invalid @enderror">
+                        <option value="INR" {{ old('currency', 'INR') == 'INR' ? 'selected' : '' }}>INR (₹) — India</option>
+                        <option value="USD" {{ old('currency') == 'USD' ? 'selected' : '' }}>USD ($) — United States</option>
+                    </select>
+                    <div class="form-text">Determines the symbol shown to customers and the payment currency used at checkout.</div>
+                    @error('currency')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 {{-- Price --}}
                 <div class="mb-3">
-                    <label class="form-label">Price (INR)</label>
+                    <label class="form-label">Price</label>
                     <input
                         type="number"
                         name="price"
@@ -79,7 +92,7 @@
                         class="form-control @error('price') is-invalid @enderror"
                         value="{{ old('price', '500.00') }}"
                     >
-                    <div class="form-text">Amount in Indian Rupees (e.g. 500.00)</div>
+                    <div class="form-text">Amount in the currency selected above (e.g. 500.00)</div>
 
                     @error('price')
                         <div class="invalid-feedback">{{ $message }}</div>

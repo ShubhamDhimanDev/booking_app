@@ -91,6 +91,18 @@ class Event extends Model
 
 
   /**
+   * Display symbol for this event's currency.
+   */
+  public function getCurrencySymbolAttribute()
+  {
+    return match ($this->currency) {
+      'USD' => '$',
+      default => '₹',
+    };
+  }
+
+
+  /**
    * The user created the event
    *
    * @return \App\Models\User

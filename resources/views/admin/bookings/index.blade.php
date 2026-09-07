@@ -454,7 +454,7 @@
 
                                                 <div class="mb-4">
                                                     <label class="form-label text-white fw-semibold">
-                                                        <i class="fa fa-indian-rupee-sign me-2"></i>Session Price (₹) *
+                                                        <i class="fa fa-indian-rupee-sign me-2"></i>Session Price ({{ $booking->event->currency_symbol ?? '₹' }}) *
                                                     </label>
                                                     <input
                                                         type="number"
@@ -522,7 +522,7 @@
 
                                                 <div class="mb-4">
                                                     <label class="form-label text-white fw-semibold">
-                                                        <i class="fa fa-indian-rupee-sign me-2"></i>Session Price (₹)
+                                                        <i class="fa fa-indian-rupee-sign me-2"></i>Session Price ({{ $booking->event->currency_symbol ?? '₹' }})
                                                     </label>
                                                     <input
                                                         type="number"

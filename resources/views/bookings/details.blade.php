@@ -15,13 +15,13 @@
         'content_name' => $event->title,
         'content_ids' => [$event->id],
         'value' => $event->price,
-        'currency' => 'INR'
+        'currency' => $event->currency ?? 'INR'
     ]) !!}
     {!! \App\Services\TrackingService::getGoogleEventScript('begin_checkout', [
         'event_name' => $event->title,
         'event_id' => $event->id,
         'value' => $event->price,
-        'currency' => 'INR'
+        'currency' => $event->currency ?? 'INR'
     ]) !!}
 @endpush
 

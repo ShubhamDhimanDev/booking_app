@@ -152,7 +152,7 @@ class BookingController extends Controller
     public function showRescheduleForm(Request $request, Booking $booking)
     {
     $user = auth()->user();
-    
+
     if ($booking->user_id !== $user->id) {
 
     Auth::guard('web')->logout();
@@ -795,7 +795,8 @@ if ($ownerHasBooking) {
       // Dispatch refund processing job
       ProcessRefundJob::dispatch($refund);
 
-      $message = "Booking cancelled successfully. Your refund of ₹" . number_format($refundDetails['amount'], 2) . " ({$refundDetails['percentage']}%) is being processed and will be credited within 5-7 business days.";
+      $currencySymbol = $booking->event->currency_symbol ?? '₹';
+      $message = "Booking cancelled successfully. Your refund of {$currencySymbol}" . number_format($refundDetails['amount'], 2) . " ({$refundDetails['percentage']}%) is being processed and will be credited within 5-7 business days.";
     } else {
       $message = "Booking cancelled successfully.";
     }
@@ -920,7 +921,8 @@ if ($ownerHasBooking) {
       // Dispatch refund processing job
       ProcessRefundJob::dispatch($refund);
 
-      $message = "Booking cancelled by admin. Refund of ₹" . number_format($refundAmount, 2) . " is being processed.";
+      $currencySymbol = $booking->event->currency_symbol ?? '₹';
+      $message = "Booking cancelled by admin. Refund of {$currencySymbol}" . number_format($refundAmount, 2) . " is being processed.";
     } else {
       $message = "Booking cancelled by admin.";
     }
@@ -1195,4 +1197,3 @@ if ($ownerHasBooking) {
     return view('bookings.slot-selection', compact('event', 'customPrice', 'isFollowUp', 'invite', 'availableSlots', 'bookedSlots'));
   }
 }
-

@@ -20,13 +20,13 @@
             'content_name' => $booking->event->title,
             'content_ids' => [$booking->event->id],
             'value' => $purchaseValue,
-            'currency' => 'INR',
+            'currency' => $booking->event->currency ?? 'INR',
             'transaction_id' => $booking->payment->transaction_id ?? $booking->id
         ]) !!}
         {!! \App\Services\TrackingService::getGoogleEventScript('purchase', [
             'transaction_id' => $booking->payment->transaction_id ?? $booking->id,
             'value' => $purchaseValue,
-            'currency' => 'INR',
+            'currency' => $booking->event->currency ?? 'INR',
             'items' => [[
                 'item_id' => $booking->event->id,
                 'item_name' => $booking->event->title,
@@ -39,13 +39,13 @@
             'content_name' => $booking->event->title,
             'content_ids' => [$booking->event->id],
             'value' => 0,
-            'currency' => 'INR',
+            'currency' => $booking->event->currency ?? 'INR',
             'transaction_id' => $booking->payment->transaction_id ?? $booking->id
         ]) !!}
         {!! \App\Services\TrackingService::getGoogleEventScript('free_booking', [
             'transaction_id' => $booking->payment->transaction_id ?? $booking->id,
             'value' => 0,
-            'currency' => 'INR',
+            'currency' => $booking->event->currency ?? 'INR',
             'items' => [[
                 'item_id' => $booking->event->id,
                 'item_name' => $booking->event->title,
@@ -199,7 +199,7 @@
                                 <span class="material-icons-round text-slate-600 dark:text-slate-400 text-xl">payments</span>
                                 <div class="flex-1">
                                     <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Payment</p>
-                                    <p class="text-xl font-extrabold text-slate-900 dark:text-white">₹{{ $booking->payment->amount ?? $booking->event->price }}</p>
+                                    <p class="text-xl font-extrabold text-slate-900 dark:text-white">{{ $booking->event->currency_symbol ?? '₹' }}{{ $booking->payment->amount ?? $booking->event->price }}</p>
                                     @if($booking->payment->transaction_id)
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
                                             Transaction ID: {{ $booking->payment->transaction_id }}

@@ -212,7 +212,7 @@
                                 @if($customPrice == 0)
                                     <span class="text-emerald-600 dark:text-emerald-400">FREE Session!</span>
                                 @else
-                                    Special Price: ₹{{ number_format($customPrice, 2) }}
+                                    Special Price: {{ $event->currency_symbol ?? '₹' }}{{ number_format($customPrice, 2) }}
                                 @endif
                             </span>
                         </div>

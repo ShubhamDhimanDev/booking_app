@@ -16,6 +16,9 @@ return new class extends Migration
         Schema::table('system_settings', function (Blueprint $table) {
             // Add user_id for per-user theme settings
             $table->foreignId('user_id')->nullable()->after('id')->constrained()->onDelete('cascade');
+        });
+
+        Schema::table('system_settings', function (Blueprint $table) {
             // Remove theme_layout as it's not being used
             $table->dropColumn('theme_layout');
         });

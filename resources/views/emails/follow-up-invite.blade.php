@@ -84,7 +84,7 @@
                                                                 @if($isFree)
                                                                     <p style="color:#10b981;font-size:18px;font-weight:700;margin:0;">This session is FREE!</p>
                                                                 @else
-                                                                    <p style="color:#f8fafc;font-size:18px;font-weight:600;margin:0;">Special Price: ₹{{ number_format($customPrice, 2) }}</p>
+                                                                    <p style="color:#f8fafc;font-size:18px;font-weight:600;margin:0;">Special Price: {{ $currencySymbol ?? '₹' }}{{ number_format($customPrice, 2) }}</p>
                                                                 @endif
                                                             </td>
                                                         </tr>

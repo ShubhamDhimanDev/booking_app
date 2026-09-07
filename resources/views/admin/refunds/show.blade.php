@@ -57,15 +57,15 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Refund Amount:</strong></div>
-                        <div class="col-md-8">₹{{ number_format($refund->amount, 2) }}</div>
+                        <div class="col-md-8">{{ $refund->booking->event->currency_symbol ?? '₹' }}{{ number_format($refund->amount, 2) }}</div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Gateway Charges:</strong></div>
-                        <div class="col-md-8">₹{{ number_format($refund->gateway_charges, 2) }}</div>
+                        <div class="col-md-8">{{ $refund->booking->event->currency_symbol ?? '₹' }}{{ number_format($refund->gateway_charges, 2) }}</div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Net Refund Amount:</strong></div>
-                        <div class="col-md-8"><strong class="text-success">₹{{ number_format($refund->net_refund_amount, 2) }}</strong></div>
+                        <div class="col-md-8"><strong class="text-success">{{ $refund->booking->event->currency_symbol ?? '₹' }}{{ number_format($refund->net_refund_amount, 2) }}</strong></div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Payment Gateway:</strong></div>
