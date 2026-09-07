@@ -115,11 +115,10 @@
                     <div class="space-y-2">
                         <p class="flex items-center gap-2 text-slate-900 dark:text-white font-bold">
                             <span class="material-icons-round text-primary">calendar_today</span>
-                            {{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}
-                        </p>
-                        <p class="flex items-center gap-2 text-slate-900 dark:text-white font-bold">
-                            <span class="material-icons-round text-primary">access_time</span>
-                            {{ \Carbon\Carbon::parse($time, 'UTC')->format('g:i A') }}
+                            <span data-ist-date="{{ \Carbon\Carbon::parse($date)->format('Y-m-d') }}"
+                                  data-ist-time="{{ \Carbon\Carbon::parse($time)->format('H:i') }}">
+                                {{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}, {{ \Carbon\Carbon::parse($time)->format('g:i A') }} IST
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -152,6 +151,7 @@
                 @csrf
                 <input type="hidden" name="booked_at_date" value="{{ $date }}">
                 <input type="hidden" name="booked_at_time" value="{{ $time }}">
+                <input type="hidden" name="timezone" value="{{ $timezone }}">
                 @if(request()->has('followup_token'))
                     <input type="hidden" name="followup_token" value="{{ request('followup_token') }}">
                 @endif

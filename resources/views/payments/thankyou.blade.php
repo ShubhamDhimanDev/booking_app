@@ -182,11 +182,10 @@
                                 <p class="text-xs font-bold text-primary uppercase tracking-wider mb-1">Scheduled Time</p>
                                 <p class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                     <span class="material-icons-round text-sm">event</span>
-                                    {{ \Carbon\Carbon::parse($booking->booked_at_date)->format('l, F j, Y') }}
-                                </p>
-                                <p class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mt-1">
-                                    <span class="material-icons-round text-sm">access_time</span>
-                                    {{ \Carbon\Carbon::parse($booking->booked_at_time, 'UTC')->format('g:i A') }}
+                                    <span data-ist-date="{{ \Carbon\Carbon::parse($booking->booked_at_date)->format('Y-m-d') }}"
+                                          data-ist-time="{{ \Carbon\Carbon::parse($booking->booked_at_time)->format('H:i') }}">
+                                        {{ \Carbon\Carbon::parse($booking->booked_at_date)->format('l, F j, Y') }}, {{ \Carbon\Carbon::parse($booking->booked_at_time)->format('g:i A') }} IST
+                                    </span>
                                 </p>
                             </div>
                         </div>
