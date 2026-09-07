@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayuController;
@@ -22,6 +23,11 @@ use App\Http\Controllers\TransactionsController;
 */
 
 // Route::redirect('/', '/events')->name('dashboard');
+
+// Public region-detection homepage — see Part B of docs/us-expansion.
+Route::get('/', [HomeController::class, 'index'])->name('home.detect');
+Route::get('/en-in', [HomeController::class, 'in'])->name('home.in');
+Route::get('/en-us', [HomeController::class, 'us'])->name('home.us');
 
 Route::middleware('auth')->group(function () {
   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
