@@ -47,13 +47,18 @@
 
     <script>
         (function () {
-            // Mirrors resources/views/partials/timezone-convert.blade.php's detection.
             try {
-                var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-                var target = (tz === 'Asia/Kolkata') ? '{{ route('home.in') }}' : '{{ route('home.us') }}';
+                // UTC offset in minutes, positive = ahead of UTC. IST is a fixed
+                // UTC+5:30 (no DST), so this is +330 for every India-based visitor
+                // regardless of which IANA zone name their OS reports (Asia/Kolkata
+                // vs. the older Asia/Calcutta alias, etc.) — offset-based detection
+                // sidesteps that naming inconsistency entirely.
+                var offsetMinutes = -(new Date().getTimezoneOffset());
+                var isIndia = offsetMinutes === 330;
+                var target = isIndia ? '{{ route('home.in') }}' : '{{ route('home.us') }}';
                 location.replace(target);
             } catch (e) {
-                // Intl unsupported — the meta-refresh above and the manual
+                // Detection unsupported — the meta-refresh above and the manual
                 // links handle this visitor instead.
             }
         })();

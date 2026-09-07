@@ -23,6 +23,10 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.bookings.index') }}" class="row g-3">
                 <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" placeholder="Name or email" value="{{ request('search') }}">
+                </div>
+                <div class="col-md-3">
                     <label for="utm_source" class="form-label">Traffic Source</label>
                     <select name="utm_source" id="utm_source" class="form-select">
                         <option value="">All Sources</option>
@@ -96,7 +100,7 @@
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="bi bi-funnel"></i> Filter
                     </button>
-                    @if(request()->hasAny(['utm_source', 'utm_medium', 'utm_campaign', 'status', 'date_from', 'date_to', 'sort', 'direction']))
+                    @if(request()->hasAny(['search', 'utm_source', 'utm_medium', 'utm_campaign', 'status', 'date_from', 'date_to', 'sort', 'direction']))
                         <a href="{{ route('admin.bookings.index') }}" class="btn btn-secondary">
                             <i class="bi bi-x-circle"></i> Clear
                         </a>

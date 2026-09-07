@@ -62,6 +62,15 @@ class BookingController extends Controller
       });
     }
 
+    // Search by booker name/email
+    if ($request->filled('search')) {
+      $search = $request->search;
+      $query->where(function ($q) use ($search) {
+        $q->where('booker_name', 'like', "%{$search}%")
+          ->orWhere('booker_email', 'like', "%{$search}%");
+      });
+    }
+
     // Status filter
     if ($request->filled('status')) {
       $query->where('status', $request->status);

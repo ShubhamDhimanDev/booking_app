@@ -23,6 +23,10 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.payments.history') }}" class="row g-3">
                 <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" placeholder="Name or email" value="{{ request('search') }}">
+                </div>
+                <div class="col-md-3">
                     <label for="status" class="form-label">Status</label>
                     <select name="status" id="status" class="form-select">
                         <option value="">All Statuses</option>
@@ -82,7 +86,7 @@
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="bi bi-funnel"></i> Filter
                     </button>
-                    @if(request()->hasAny(['status', 'provider', 'currency', 'date_from', 'date_to', 'sort', 'direction']))
+                    @if(request()->hasAny(['search', 'status', 'provider', 'currency', 'date_from', 'date_to', 'sort', 'direction']))
                         <a href="{{ route('admin.payments.history') }}" class="btn btn-secondary">
                             <i class="bi bi-x-circle"></i> Clear
                         </a>

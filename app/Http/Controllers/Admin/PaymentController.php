@@ -12,6 +12,22 @@ class PaymentController extends Controller
     {
         $query = Payment::with(['booking', 'user']);
 
+        // Search by customer name/email (registered account, and the guest-entered
+        // name/email captured on the booking, in case they differ)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('booking', function ($bq) use ($search) {
+                        $bq->where('booker_name', 'like', "%{$search}%")
+                            ->orWhere('booker_email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
         // Filters
         if ($request->filled('status')) {
             $query->where('status', $request->status);
