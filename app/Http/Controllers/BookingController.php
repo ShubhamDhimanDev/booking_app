@@ -62,7 +62,39 @@ class BookingController extends Controller
       });
     }
 
-    $bookings = $query->orderBy('created_at', 'DESC')->paginate(10);
+    // Status filter
+    if ($request->filled('status')) {
+      $query->where('status', $request->status);
+    }
+
+    // Booked date range filter (booked_at_date)
+    if ($request->filled('date_from')) {
+      $query->whereDate('booked_at_date', '>=', $request->date_from);
+    }
+    if ($request->filled('date_to')) {
+      $query->whereDate('booked_at_date', '<=', $request->date_to);
+    }
+
+    // Sorting (whitelist columns to prevent arbitrary column injection via query string)
+    $allowedSorts = ['booked_at_date', 'created_at', 'status'];
+    $sort = in_array($request->query('sort'), $allowedSorts, true) ? $request->query('sort') : 'created_at';
+    $direction = strtolower((string) $request->query('direction')) === 'asc' ? 'asc' : 'desc';
+
+    $query->orderBy($sort, $direction);
+    if ($sort !== 'created_at') {
+      // stable secondary sort so ties don't jump around between page loads
+      $query->orderBy('created_at', 'desc');
+    }
+
+    $bookings = $query->paginate(10)->withQueryString();
+
+    // Status options for the filter dropdown (actual values used across the app, see grep in BookingController/RefundController)
+    $bookingStatuses = [
+      'pending' => 'Pending',
+      'confirmed' => 'Scheduled',
+      'declined' => 'Declined',
+      'cancelled' => 'Cancelled',
+    ];
 
     // Get unique values for filter dropdowns from tracking table
     $utmSources = BookingTracking::whereHas('booking.event', function ($q) use ($user) {
@@ -86,7 +118,7 @@ class BookingController extends Controller
     ->distinct()
     ->pluck('utm_medium');
 
-    return view('admin.bookings.index', compact('bookings', 'utmSources', 'utmCampaigns', 'utmMediums'));
+    return view('admin.bookings.index', compact('bookings', 'utmSources', 'utmCampaigns', 'utmMediums', 'bookingStatuses', 'sort', 'direction'));
   }
 
   public function pay(Request $request, PaymentGatewayManager $gatewayManager)

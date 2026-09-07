@@ -18,30 +18,136 @@
         </div>
     @endif
 
+    {{-- Filters --}}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.payments.history') }}" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        @foreach($statuses as $value => $label)
+                            <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="provider" class="form-label">Provider</label>
+                    <select name="provider" id="provider" class="form-select">
+                        <option value="">All Providers</option>
+                        @foreach($providers as $value => $label)
+                            <option value="{{ $value }}" {{ request('provider') == $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="currency" class="form-label">Currency</label>
+                    <select name="currency" id="currency" class="form-select">
+                        <option value="">All Currencies</option>
+                        @foreach($currencies as $value => $label)
+                            <option value="{{ $value }}" {{ request('currency') == $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="date_from" class="form-label">Date From</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request('date_from') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_to" class="form-label">Date To</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request('date_to') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select name="sort" id="sort" class="form-select">
+                        <option value="created_at" {{ (request('sort', 'created_at') == 'created_at') ? 'selected' : '' }}>Date</option>
+                        <option value="amount" {{ request('sort') == 'amount' ? 'selected' : '' }}>Amount</option>
+                        <option value="status" {{ request('sort') == 'status' ? 'selected' : '' }}>Status</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="direction" class="form-label">Direction</label>
+                    <select name="direction" id="direction" class="form-select">
+                        <option value="desc" {{ (request('direction', 'desc') == 'desc') ? 'selected' : '' }}>Descending</option>
+                        <option value="asc" {{ request('direction') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    @if(request()->hasAny(['status', 'provider', 'currency', 'date_from', 'date_to', 'sort', 'direction']))
+                        <a href="{{ route('admin.payments.history') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body p-0">
 
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
+                        @php
+                            $sortLink = function (string $column) use ($sort, $direction) {
+                                $nextDirection = ($sort === $column && $direction === 'asc') ? 'desc' : 'asc';
+                                $params = array_filter(array_merge(request()->except('page'), [
+                                    'sort' => $column,
+                                    'direction' => $nextDirection,
+                                ]), fn ($v) => $v !== null && $v !== '');
+                                return route('admin.payments.history', $params);
+                            };
+                            $sortIcon = function (string $column) use ($sort, $direction) {
+                                if ($sort !== $column) {
+                                    return '<i class="fa fa-sort text-muted"></i>';
+                                }
+                                return $direction === 'asc'
+                                    ? '<i class="fa fa-sort-up"></i>'
+                                    : '<i class="fa fa-sort-down"></i>';
+                            };
+                        @endphp
                         <tr>
                             <th>#</th>
                             <th>User</th>
                             <th>Booking</th>
                             <th>Provider</th>
                             <th>Transaction ID</th>
-                            <th>Amount</th>
+                            <th>
+                                <a href="{{ $sortLink('amount') }}" class="text-dark text-decoration-none">
+                                    Amount {!! $sortIcon('amount') !!}
+                                </a>
+                            </th>
                             <th>Currency</th>
-                            <th>Status</th>
-                            <th>Created At</th>
+                            <th>
+                                <a href="{{ $sortLink('status') }}" class="text-dark text-decoration-none">
+                                    Status {!! $sortIcon('status') !!}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ $sortLink('created_at') }}" class="text-dark text-decoration-none">
+                                    Created At {!! $sortIcon('created_at') !!}
+                                </a>
+                            </th>
                         </tr>
                     </thead>
 
                     <tbody>
 
-                        @foreach ($payments as $index => $payment)
+                        @php $i = ($payments->currentPage() - 1) * $payments->perPage() + 1; @endphp
+
+                        @foreach ($payments as $payment)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $i++ }}</td>
 
                             {{-- User --}}
                             <td>
@@ -115,6 +221,11 @@
             </div>
 
         </div>
+    </div>
+
+    {{-- Pagination --}}
+    <div class="d-flex justify-content-center mt-4">
+        {{ $payments->links() }}
     </div>
 
 </div>

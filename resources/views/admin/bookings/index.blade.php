@@ -55,11 +55,48 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        @foreach($bookingStatuses as $value => $label)
+                            <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="date_from" class="form-label">Booked From</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request('date_from') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_to" class="form-label">Booked To</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request('date_to') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select name="sort" id="sort" class="form-select">
+                        <option value="created_at" {{ (request('sort', 'created_at') == 'created_at') ? 'selected' : '' }}>Created Date</option>
+                        <option value="booked_at_date" {{ request('sort') == 'booked_at_date' ? 'selected' : '' }}>Booking Date</option>
+                        <option value="status" {{ request('sort') == 'status' ? 'selected' : '' }}>Status</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="direction" class="form-label">Direction</label>
+                    <select name="direction" id="direction" class="form-select">
+                        <option value="desc" {{ (request('direction', 'desc') == 'desc') ? 'selected' : '' }}>Descending</option>
+                        <option value="asc" {{ request('direction') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                    </select>
+                </div>
+
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="bi bi-funnel"></i> Filter
                     </button>
-                    @if(request()->hasAny(['utm_source', 'utm_medium', 'utm_campaign']))
+                    @if(request()->hasAny(['utm_source', 'utm_medium', 'utm_campaign', 'status', 'date_from', 'date_to', 'sort', 'direction']))
                         <a href="{{ route('admin.bookings.index') }}" class="btn btn-secondary">
                             <i class="bi bi-x-circle"></i> Clear
                         </a>
@@ -75,13 +112,44 @@
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
+                        @php
+                            $sortLink = function (string $column) use ($sort, $direction) {
+                                $nextDirection = ($sort === $column && $direction === 'asc') ? 'desc' : 'asc';
+                                $params = array_filter(array_merge(request()->except('page'), [
+                                    'sort' => $column,
+                                    'direction' => $nextDirection,
+                                ]), fn ($v) => $v !== null && $v !== '');
+                                return route('admin.bookings.index', $params);
+                            };
+                            $sortIcon = function (string $column) use ($sort, $direction) {
+                                if ($sort !== $column) {
+                                    return '<i class="fa fa-sort text-muted"></i>';
+                                }
+                                return $direction === 'asc'
+                                    ? '<i class="fa fa-sort-up"></i>'
+                                    : '<i class="fa fa-sort-down"></i>';
+                            };
+                        @endphp
                         <tr>
                             <th>#</th>
                             <th>Event</th>
                             <th>Booker</th>
-                            <th>Booked Date</th>
+                            <th>
+                                <a href="{{ $sortLink('booked_at_date') }}" class="text-dark text-decoration-none">
+                                    Booked Date {!! $sortIcon('booked_at_date') !!}
+                                </a>
+                            </th>
                             <th>Booked Time</th>
-                            <th>Status</th>
+                            <th>
+                                <a href="{{ $sortLink('status') }}" class="text-dark text-decoration-none">
+                                    Status {!! $sortIcon('status') !!}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ $sortLink('created_at') }}" class="text-dark text-decoration-none">
+                                    Created At {!! $sortIcon('created_at') !!}
+                                </a>
+                            </th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -146,6 +214,11 @@
                                 {{-- status --}}
                                 <td>
                                     <span class="badge {{ $statusBadgeClass }}">{{ $statusLabel }}</span>
+                                </td>
+
+                                {{-- Created At --}}
+                                <td>
+                                    <small class="text-muted">{{ $booking->created_at->format('d M Y H:i') }}</small>
                                 </td>
 
                                 {{-- Actions --}}
@@ -570,7 +643,7 @@
                             </div>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
+                            <td colspan="8" class="text-center py-4 text-muted">
                                 No bookings found.
                             </td>
                         </tr>
