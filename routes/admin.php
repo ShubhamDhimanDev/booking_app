@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\HomepageSettingsController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PromoCodeController;
@@ -61,6 +62,12 @@ Route::prefix('admin')->name('admin.')->group(function(){
 
         // Promo Codes
         Route::resource('/promo-codes', PromoCodeController::class);
+
+        // Homepage Settings (raw HTML content for /en-in and /en-us)
+        Route::name('homepage-settings.')->controller(HomepageSettingsController::class)->group(function(){
+            Route::get('/homepage-settings', 'index')->name('index');
+            Route::put('/homepage-settings', 'update')->name('update');
+        });
     });
   });
 

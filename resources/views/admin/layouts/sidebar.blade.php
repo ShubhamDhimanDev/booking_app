@@ -66,6 +66,14 @@
               </a>
           </li>
 
+          {{-- Homepage Settings --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.homepage-settings.*') }}" href="{{ route('admin.homepage-settings.index') }}">
+                  <i class="mdi mdi-home-edit-outline menu-icon"></i>
+                  <span class="menu-title">Homepage Settings</span>
+              </a>
+          </li>
+
           {{-- Promo Codes --}}
           <li class="nav-item">
               <a class="nav-link {{ request()->routeIs('admin.promo-codes.*') }}" href="{{ route('admin.promo-codes.index') }}">

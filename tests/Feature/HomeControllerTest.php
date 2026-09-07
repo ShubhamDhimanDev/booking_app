@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Event;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -45,7 +45,6 @@ class HomeControllerTest extends TestCase
         $response = $this->get('/en-in');
 
         $response->assertOk();
-        $response->assertViewIs('home.show');
         $response->assertCookie('region', 'in');
     }
 
@@ -54,45 +53,50 @@ class HomeControllerTest extends TestCase
         $response = $this->get('/en-us');
 
         $response->assertOk();
-        $response->assertViewIs('home.show');
         $response->assertCookie('region', 'us');
     }
 
-    public function test_en_in_shows_cta_when_an_inr_event_exists()
+    public function test_en_in_response_contains_nothing_but_the_stored_html_no_app_layout()
     {
-        $event = Event::factory()->create(['currency' => 'INR']);
+        Setting::setSetting('homepage_html_in', '<h1>Only this</h1>');
 
         $response = $this->get('/en-in');
 
         $response->assertOk();
-        $response->assertViewHas('event', function ($viewEvent) use ($event) {
-            return $viewEvent->id === $event->id;
-        });
-        $response->assertSee(route('events.show.public', $event), false);
+        // No app shell/layout markup should be present -- this is a standalone
+        // response, not a view rendered through layouts.app.
+        $this->assertSame('<h1>Only this</h1>', $response->getContent());
     }
 
-    public function test_en_us_shows_coming_soon_when_no_usd_event_exists()
+    public function test_en_in_renders_the_admin_configured_html_for_india()
     {
-        // Ensure no USD event exists (an INR one alone must not satisfy the lookup).
-        Event::factory()->create(['currency' => 'INR']);
+        Setting::setSetting('homepage_html_in', '<h1>Welcome India visitors</h1>');
+        Setting::setSetting('homepage_html_us', '<h1>Welcome US visitors</h1>');
+
+        $response = $this->get('/en-in');
+
+        $response->assertOk();
+        $response->assertSee('Welcome India visitors', false);
+        $response->assertDontSee('Welcome US visitors', false);
+    }
+
+    public function test_en_us_renders_the_admin_configured_html_for_us()
+    {
+        Setting::setSetting('homepage_html_in', '<h1>Welcome India visitors</h1>');
+        Setting::setSetting('homepage_html_us', '<h1>Welcome US visitors</h1>');
 
         $response = $this->get('/en-us');
 
         $response->assertOk();
-        $response->assertViewHas('event', null);
-        $response->assertSee('Coming Soon');
+        $response->assertSee('Welcome US visitors', false);
+        $response->assertDontSee('Welcome India visitors', false);
     }
 
-    public function test_en_us_shows_cta_once_a_usd_event_exists()
+    public function test_en_in_shows_a_fallback_message_when_no_html_is_configured_yet()
     {
-        $event = Event::factory()->create(['currency' => 'USD']);
-
-        $response = $this->get('/en-us');
+        $response = $this->get('/en-in');
 
         $response->assertOk();
-        $response->assertViewHas('event', function ($viewEvent) use ($event) {
-            return $viewEvent->id === $event->id;
-        });
-        $response->assertSee(route('events.show.public', $event), false);
+        $response->assertSee("hasn't been set up yet", false);
     }
 }

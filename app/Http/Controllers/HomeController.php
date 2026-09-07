@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 
@@ -47,24 +47,38 @@ class HomeController extends Controller
     {
         Cookie::queue('region', 'in', self::REGION_COOKIE_MINUTES);
 
-        return view('home.show', [
-            'region' => 'in',
-            'event' => Event::where('currency', 'INR')->latest()->first(),
-        ]);
+        return $this->renderRegion('homepage_html_in');
     }
 
     /**
-     * `/en-us` — the US home page. Shows a "coming soon" card until a USD
-     * event actually exists (see docs/us-expansion/phase-4-us-event-launch-runbook.md);
-     * once one is created, this page picks it up automatically.
+     * `/en-us` — the US home page.
      */
     public function us()
     {
         Cookie::queue('region', 'us', self::REGION_COOKIE_MINUTES);
 
-        return view('home.show', [
-            'region' => 'us',
-            'event' => Event::where('currency', 'USD')->latest()->first(),
-        ]);
+        return $this->renderRegion('homepage_html_us');
+    }
+
+    /**
+     * The stored HTML (Admin > Homepage Settings) is returned as-is and is
+     * the ENTIRE response body — no app layout, no header/footer/nav, no
+     * scripts from the rest of the site. Whatever the admin saved is exactly
+     * what renders.
+     */
+    protected function renderRegion(string $settingKey)
+    {
+        $html = trim((string) Setting::getSetting($settingKey, ''));
+
+        if ($html === '') {
+            $html = '<!doctype html><html><head><meta charset="utf-8">'
+                . '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+                . '<title>' . e(config('app.name')) . '</title></head>'
+                . '<body style="font-family:sans-serif;padding:4rem 2rem;text-align:center;color:#475569;">'
+                . "This page hasn't been set up yet."
+                . '</body></html>';
+        }
+
+        return response($html);
     }
 }
