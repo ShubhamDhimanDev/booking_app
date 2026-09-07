@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
+use App\Services\PostAuthRedirect;
 use Illuminate\Http\Request;
 
 class EmailVerificationNotificationController extends Controller
@@ -17,7 +17,7 @@ class EmailVerificationNotificationController extends Controller
     public function store(Request $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(RouteServiceProvider::HOME);
+            return redirect()->intended(PostAuthRedirect::url($request->user()));
         }
 
         $request->user()->sendEmailVerificationNotification();
