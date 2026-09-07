@@ -87,4 +87,29 @@ class SearchFilterTest extends TestCase
         $response->assertSee('txn_2');
         $response->assertDontSee('txn_1');
     }
+
+    public function test_users_search_matches_name_username_or_email()
+    {
+        Role::firstOrCreate(['name' => 'owner']);
+        $match = User::factory()->create(['name' => 'Amit Sharma', 'username' => 'amitsharma', 'email' => 'amit@example.com']);
+        $noMatch = User::factory()->create(['name' => 'Someone Else', 'username' => 'someoneelse', 'email' => 'someone@example.com']);
+
+        $response = $this->actingAs($this->admin)->get('/admin/users?search=Amit');
+        $response->assertOk();
+        $response->assertSee('Amit Sharma');
+        $response->assertDontSee('Someone Else');
+    }
+
+    public function test_users_role_filter_matches_only_users_with_that_role()
+    {
+        Role::firstOrCreate(['name' => 'owner']);
+        $owner = User::factory()->create(['name' => 'Owner Person']);
+        $owner->assignRole('owner');
+        $plainUser = User::factory()->create(['name' => 'Regular Person']);
+
+        $response = $this->actingAs($this->admin)->get('/admin/users?role=owner');
+        $response->assertOk();
+        $response->assertSee('Owner Person');
+        $response->assertDontSee('Regular Person');
+    }
 }

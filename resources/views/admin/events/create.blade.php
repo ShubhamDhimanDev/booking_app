@@ -99,7 +99,36 @@
                     @enderror
                 </div>
 
+                {{-- Per-event tracking overrides --}}
+                <div class="mb-3">
+                    <label class="form-label">Meta Pixel ID <span class="text-muted fw-normal">(optional)</span></label>
+                    <input
+                        type="text"
+                        name="meta_pixel_id"
+                        class="form-control @error('meta_pixel_id') is-invalid @enderror"
+                        value="{{ old('meta_pixel_id') }}"
+                        placeholder="Leave blank to use the site-wide Pixel from Tracking Settings"
+                    >
+                    <div class="form-text">Overrides the site-wide Meta Pixel for this event only — useful for tracking a specific ad campaign separately.</div>
+                    @error('meta_pixel_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
 
+                <div class="mb-3">
+                    <label class="form-label">Google Analytics ID <span class="text-muted fw-normal">(optional)</span></label>
+                    <input
+                        type="text"
+                        name="google_analytics_id"
+                        class="form-control @error('google_analytics_id') is-invalid @enderror"
+                        value="{{ old('google_analytics_id') }}"
+                        placeholder="Leave blank to use the site-wide GA ID from Tracking Settings"
+                    >
+                    <div class="form-text">Overrides the site-wide Google Analytics Measurement ID for this event only.</div>
+                    @error('google_analytics_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
 
                 {{-- Available Dates --}}
                 <div class="row">

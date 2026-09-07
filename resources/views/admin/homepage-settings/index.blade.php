@@ -40,16 +40,22 @@
                 This is raw HTML, rendered exactly as entered — no escaping, no sanitization. Only trusted admins should have access to this page.
             </div>
 
-            <form action="{{ route('admin.homepage-settings.update') }}" method="POST">
+            <form action="{{ route('admin.homepage-settings.update') }}" method="POST" id="homepage-html-form">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="region" value="{{ $region }}">
 
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-fullscreen-editor">
+                        <i class="mdi mdi-arrow-expand"></i> Expand editor
+                    </button>
+                </div>
+
                 <textarea
                     name="html"
-                    rows="24"
+                    id="homepage-html-textarea"
                     class="form-control font-monospace"
-                    style="font-size: 0.9rem;"
+                    style="font-size: 0.9rem; height: 65vh; min-height: 400px; resize: vertical;"
                     placeholder="&lt;section&gt;&#10;  &lt;h1&gt;Welcome&lt;/h1&gt;&#10;  ...&#10;&lt;/section&gt;"
                 >{{ old('html', $html) }}</textarea>
 
@@ -62,6 +68,50 @@
                     </button>
                 </div>
             </form>
+
+            <div id="fullscreen-editor-overlay" style="display:none; position:fixed; inset:0; z-index:1050; background:#fff; padding:16px;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">{{ $regions[$region]['label'] }} — HTML</h6>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="close-fullscreen-editor">
+                        <i class="mdi mdi-arrow-collapse"></i> Collapse
+                    </button>
+                </div>
+                <textarea id="homepage-html-textarea-fullscreen" class="form-control font-monospace" style="height: calc(100vh - 80px); font-size: 0.9rem;"></textarea>
+            </div>
+
+            <script>
+                (function () {
+                    var textarea = document.getElementById('homepage-html-textarea');
+                    var fullscreenTextarea = document.getElementById('homepage-html-textarea-fullscreen');
+                    var overlay = document.getElementById('fullscreen-editor-overlay');
+                    var openBtn = document.getElementById('toggle-fullscreen-editor');
+                    var closeBtn = document.getElementById('close-fullscreen-editor');
+                    var form = document.getElementById('homepage-html-form');
+
+                    openBtn.addEventListener('click', function () {
+                        fullscreenTextarea.value = textarea.value;
+                        overlay.style.display = 'block';
+                        fullscreenTextarea.focus();
+                    });
+
+                    closeBtn.addEventListener('click', function () {
+                        textarea.value = fullscreenTextarea.value;
+                        overlay.style.display = 'none';
+                    });
+
+                    // Keep the real (submitted) textarea in sync as you type in fullscreen mode,
+                    // so the content isn't lost if the form is submitted some other way.
+                    fullscreenTextarea.addEventListener('input', function () {
+                        textarea.value = fullscreenTextarea.value;
+                    });
+
+                    form.addEventListener('submit', function () {
+                        if (overlay.style.display === 'block') {
+                            textarea.value = fullscreenTextarea.value;
+                        }
+                    });
+                })();
+            </script>
         </div>
     </div>
 

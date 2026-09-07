@@ -14,6 +14,39 @@
         </a>
     </div>
 
+    {{-- Filters --}}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.users.index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" placeholder="Name, username, or email" value="{{ request('search') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="role" class="form-label">Role</label>
+                    <select name="role" id="role" class="form-select">
+                        <option value="">All Roles</option>
+                        @foreach($roles as $roleName)
+                            <option value="{{ $roleName }}" {{ request('role') == $roleName ? 'selected' : '' }}>
+                                {{ ucfirst(str_replace('-', ' ', $roleName)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    @if(request()->hasAny(['search', 'role']))
+                        <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body p-0">
 
@@ -32,9 +65,11 @@
 
                     <tbody>
 
+                        @php $i = ($users->currentPage() - 1) * $users->perPage() + 1; @endphp
+
                         @forelse ($users as $user)
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $i++ }}</td>
 
                             <td>{{ $user->name }}</td>
 

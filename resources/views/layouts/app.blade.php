@@ -13,8 +13,21 @@
 
     @vite(['resources/css/app.css'])
 
-    {!! \App\Services\TrackingService::getBaseScript() !!}
-    {!! \App\Services\TrackingService::getGoogleBaseScript() !!}
+    @php
+        // Pages reached via a specific event (booking flow, payment flow) expose
+        // it as either $event directly or via $booking->event -- resolve
+        // whichever is present so the base tracking scripts can use that
+        // event's own Pixel/GA IDs if it has one configured, falling back to
+        // the site-wide default (Admin > Tracking Settings) otherwise.
+        $__trackingEvent = null;
+        if (isset($event) && $event instanceof \App\Models\Event) {
+            $__trackingEvent = $event;
+        } elseif (isset($booking) && $booking->event instanceof \App\Models\Event) {
+            $__trackingEvent = $booking->event;
+        }
+    @endphp
+    {!! \App\Services\TrackingService::getBaseScript($__trackingEvent) !!}
+    {!! \App\Services\TrackingService::getGoogleBaseScript($__trackingEvent) !!}
 
     <!-- Google Tag Manager -->
         <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

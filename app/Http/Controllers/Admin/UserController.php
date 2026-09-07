@@ -10,10 +10,31 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->paginate(20);
-        return view('admin.users.index', compact('users'));
+        $query = User::with('roles');
+
+        // Search by name, username, or email
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Role filter
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function ($q) use ($request) {
+                $q->where('name', $request->role);
+            });
+        }
+
+        $users = $query->orderBy('name')->paginate(20)->withQueryString();
+        $roles = Role::pluck('name');
+
+        return view('admin.users.index', compact('users', 'roles'));
     }
 
     public function create()

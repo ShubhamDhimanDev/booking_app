@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Event;
 use App\Models\Setting;
 
 class TrackingService
@@ -9,7 +10,7 @@ class TrackingService
     // ==================== META PIXEL METHODS ====================
 
     /**
-     * Check if Meta Pixel is enabled
+     * Check if Meta Pixel is enabled (site-wide switch; not overridable per event)
      */
     public static function isMetaPixelEnabled(): bool
     {
@@ -17,10 +18,16 @@ class TrackingService
     }
 
     /**
-     * Get Meta Pixel ID
+     * Get Meta Pixel ID — an event's own `meta_pixel_id`, if set, overrides the
+     * site-wide default. This lets each event/campaign track conversions to
+     * its own Pixel.
      */
-    public static function getMetaPixelId(): ?string
+    public static function getMetaPixelId(?Event $event = null): ?string
     {
+        if ($event && ! empty($event->meta_pixel_id)) {
+            return $event->meta_pixel_id;
+        }
+
         $pixelId = Setting::getSetting('meta_pixel_id', '');
 
         return ! empty($pixelId) ? $pixelId : null;
@@ -39,13 +46,13 @@ class TrackingService
     /**
      * Generate Meta Pixel base script
      */
-    public static function getBaseScript(): string
+    public static function getBaseScript(?Event $event = null): string
     {
         if (! self::isMetaPixelEnabled()) {
             return '';
         }
 
-        $pixelId = self::getMetaPixelId();
+        $pixelId = self::getMetaPixelId($event);
         if (! $pixelId) {
             return '';
         }
@@ -75,13 +82,13 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     /**
      * Generate event tracking script
      */
-    public static function getEventScript(string $eventName, array $params = []): string
+    public static function getEventScript(string $eventName, array $params = [], ?Event $event = null): string
     {
         if (! self::isMetaPixelEnabled() || ! self::isEventEnabled($eventName)) {
             return '';
         }
 
-        $pixelId = self::getMetaPixelId();
+        $pixelId = self::getMetaPixelId($event);
         if (! $pixelId) {
             return '';
         }
@@ -94,13 +101,13 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     /**
      * Generate inline tracking code (for use in JS event handlers)
      */
-    public static function getInlineTrackingCode(string $eventName, array $params = []): string
+    public static function getInlineTrackingCode(string $eventName, array $params = [], ?Event $event = null): string
     {
         if (! self::isMetaPixelEnabled() || ! self::isEventEnabled($eventName)) {
             return '';
         }
 
-        $pixelId = self::getMetaPixelId();
+        $pixelId = self::getMetaPixelId($event);
         if (! $pixelId) {
             return '';
         }
@@ -113,7 +120,7 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     // ==================== GOOGLE ANALYTICS METHODS ====================
 
     /**
-     * Check if Google Analytics is enabled
+     * Check if Google Analytics is enabled (site-wide switch; not overridable per event)
      */
     public static function isGoogleAnalyticsEnabled(): bool
     {
@@ -121,10 +128,15 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     }
 
     /**
-     * Get Google Analytics Measurement ID
+     * Get Google Analytics Measurement ID — an event's own `google_analytics_id`,
+     * if set, overrides the site-wide default.
      */
-    public static function getGoogleAnalyticsId(): ?string
+    public static function getGoogleAnalyticsId(?Event $event = null): ?string
     {
+        if ($event && ! empty($event->google_analytics_id)) {
+            return $event->google_analytics_id;
+        }
+
         $measurementId = Setting::getSetting('google_analytics_id', '');
 
         return ! empty($measurementId) ? $measurementId : null;
@@ -143,13 +155,13 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     /**
      * Generate Google Analytics base script (gtag.js)
      */
-    public static function getGoogleBaseScript(): string
+    public static function getGoogleBaseScript(?Event $event = null): string
     {
         if (! self::isGoogleAnalyticsEnabled()) {
             return '';
         }
 
-        $measurementId = self::getGoogleAnalyticsId();
+        $measurementId = self::getGoogleAnalyticsId($event);
         if (! $measurementId) {
             return '';
         }
@@ -170,13 +182,13 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     /**
      * Generate Google Analytics event tracking script
      */
-    public static function getGoogleEventScript(string $eventName, array $params = []): string
+    public static function getGoogleEventScript(string $eventName, array $params = [], ?Event $event = null): string
     {
         if (! self::isGoogleAnalyticsEnabled() || ! self::isGoogleEventEnabled($eventName)) {
             return '';
         }
 
-        $measurementId = self::getGoogleAnalyticsId();
+        $measurementId = self::getGoogleAnalyticsId($event);
         if (! $measurementId) {
             return '';
         }
@@ -189,13 +201,13 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     /**
      * Generate inline Google tracking code (for use in JS event handlers)
      */
-    public static function getGoogleInlineTrackingCode(string $eventName, array $params = []): string
+    public static function getGoogleInlineTrackingCode(string $eventName, array $params = [], ?Event $event = null): string
     {
         if (! self::isGoogleAnalyticsEnabled() || ! self::isGoogleEventEnabled($eventName)) {
             return '';
         }
 
-        $measurementId = self::getGoogleAnalyticsId();
+        $measurementId = self::getGoogleAnalyticsId($event);
         if (! $measurementId) {
             return '';
         }

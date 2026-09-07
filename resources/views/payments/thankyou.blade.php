@@ -22,7 +22,7 @@
             'value' => $purchaseValue,
             'currency' => $booking->event->currency ?? 'INR',
             'transaction_id' => $booking->payment->transaction_id ?? $booking->id
-        ]) !!}
+        ], $booking->event) !!}
         {!! \App\Services\TrackingService::getGoogleEventScript('purchase', [
             'transaction_id' => $booking->payment->transaction_id ?? $booking->id,
             'value' => $purchaseValue,
@@ -33,7 +33,7 @@
                 'price' => $purchaseValue,
                 'quantity' => 1
             ]]
-        ]) !!}
+        ], $booking->event) !!}
     @else
         {!! \App\Services\TrackingService::getEventScript('FreeBooking', [
             'content_name' => $booking->event->title,
@@ -41,7 +41,7 @@
             'value' => 0,
             'currency' => $booking->event->currency ?? 'INR',
             'transaction_id' => $booking->payment->transaction_id ?? $booking->id
-        ]) !!}
+        ], $booking->event) !!}
         {!! \App\Services\TrackingService::getGoogleEventScript('free_booking', [
             'transaction_id' => $booking->payment->transaction_id ?? $booking->id,
             'value' => 0,
@@ -52,7 +52,7 @@
                 'price' => 0,
                 'quantity' => 1
             ]]
-        ]) !!}
+        ], $booking->event) !!}
     @endif
 @endpush
 

@@ -21,14 +21,14 @@
         'booking_id' => $booking->id,
         'value' => $actualPrice,
         'currency' => $booking->event->currency ?? 'INR'
-    ]) !!}
+    ], $booking->event) !!}
     {!! \App\Services\TrackingService::getGoogleEventScript('view_payment_page', [
         'event_name' => $booking->event->title,
         'event_id' => $booking->event->id,
         'booking_id' => $booking->id,
         'value' => $actualPrice,
         'currency' => $booking->event->currency ?? 'INR'
-    ]) !!}
+    ], $booking->event) !!}
 @endpush
 
 @section('additional-styles')
