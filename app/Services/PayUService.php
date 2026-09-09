@@ -72,12 +72,6 @@ class PayUService implements PaymentGatewayInterface
                 'success' => true,
                 'txnid' => $txnId,
                 'amount' => $amount,
-                // PayU's hosted checkout reads the transaction currency from a
-                // field literally named "transactionCurrency" (ISO 4217, e.g.
-                // INR/USD) -- NOT "currency". A plain "currency" field is
-                // silently ignored, and the transaction is processed in INR
-                // regardless of what's sent. Confirmed via PayU's own docs:
-                // https://docs.payu.in/docs/payu-hosted-checkout-integration-dynamic-currency-conversion
                 'transactionCurrency' => $data['currency'] ?? 'INR',
                 'key' => $this->merchantKey,
                 'merchant_id' => $this->merchantId,

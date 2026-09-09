@@ -73,4 +73,44 @@ class TrackingServiceTest extends TestCase
 
         $this->assertStringContainsString('GLOBAL_PIXEL_ID', $script);
     }
+
+    public function test_event_with_its_own_pixel_id_fires_even_when_the_global_toggle_is_off()
+    {
+        Setting::setSetting('meta_pixel_enabled', '0');
+        $event = Event::factory()->create(['meta_pixel_id' => 'EVENT_SPECIFIC_PIXEL']);
+
+        $script = TrackingService::getBaseScript($event);
+
+        $this->assertStringContainsString('EVENT_SPECIFIC_PIXEL', $script);
+    }
+
+    public function test_event_with_its_own_ga_id_fires_even_when_the_global_toggle_is_off()
+    {
+        Setting::setSetting('google_analytics_enabled', '0');
+        $event = Event::factory()->create(['google_analytics_id' => 'EVENT_SPECIFIC_GA']);
+
+        $script = TrackingService::getGoogleBaseScript($event);
+
+        $this->assertStringContainsString('EVENT_SPECIFIC_GA', $script);
+    }
+
+    public function test_event_without_its_own_ids_stays_off_when_the_global_toggle_is_off()
+    {
+        Setting::setSetting('meta_pixel_enabled', '0');
+        Setting::setSetting('google_analytics_enabled', '0');
+        $event = Event::factory()->create(['meta_pixel_id' => null, 'google_analytics_id' => null]);
+
+        $this->assertSame('', TrackingService::getBaseScript($event));
+        $this->assertSame('', TrackingService::getGoogleBaseScript($event));
+    }
+
+    public function test_get_event_script_fires_using_the_events_own_pixel_even_when_global_toggle_is_off()
+    {
+        Setting::setSetting('meta_pixel_enabled', '0');
+        $event = Event::factory()->create(['meta_pixel_id' => 'EVENT_SPECIFIC_PIXEL']);
+
+        $script = TrackingService::getEventScript('InitiateCheckout', ['value' => 1], $event);
+
+        $this->assertStringContainsString('InitiateCheckout', $script);
+    }
 }

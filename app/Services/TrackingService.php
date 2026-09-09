@@ -10,10 +10,17 @@ class TrackingService
     // ==================== META PIXEL METHODS ====================
 
     /**
-     * Check if Meta Pixel is enabled (site-wide switch; not overridable per event)
+     * Check if Meta Pixel tracking should fire. An event with its own
+     * `meta_pixel_id` is always enabled, regardless of the site-wide switch —
+     * configuring a dedicated Pixel for an event is itself the signal to
+     * track it. Falls back to the site-wide switch otherwise.
      */
-    public static function isMetaPixelEnabled(): bool
+    public static function isMetaPixelEnabled(?Event $event = null): bool
     {
+        if ($event && ! empty($event->meta_pixel_id)) {
+            return true;
+        }
+
         return (bool) Setting::getSetting('meta_pixel_enabled', false);
     }
 
@@ -48,7 +55,7 @@ class TrackingService
      */
     public static function getBaseScript(?Event $event = null): string
     {
-        if (! self::isMetaPixelEnabled()) {
+        if (! self::isMetaPixelEnabled($event)) {
             return '';
         }
 
@@ -84,7 +91,7 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
      */
     public static function getEventScript(string $eventName, array $params = [], ?Event $event = null): string
     {
-        if (! self::isMetaPixelEnabled() || ! self::isEventEnabled($eventName)) {
+        if (! self::isMetaPixelEnabled($event) || ! self::isEventEnabled($eventName)) {
             return '';
         }
 
@@ -103,7 +110,7 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
      */
     public static function getInlineTrackingCode(string $eventName, array $params = [], ?Event $event = null): string
     {
-        if (! self::isMetaPixelEnabled() || ! self::isEventEnabled($eventName)) {
+        if (! self::isMetaPixelEnabled($event) || ! self::isEventEnabled($eventName)) {
             return '';
         }
 
@@ -120,10 +127,17 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
     // ==================== GOOGLE ANALYTICS METHODS ====================
 
     /**
-     * Check if Google Analytics is enabled (site-wide switch; not overridable per event)
+     * Check if Google Analytics tracking should fire. An event with its own
+     * `google_analytics_id` is always enabled, regardless of the site-wide
+     * switch — configuring a dedicated GA ID for an event is itself the
+     * signal to track it. Falls back to the site-wide switch otherwise.
      */
-    public static function isGoogleAnalyticsEnabled(): bool
+    public static function isGoogleAnalyticsEnabled(?Event $event = null): bool
     {
+        if ($event && ! empty($event->google_analytics_id)) {
+            return true;
+        }
+
         return (bool) Setting::getSetting('google_analytics_enabled', false);
     }
 
@@ -157,7 +171,7 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
      */
     public static function getGoogleBaseScript(?Event $event = null): string
     {
-        if (! self::isGoogleAnalyticsEnabled()) {
+        if (! self::isGoogleAnalyticsEnabled($event)) {
             return '';
         }
 
@@ -184,7 +198,7 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
      */
     public static function getGoogleEventScript(string $eventName, array $params = [], ?Event $event = null): string
     {
-        if (! self::isGoogleAnalyticsEnabled() || ! self::isGoogleEventEnabled($eventName)) {
+        if (! self::isGoogleAnalyticsEnabled($event) || ! self::isGoogleEventEnabled($eventName)) {
             return '';
         }
 
@@ -203,7 +217,7 @@ src=\"https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1\"/>
      */
     public static function getGoogleInlineTrackingCode(string $eventName, array $params = [], ?Event $event = null): string
     {
-        if (! self::isGoogleAnalyticsEnabled() || ! self::isGoogleEventEnabled($eventName)) {
+        if (! self::isGoogleAnalyticsEnabled($event) || ! self::isGoogleEventEnabled($eventName)) {
             return '';
         }
 
