@@ -14,6 +14,16 @@
         </a>
     </div>
 
+    <form method="GET" class="mb-3 d-flex align-items-center gap-2">
+        <label class="form-label mb-0">Country</label>
+        <select name="country_id" class="form-select" style="max-width: 240px;" onchange="this.form.submit()">
+            <option value="">All countries</option>
+            @foreach($countries as $c)
+                <option value="{{ $c->id }}" {{ (string) $countryId === (string) $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+            @endforeach
+        </select>
+    </form>
+
     <div class="card shadow-sm">
         <div class="card-body p-0">
 
@@ -23,7 +33,8 @@
                         <tr>
                             <th>#</th>
                             <th>Title</th>
-                            <th>Slug</th>
+                            <th>Country</th>
+                            <th>Link</th>
                             <th>Duration</th>
                             <th>Price</th>
                             <th>Bookings</th>
@@ -40,8 +51,10 @@
 
                             <td>{{ $event->title }}</td>
 
+                            <td>{{ $event->country->name ?? '—' }}</td>
+
                             <td>
-                              <a target="_blank" href="{{ route('events.show.public', ['event' => $event->slug]) }}">
+                              <a target="_blank" href="{{ $event->publicUrl() }}">
                                 <i class="fa fa-external-link-square"></i>
                               </a>
                             </td>

@@ -3,6 +3,10 @@
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
+// PHP 8.4 flags many old vendor signatures as deprecated. Their output is printed before the
+// response headers, which stops the session cookie being sent (login shows "Page Expired").
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 define('LARAVEL_START', microtime(true));
 
 /*

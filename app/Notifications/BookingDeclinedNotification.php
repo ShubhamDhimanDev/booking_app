@@ -71,7 +71,7 @@ class BookingDeclinedNotification extends Notification implements ShouldQueue
         'istDate' => $istMoment->format('l, F j, Y'),
         'istTime' => $istMoment->format('g:i A'),
         'declineReason' => $this->decline_reason,
-        'browseEventsUrl' => url('/e/' . $this->event->slug),
+        'browseEventsUrl' => $this->event->publicUrl(),
       ]);
   }
 }

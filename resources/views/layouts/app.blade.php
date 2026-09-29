@@ -113,6 +113,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
     @stack('body-scripts')
 
+    @if(!empty($cmsCountry) && $cmsCountry->hasCustomHeader())
+        @include('cms.partials.header', ['country' => $cmsCountry])
+    @else
     <!-- Modern Header -->
     <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 shadow-sm">
         <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -189,6 +192,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
         </div>
     </header>
+    @endif
 
     @if(View::hasSection('loader'))
         <!-- Loader -->
@@ -198,6 +202,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <p class="text-lg font-bold text-slate-900 dark:text-white">@yield('loader-text', 'Please wait...')</p>
             </div>
         </div>
+    @endif
+
+    @if(!empty($cmsCountry))
+        @include('cms.partials.tz-picker', ['country' => $cmsCountry])
     @endif
 
     <!-- Main Content -->
@@ -211,6 +219,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span id="themeIcon" class="material-icons-round text-amber-500 dark:text-slate-300 transition-all duration-300 group-hover:rotate-180 text-2xl"></span>
     </button>
 
+    @if(!empty($cmsCountry) && $cmsCountry->hasCustomFooter())
+        @include('cms.partials.footer', ['country' => $cmsCountry])
+    @else
     <!-- Footer -->
     <footer class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-700 @auth mt-20 @else mt-20 @endauth">
         <div class="@auth max-w-7xl @else max-w-6xl @endauth mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -223,6 +234,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
         </div>
     </footer>
+    @endif
 
     @auth
     <script>
@@ -331,6 +343,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         });
     </script>
 
+    @include('cms.partials.tz-boot', ['country' => $cmsCountry ?? null])
     @include('partials.timezone-convert')
 
     @stack('scripts')

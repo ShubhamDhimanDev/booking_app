@@ -1,10 +1,18 @@
 <script>
 (function () {
     // Detect once, reuse everywhere on this page.
-    let visitorTz = 'Asia/Kolkata';
-    try {
-        visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-    } catch (e) { /* Intl unsupported — fall back to IST, matches server default */ }
+    function validTz(z) {
+        try { new Intl.DateTimeFormat('en-US', { timeZone: z }); return true; } catch (e) { return false; }
+    }
+    // Order: visitor's manual choice (timezone picker) -> browser timezone -> country default -> IST.
+    let visitorTz = null;
+    try { visitorTz = localStorage.getItem('visitor_tz'); } catch (e) { /* storage blocked */ }
+    if (!visitorTz || !validTz(visitorTz)) {
+        try { visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { visitorTz = null; }
+    }
+    if (!visitorTz || !validTz(visitorTz)) {
+        visitorTz = (window.__countryTz && validTz(window.__countryTz)) ? window.__countryTz : 'Asia/Kolkata';
+    }
     window.__visitorTz = visitorTz;
 
     // Given an IST-wall-clock date ("YYYY-MM-DD") and time ("HH:mm"), return

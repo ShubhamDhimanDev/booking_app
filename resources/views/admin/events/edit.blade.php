@@ -71,13 +71,36 @@
                     @enderror
                 </div>
 
+                {{-- Country --}}
+                <div class="mb-3">
+                    <label class="form-label">Country</label>
+                    <select name="country_id" id="event-country" class="form-control @error('country_id') is-invalid @enderror">
+                        @foreach($countries as $c)
+                            <option value="{{ $c->id }}" data-currency="{{ $c->currency }}" {{ (string) old('country_id', $event->country_id) === (string) $c->id ? 'selected' : '' }}>{{ $c->name }} ({{ $c->currency }})</option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">The event is shown on this country's pages and defaults to its currency and timezone.</div>
+                    @error('country_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 {{-- Currency --}}
                 <div class="mb-3">
                     <label class="form-label">Currency</label>
-                    <select name="currency" class="form-control @error('currency') is-invalid @enderror">
-                        <option value="INR" {{ old('currency', $event->currency) == 'INR' ? 'selected' : '' }}>INR (₹) — India</option>
-                        <option value="USD" {{ old('currency', $event->currency) == 'USD' ? 'selected' : '' }}>USD ($) — United States</option>
+                    <select name="currency" id="event-currency" class="form-control @error('currency') is-invalid @enderror">
+                        @foreach(config('cms.currencies') as $code => $symbol)
+                            <option value="{{ $code }}" {{ old('currency', $event->currency) == $code ? 'selected' : '' }}>{{ $code }} ({{ trim($symbol) }})</option>
+                        @endforeach
                     </select>
+                    <script>
+                        // Picking a country switches the currency to that country's default (still overridable).
+                        document.getElementById('event-country').addEventListener('change', function () {
+                            var cur = this.options[this.selectedIndex].dataset.currency;
+                            var sel = document.getElementById('event-currency');
+                            if (cur) sel.value = cur;
+                        });
+                    </script>
                     <div class="form-text">Determines the symbol shown to customers and the payment currency used at checkout.</div>
                     @error('currency')
                         <div class="invalid-feedback">{{ $message }}</div>

@@ -7,6 +7,7 @@ use App\Http\Middleware\LinkedWithGoogleMiddleware;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\Booking;
+use App\Models\Country;
 use App\Models\Event;
 use Carbon\Carbon;
 
@@ -14,8 +15,8 @@ class EventController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('role:admin|owner')->except('showPublic');
-        $this->middleware(LinkedWithGoogleMiddleware::class)->except('showPublic');
+        $this->middleware('role:admin|owner')->except(['showPublic', 'showInCountry']);
+        $this->middleware(LinkedWithGoogleMiddleware::class)->except(['showPublic', 'showInCountry']);
     }
 
     /**
@@ -27,9 +28,13 @@ class EventController extends Controller
     {
         /** @var mixed */
         $user = auth()->user();
-        $events = $user->events()->latest()->get();
+        $countries = Country::orderBy('sort_order')->orderBy('name')->get();
+        $countryId = request('country_id');
+        $events = $user->events()->with('country')
+            ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
+            ->latest()->get();
 
-        return view('admin.events.index', compact('events'));
+        return view('admin.events.index', compact('events', 'countries', 'countryId'));
     }
 
     /**
@@ -41,7 +46,9 @@ class EventController extends Controller
     {
         $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-        return view('admin.events.create', compact('days'));
+        $countries = Country::where('is_active', true)->orderBy('sort_order')->get();
+
+        return view('admin.events.create', compact('days', 'countries'));
     }
 
     /**
@@ -126,12 +133,39 @@ class EventController extends Controller
     }
 
     /**
+     * Legacy flat URL `/e/{slug}`: 301 to the country-scoped URL when the event
+     * has an active country, otherwise render in place.
+     */
+    public function showPublic(Event $event)
+    {
+        $event->loadMissing('country');
+        if ($event->country && $event->country->is_active) {
+            return redirect()->to($event->publicUrl(), 301);
+        }
+
+        return $this->renderPublic($event);
+    }
+
+    /**
+     * `/{country}/e/{slug}` — event slot selection, inside its country.
+     */
+    public function showInCountry(Country $cmsCountry, Event $event)
+    {
+        abort_unless($cmsCountry->is_active, 404);
+        if ($event->country_id !== $cmsCountry->id) {
+            return redirect()->to($event->publicUrl(), 301);
+        }
+
+        return $this->renderPublic($event);
+    }
+
+    /**
      * Show event to public
      *
      * @param  Event  $event
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
-    public function showPublic(Event $event)
+    protected function renderPublic(Event $event)
     {
         $event->load('user')->append('timeslots');
 
@@ -229,7 +263,9 @@ class EventController extends Controller
     {
         $this->authorize('update', $event);
 
-        return view('admin.events.edit', compact('event'));
+        $countries = Country::orderBy('sort_order')->get();
+
+        return view('admin.events.edit', compact('event', 'countries'));
     }
 
     /**

@@ -95,10 +95,28 @@ class Event extends Model
    */
   public function getCurrencySymbolAttribute()
   {
-    return match ($this->currency) {
-      'USD' => '$',
-      default => '₹',
-    };
+    return config('cms.currencies.' . $this->currency, $this->currency . ' ');
+  }
+
+  /**
+   * The country this event is sold in (drives currency, header/footer, timezone default).
+   */
+  public function country()
+  {
+    return $this->belongsTo(Country::class);
+  }
+
+  /**
+   * Public booking URL: country-scoped when the event has an active country.
+   */
+  public function publicUrl(): string
+  {
+    $country = $this->country;
+    if ($country && $country->is_active) {
+      return route('country.event', ['cmsCountry' => $country->slug, 'event' => $this->slug]);
+    }
+
+    return route('events.show.public', ['event' => $this->slug]);
   }
 
 

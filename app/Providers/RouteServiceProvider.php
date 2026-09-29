@@ -31,6 +31,10 @@ class RouteServiceProvider extends ServiceProvider
   {
     $this->configureRateLimiting();
 
+    // Public CMS routes: `/{cmsCountry}/...` resolves a Country by slug (404 if unknown).
+    // Active/inactive is checked in the controllers so admins can preview.
+    Route::bind('cmsCountry', fn ($value) => \App\Models\Country::where('slug', $value)->firstOrFail());
+
     $this->routes(function () {
       Route::middleware('api')
         ->prefix('api')

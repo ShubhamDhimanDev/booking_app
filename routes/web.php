@@ -24,10 +24,8 @@ use App\Http\Controllers\TransactionsController;
 
 // Route::redirect('/', '/events')->name('dashboard');
 
-// Public region-detection homepage — see Part B of docs/us-expansion.
+// Public country-detection entry point. Country pages (/en-in, /en-us/about, ...) live in routes/cms.php.
 Route::get('/', [HomeController::class, 'index'])->name('home.detect');
-Route::get('/en-in', [HomeController::class, 'in'])->name('home.in');
-Route::get('/en-us', [HomeController::class, 'us'])->name('home.us');
 
 Route::middleware('auth')->group(function () {
   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -58,9 +56,9 @@ Route::post('/payment/payu/webhook', [PaymentController::class, 'payuWebhook'])-
 Route::get('/payment/failed/{booking?}', [PaymentController::class, 'paymentFailedPage'])->name('payment.failed');
 
 // Multi-page booking flow
-Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->name('events.show.public');
-Route::get('/e/{event:slug}/details', [BookingController::class, 'showDetailsForm'])->name('bookings.details');
-Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->name('bookings.store');
+Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->middleware('event.country')->name('events.show.public');
+Route::get('/e/{event:slug}/details', [BookingController::class, 'showDetailsForm'])->middleware('event.country')->name('bookings.details');
+Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->middleware('event.country')->name('bookings.store');
 
 // Follow-up booking flow
 Route::get('/followup/{token}', [BookingController::class, 'showFollowUpBooking'])->name('bookings.followup.show');
@@ -71,3 +69,5 @@ Route::post('/test/payu/initiate', [TestController::class, 'initiateTestPayment'
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
+// Must stay last: `/{country}` and `/{country}/{page}` are catch-alls.
+require __DIR__ . '/cms.php';

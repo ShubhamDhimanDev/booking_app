@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="3;url={{ route('home.in') }}">
+    <meta http-equiv="refresh" content="3;url={{ $default->url() }}">
     <title>{{ config('app.name') }}</title>
     <style>
         * { box-sizing: border-box; }
@@ -30,7 +30,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         p { color: #475569; margin: 0 0 1.5rem; }
-        .links { display: flex; gap: 1.5rem; justify-content: center; }
+        .links { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
         a { color: #4f46e5; font-weight: 600; text-decoration: none; font-size: 0.95rem; }
         a:hover { text-decoration: underline; }
     </style>
@@ -40,26 +40,55 @@
         <div class="spinner"></div>
         <p>Taking you to the right site&hellip;</p>
         <div class="links">
-            <a href="{{ route('home.in') }}">Continue to India site</a>
-            <a href="{{ route('home.us') }}">Continue to US site</a>
+            @foreach($countries as $country)
+                <a href="{{ $country->url() }}">Continue to {{ $country->name }} site</a>
+            @endforeach
         </div>
     </div>
 
     <script>
         (function () {
             try {
-                // UTC offset in minutes, positive = ahead of UTC. IST is a fixed
-                // UTC+5:30 (no DST), so this is +330 for every India-based visitor
-                // regardless of which IANA zone name their OS reports (Asia/Kolkata
-                // vs. the older Asia/Calcutta alias, etc.) — offset-based detection
-                // sidesteps that naming inconsistency entirely.
-                var offsetMinutes = -(new Date().getTimezoneOffset());
-                var isIndia = offsetMinutes === 330;
-                var target = isIndia ? '{{ route('home.in') }}' : '{{ route('home.us') }}';
-                location.replace(target);
+                var countries = @json($countries->map(fn ($c) => ['url' => $c->url(), 'iso' => $c->iso_code, 'tz' => $c->default_timezone])->values());
+                var fallback = @json($default->url());
+
+                var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                var langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+
+                function offsetMinutes(zone) {
+                    try {
+                        var parts = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'shortOffset' }).formatToParts(new Date());
+                        var name = parts.filter(function (p) { return p.type === 'timeZoneName'; })[0].value; // GMT+5:30
+                        var m = name.match(/GMT([+-])(\d+)(?::(\d+))?/);
+                        if (!m) return 0;
+                        return (m[1] === '-' ? -1 : 1) * (parseInt(m[2], 10) * 60 + parseInt(m[3] || '0', 10));
+                    } catch (e) { return null; }
+                }
+
+                var match = null;
+                // 1. exact timezone match
+                countries.forEach(function (c) { if (!match && c.tz === tz) match = c; });
+                // 2. browser locale region (en-US -> US)
+                if (!match) {
+                    langs.forEach(function (l) {
+                        var region = (l.split('-')[1] || '').toUpperCase();
+                        countries.forEach(function (c) { if (!match && region && c.iso === region) match = c; });
+                    });
+                }
+                // 3. same continent prefix (America/* -> a country whose default zone is America/*)
+                if (!match && tz.indexOf('/') > -1) {
+                    var continent = tz.split('/')[0];
+                    countries.forEach(function (c) { if (!match && c.tz.split('/')[0] === continent) match = c; });
+                }
+                // 4. same UTC offset right now
+                if (!match) {
+                    var mine = -(new Date().getTimezoneOffset());
+                    countries.forEach(function (c) { if (!match && offsetMinutes(c.tz) === mine) match = c; });
+                }
+
+                location.replace((match || { url: fallback }).url);
             } catch (e) {
-                // Detection unsupported — the meta-refresh above and the manual
-                // links handle this visitor instead.
+                // Detection unsupported: the meta-refresh above and the manual links handle this visitor.
             }
         })();
     </script>

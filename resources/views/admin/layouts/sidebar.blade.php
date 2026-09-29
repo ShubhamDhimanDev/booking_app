@@ -66,11 +66,19 @@
               </a>
           </li>
 
-          {{-- Homepage Settings --}}
+          {{-- CMS: Countries --}}
           <li class="nav-item">
-              <a class="nav-link {{ request()->routeIs('admin.homepage-settings.*') }}" href="{{ route('admin.homepage-settings.index') }}">
-                  <i class="mdi mdi-home-edit-outline menu-icon"></i>
-                  <span class="menu-title">Homepage Settings</span>
+              <a class="nav-link {{ request()->routeIs('admin.countries.*') }}" href="{{ route('admin.countries.index') }}">
+                  <i class="mdi mdi-earth menu-icon"></i>
+                  <span class="menu-title">Countries</span>
+              </a>
+          </li>
+
+          {{-- CMS: Pages --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.pages.*') }}" href="{{ route('admin.pages.index') }}">
+                  <i class="mdi mdi-file-document-edit-outline menu-icon"></i>
+                  <span class="menu-title">Pages</span>
               </a>
           </li>
 
