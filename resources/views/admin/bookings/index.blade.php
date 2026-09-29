@@ -180,7 +180,7 @@
                                     $statusBadgeClass = 'bg-secondary text-white';
                                 }
 
-                                if ($bookingStatus !== 'cancelled' && $bookingDateTime->isPast()) {
+                                if ($bookingStatus === 'confirmed' && $bookingDateTime->isPast()) {
                                     $statusLabel = 'Completed';
                                     $statusBadgeClass = 'bg-success text-white';
                                 }
