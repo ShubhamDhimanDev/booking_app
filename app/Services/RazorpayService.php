@@ -34,7 +34,7 @@ class RazorpayService implements PaymentGatewayInterface
         try {
             $order = $this->api->order->create([
                 'receipt' => $data['receipt'] ?? 'order_' . time(),
-                'amount' => intval($data['amount'] * 100),
+                'amount' => (int) round($data['amount'] * 100), // intval(19.99 * 100) would give 1998
                 'currency' => 'INR',
             ]);
             return [

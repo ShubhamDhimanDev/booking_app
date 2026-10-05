@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
+use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Response;
 
@@ -69,10 +71,26 @@ class DashboardController extends Controller
             $start = Carbon::now()->subMonths($m)->startOfMonth();
             $end = Carbon::now()->subMonths($m)->endOfMonth();
             $paymentsLast6Labels[] = $start->format('M Y');
-            $paymentsLast6[] = Payment::whereBetween('created_at', [$start->toDateString(), $end->toDateString()])->sum('amount');
+            $paymentsLast6[] = Payment::whereBetween('created_at', [$start->toDateString(), $end->toDateString()])
+                ->where(fn ($q) => $q->whereNull('order_id')->orWhere('status', '!=', 'pending')) // skip unfinished order attempts
+                ->sum('amount');
+        }
+
+        // Store summary (only shown once at least one order exists)
+        $store = null;
+        if (Order::exists()) {
+            $monthStart = Carbon::now()->startOfMonth();
+            $store = [
+                'orders_this_month' => Order::where('payment_status', 'paid')->where('paid_at', '>=', $monthStart)->count(),
+                'to_ship' => Order::whereIn('status', ['paid', 'processing'])->count(),
+                'revenue_this_month' => Order::where('payment_status', 'paid')->where('paid_at', '>=', $monthStart)
+                    ->selectRaw('currency, SUM(total) as total')->groupBy('currency')->pluck('total', 'currency'),
+                'low_stock' => Product::where('is_active', true)->where('track_stock', true)->where('stock_qty', '<=', 3)->orderBy('stock_qty')->limit(5)->get(['id', 'name', 'stock_qty']),
+            ];
         }
 
         return view('admin.dashboard', compact(
+            'store',
             'upcoming', 'past', 'analytics',
             'bookingsLast7Labels', 'bookingsLast7',
             'bookingsLast6Labels', 'bookingsLast6Months',

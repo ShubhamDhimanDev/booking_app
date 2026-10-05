@@ -135,6 +135,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                            href="{{ route('user.bookings.index') }}">My Bookings</a>
                         <a class="text-sm font-medium {{ request()->routeIs('transactions.*') ? 'font-semibold text-primary border-b-2 border-primary pb-1' : 'text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary' }} transition-colors"
                            href="{{ route('transactions.index') }}">Transactions</a>
+                        <a class="text-sm font-medium {{ request()->routeIs('user.orders.*') ? 'font-semibold text-primary border-b-2 border-primary pb-1' : 'text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary' }} transition-colors"
+                           href="{{ route('user.orders.index') }}">My Orders</a>
                     </div>
                     <div class="relative flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-700">
                         <div class="text-right hidden sm:block">
@@ -158,6 +160,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <a href="{{ route('transactions.index') }}" class="flex md:hidden items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200 {{ request()->routeIs('transactions.*') ? 'bg-primary/10 text-primary dark:bg-primary/20' : '' }} border-b md:border-b-0 border-slate-100 dark:border-slate-700">
                                 <span class="material-icons-round text-lg {{ request()->routeIs('transactions.*') ? 'text-primary' : 'text-slate-500 dark:text-slate-400' }}">receipt_long</span>
                                 <span class="text-sm font-medium">Transactions</span>
+                            </a>
+                            <a href="{{ route('user.orders.index') }}" class="flex md:hidden items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200 {{ request()->routeIs('user.orders.*') ? 'bg-primary/10 text-primary dark:bg-primary/20' : '' }}">
+                                <span class="material-icons-round text-lg {{ request()->routeIs('user.orders.*') ? 'text-primary' : 'text-slate-500 dark:text-slate-400' }}">inventory_2</span>
+                                <span class="text-sm font-medium">My Orders</span>
                             </a>
                             <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200">
                                 <span class="material-icons-round text-lg text-primary">person</span>

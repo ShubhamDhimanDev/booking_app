@@ -82,6 +82,30 @@
               </a>
           </li>
 
+          {{-- Store: Orders --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.orders.*') }}" href="{{ route('admin.orders.index') }}">
+                  <i class="mdi mdi-package-variant-closed menu-icon"></i>
+                  <span class="menu-title">Orders</span>
+              </a>
+          </li>
+
+          {{-- Store: Products --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.products.*') }}" href="{{ route('admin.products.index') }}">
+                  <i class="mdi mdi-shopping menu-icon"></i>
+                  <span class="menu-title">Products</span>
+              </a>
+          </li>
+
+          {{-- Store: Categories --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.product-categories.*') }}" href="{{ route('admin.product-categories.index') }}">
+                  <i class="mdi mdi-shape-outline menu-icon"></i>
+                  <span class="menu-title">Product Categories</span>
+              </a>
+          </li>
+
           {{-- Promo Codes --}}
           <li class="nav-item">
               <a class="nav-link {{ request()->routeIs('admin.promo-codes.*') }}" href="{{ route('admin.promo-codes.index') }}">

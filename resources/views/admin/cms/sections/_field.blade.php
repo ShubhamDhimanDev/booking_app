@@ -29,6 +29,17 @@
             @endforelse
             @break
 
+        @case('products')
+            @forelse($products ?? [] as $pr)
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="{{ $inputName }}[]" value="{{ $pr->id }}" id="pr-{{ $uid }}-{{ $pr->id }}" {{ in_array($pr->id, (array) $value) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="pr-{{ $uid }}-{{ $pr->id }}">{{ $pr->name }}</label>
+                </div>
+            @empty
+                <div class="text-muted small">No products are priced for this country yet.</div>
+            @endforelse
+            @break
+
         @case('repeater')
             <div class="repeater">
                 <div class="repeater-rows">

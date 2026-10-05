@@ -1,6 +1,6 @@
 @php $content = $section->content ?? []; @endphp
 <div class="section-card border rounded mb-3" data-id="{{ $section->id }}" id="section-{{ $section->id }}">
-    <div class="d-flex align-items-center gap-2 p-2 bg-light border-bottom">
+    <div class="d-flex align-items-center gap-2 p-2 border-bottom bg-transparent">
         <span class="drag-handle mdi mdi-drag" style="cursor: grab; font-size: 1.5rem;" title="Drag to reorder"></span>
         <i class="mdi {{ $def['icon'] ?? 'mdi-view-dashboard' }}"></i>
         <strong>{{ $def['label'] ?? $section->type }}</strong>

@@ -10,6 +10,9 @@ use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PromoCodeController;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\TrackingSettingsController;
 use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\BookingController;
@@ -30,7 +33,8 @@ Route::prefix('admin')->name('admin.')->group(function(){
         });
 
         // User management
-        Route::resource('/users', UserController::class);
+        Route::get('/users/{user}', fn ($user) => redirect()->route('admin.users.edit', $user))->whereNumber('user')->name('users.show');
+        Route::resource('/users', UserController::class)->except(['show']);
 
         Route::resource('/events', EventController::class)->except(['show']);
 
@@ -64,7 +68,22 @@ Route::prefix('admin')->name('admin.')->group(function(){
         });
 
         // Promo Codes
-        Route::resource('/promo-codes', PromoCodeController::class);
+        Route::get('/promo-codes/{promo_code}', fn ($promo_code) => redirect()->route('admin.promo-codes.edit', $promo_code))->whereNumber('promo_code')->name('promo-codes.show');
+        Route::resource('/promo-codes', PromoCodeController::class)->except(['show']);
+
+        // Store catalog
+        Route::resource('/products', ProductController::class)->except(['show']);
+        Route::resource('/product-categories', ProductCategoryController::class)->except(['show']);
+
+        // Store orders
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::get('/orders/{order}/slip', [OrderController::class, 'slip'])->name('orders.slip');
+        Route::post('/orders/{order}/status', [OrderController::class, 'status'])->name('orders.status');
+        Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('/orders/{order}/refund', [OrderController::class, 'refund'])->name('orders.refund');
+        Route::post('/orders/{order}/resend', [OrderController::class, 'resend'])->name('orders.resend');
 
         // CMS: countries, per-country menus, pages and sections
         Route::resource('/countries', CountryController::class)->except(['show']);

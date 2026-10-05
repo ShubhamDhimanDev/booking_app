@@ -34,7 +34,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center gap-2">
                             <span class="material-icons-round text-primary text-sm">event</span>
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">#BK-{{ optional($p->booking)->id ?? 'N/A' }}</span>
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ $p->order ? $p->order->order_number : '#BK-' . (optional($p->booking)->id ?? 'N/A') }}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -137,7 +137,7 @@
                     <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Booking</p>
                     <div class="flex items-center gap-1.5">
                         <span class="material-icons-round text-primary text-sm">event</span>
-                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">#BK-{{ optional($p->booking)->id ?? 'N/A' }}</span>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ $p->order ? $p->order->order_number : '#BK-' . (optional($p->booking)->id ?? 'N/A') }}</span>
                     </div>
                 </div>
                 <div>

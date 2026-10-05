@@ -34,6 +34,9 @@ Route::middleware('auth')->group(function () {
 
   // Transactions for regular users
   Route::get('/user/transactions', [TransactionsController::class, 'index'])->name('transactions.index');
+  // Store orders for regular users
+  Route::get('/user/orders', [\App\Http\Controllers\UserOrderController::class, 'index'])->name('user.orders.index');
+  Route::get('/user/orders/{order}', [\App\Http\Controllers\UserOrderController::class, 'show'])->name('user.orders.show');
   // Bookings for regular users (bookers)
   Route::get('/user/bookings', [BookingController::class, 'userIndex'])->name('user.bookings.index');
   Route::get('/user/bookings/{booking}/reschedule', [BookingController::class, 'showRescheduleForm'])->name('user.bookings.reschedule.form');
@@ -53,6 +56,7 @@ Route::post('/validate-promo', [PaymentController::class, 'validatePromoCode']);
 // PayU callback routes
 Route::post('/payment/payu/callback', [PaymentController::class, 'payuCallback'])->name('payment.payu.callback');
 Route::post('/payment/payu/webhook', [PaymentController::class, 'payuWebhook'])->name('payment.payu.webhook');
+Route::post('/payment/payu/order-callback', [\App\Http\Controllers\OrderPaymentController::class, 'payuCallback'])->name('order.payu.callback');
 Route::get('/payment/failed/{booking?}', [PaymentController::class, 'paymentFailedPage'])->name('payment.failed');
 
 // Multi-page booking flow

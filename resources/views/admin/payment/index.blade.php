@@ -167,6 +167,9 @@
                                     <small class="text-muted">
                                         {{ $payment->booking->booked_at_date }} {{ $payment->booking->booked_at_time }}
                                     </small>
+                                @elseif ($payment->order)
+                                    <a href="{{ route('admin.orders.show', $payment->order) }}"><strong>{{ $payment->order->order_number }}</strong></a><br>
+                                    <small class="text-muted">Store order &middot; {{ $payment->order->customer_name }}</small>
                                 @else
                                     <span class="text-muted">N/A</span>
                                 @endif

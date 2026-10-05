@@ -7,7 +7,7 @@ namespace App\Cms;
  * partial at resources/views/cms/sections/{type}.blade.php. The admin form is
  * generated from the field definitions.
  *
- * Field types: text, textarea, code, url, image, events, repeater.
+ * Field types: text, textarea, code, url, image, events, products, repeater.
  */
 class SectionTypes
 {
@@ -55,6 +55,22 @@ class SectionTypes
                 'fields' => [
                     'heading' => ['type' => 'text', 'label' => 'Heading'],
                     'event_ids' => ['type' => 'events', 'label' => 'Events to show (none selected = all upcoming events of this country)'],
+                ],
+            ],
+            'products' => [
+                'label' => 'Products grid (store)',
+                'icon' => 'mdi-shopping',
+                'fields' => [
+                    'heading' => ['type' => 'text', 'label' => 'Heading'],
+                    'product_ids' => ['type' => 'products', 'label' => 'Products to show (none selected = featured first, then newest; only products priced for this country appear)'],
+                    'limit' => ['type' => 'text', 'label' => 'Max products when none are picked (default 8)'],
+                ],
+            ],
+            'product_categories' => [
+                'label' => 'Product categories (store)',
+                'icon' => 'mdi-shape-outline',
+                'fields' => [
+                    'heading' => ['type' => 'text', 'label' => 'Heading'],
                 ],
             ],
             'faq' => [
@@ -121,7 +137,7 @@ class SectionTypes
                     $rows[] = array_intersect_key($row, $field['fields']);
                 }
                 $out[$name] = $rows;
-            } elseif ($field['type'] === 'events') {
+            } elseif (in_array($field['type'], ['events', 'products'], true)) {
                 $out[$name] = array_values(array_map('intval', (array) $value));
             } else {
                 $out[$name] = is_scalar($value) ? (string) $value : '';

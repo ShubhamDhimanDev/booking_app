@@ -10,7 +10,7 @@ class PaymentController extends Controller
 {
     public function paymentHistory(Request $request)
     {
-        $query = Payment::with(['booking', 'user']);
+        $query = Payment::with(['booking', 'order', 'user']);
 
         // Search by customer name/email (registered account, and the guest-entered
         // name/email captured on the booking, in case they differ)
@@ -24,6 +24,11 @@ class PaymentController extends Controller
                     ->orWhereHas('booking', function ($bq) use ($search) {
                         $bq->where('booker_name', 'like', "%{$search}%")
                             ->orWhere('booker_email', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('order', function ($oq) use ($search) {
+                        $oq->where('order_number', 'like', "%{$search}%")
+                            ->orWhere('customer_name', 'like', "%{$search}%")
+                            ->orWhere('customer_email', 'like', "%{$search}%");
                     });
             });
         }

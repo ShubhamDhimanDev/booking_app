@@ -118,9 +118,12 @@ class PayUService implements PaymentGatewayInterface
      * We try webhook v2 first (additionalCharges present even if empty), then fall back to
      * callback v1. Both variants use all 10 UDF positions.
      */
-    public function verifyHash(array $payload): bool
+    public function verifyHash(array $payload, bool $strict = false): bool
     {
-      return true; // Temporary bypass for testing — remove this line to enable real hash verification
+      // Temporary bypass for testing (booking flow). Store orders pass $strict = true and are never bypassed.
+      if (! $strict) {
+        return true;
+      }
         try {
             $status      = $payload['status']      ?? null;
             // PayU S2S webhooks use different field names from the browser callback.

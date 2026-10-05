@@ -45,4 +45,21 @@
             <label class="form-check-label" for="is_default">Default country (used when a visitor's country can't be detected)</label>
         </div>
     </div>
+    <div class="col-12"><hr class="my-1"></div>
+    <div class="col-md-6">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="ecommerce_enabled" value="1" id="ecommerce_enabled" {{ old('ecommerce_enabled', $country->ecommerce_enabled) ? 'checked' : '' }}>
+            <label class="form-check-label" for="ecommerce_enabled">Enable store in this country</label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Default free-session event</label>
+        <select name="free_session_event_id" class="form-select">
+            <option value="">None</option>
+            @foreach(\App\Models\Event::orderBy('title')->get(['id', 'title']) as $ev)
+                <option value="{{ $ev->id }}" {{ (int) old('free_session_event_id', $country->free_session_event_id) === $ev->id ? 'selected' : '' }}>{{ $ev->title }}</option>
+            @endforeach
+        </select>
+        <div class="form-text">Used for products that grant a free session but have no event of their own.</div>
+    </div>
 </div>

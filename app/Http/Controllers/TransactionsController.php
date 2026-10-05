@@ -10,7 +10,10 @@ class TransactionsController extends Controller
     {
         $user = auth()->user();
 
-        $payments = Payment::where('user_id', $user->id)->latest()->paginate(10);
+        // Unfinished store-order payment attempts are not transactions yet.
+        $payments = Payment::with('order')->where('user_id', $user->id)
+            ->where(fn ($q) => $q->whereNull('order_id')->orWhere('status', '!=', 'pending'))
+            ->latest()->paginate(10);
 
         return view('user.transactions.index', compact('payments'));
     }

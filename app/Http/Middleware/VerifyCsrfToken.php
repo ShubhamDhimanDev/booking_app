@@ -16,5 +16,6 @@ class VerifyCsrfToken extends Middleware
         'payu/failure',
         'payment/payu/callback',
         'payment/payu/webhook',
+        'payment/payu/order-callback',
     ];
 }

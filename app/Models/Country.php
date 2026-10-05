@@ -11,6 +11,7 @@ class Country extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_default' => 'boolean',
+        'ecommerce_enabled' => 'boolean',
     ];
 
     public function pages()
@@ -21,6 +22,16 @@ class Country extends Model
     public function events()
     {
         return $this->hasMany(Event::class);
+    }
+
+    public function productPrices()
+    {
+        return $this->hasMany(ProductPrice::class);
+    }
+
+    public function freeSessionEvent()
+    {
+        return $this->belongsTo(Event::class, 'free_session_event_id');
     }
 
     public function navItems()

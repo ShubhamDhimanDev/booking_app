@@ -11,6 +11,7 @@ class Refund extends Model
 
     protected $fillable = [
         'booking_id',
+        'order_id',
         'payment_id',
         'amount',
         'gateway_charges',
@@ -41,6 +42,14 @@ class Refund extends Model
     public function booking()
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    /**
+     * Relationship with Order (store refunds)
+     */
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 
     /**

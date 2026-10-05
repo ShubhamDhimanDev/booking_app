@@ -19,7 +19,7 @@ class RefundController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Refund::with(['booking.event', 'booking.booker', 'payment', 'initiatedBy'])
+        $query = Refund::with(['booking.event', 'booking.booker', 'order', 'payment', 'initiatedBy'])
             ->latest();
 
         // Apply filters
@@ -69,7 +69,7 @@ class RefundController extends Controller
      */
     public function show(Refund $refund)
     {
-        $refund->load(['booking.event', 'booking.booker', 'payment', 'initiatedBy']);
+        $refund->load(['booking.event', 'booking.booker', 'order', 'payment', 'initiatedBy']);
 
         return view('admin.refunds.show', compact('refund'));
     }
@@ -96,7 +96,9 @@ class RefundController extends Controller
         ]);
 
         // Dispatch job again
-        ProcessRefundJob::dispatch($refund);
+        $refund->order_id
+            ? \App\Jobs\ProcessOrderRefundJob::dispatch($refund)
+            : ProcessRefundJob::dispatch($refund);
 
         Log::info('Admin manually retried refund', [
             'refund_id' => $refund->id,

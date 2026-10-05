@@ -54,6 +54,7 @@ class PageController extends Controller
             'page' => $page,
             'types' => SectionTypes::all(),
             'events' => $events,
+            'products' => \App\Models\Product::soldIn($page->country)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

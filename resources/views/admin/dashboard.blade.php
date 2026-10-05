@@ -32,6 +32,43 @@
     </div>
 </div>
 
+@if($store)
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5 class="mb-2">Store orders (This month)</h5>
+            <div class="h3">{{ $store['orders_this_month'] }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5 class="mb-2">To ship</h5>
+            <div class="h3"><a href="{{ route('admin.orders.index', ['status' => 'paid']) }}">{{ $store['to_ship'] }}</a></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5 class="mb-2">Store revenue (This month)</h5>
+            @forelse($store['revenue_this_month'] as $currency => $total)
+                <div class="h5 mb-0">{{ trim(config('cms.currencies.' . $currency, $currency)) }}{{ number_format($total, 2) }}</div>
+            @empty
+                <div class="h5 mb-0">0</div>
+            @endforelse
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5 class="mb-2">Low stock</h5>
+            @forelse($store['low_stock'] as $p)
+                <div class="small"><a href="{{ route('admin.products.edit', $p) }}">{{ $p->name }}</a> ({{ $p->stock_qty }})</div>
+            @empty
+                <div class="small text-muted">All good</div>
+            @endforelse
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="row mb-4">
     <div class="col-md-8">
         <div class="card">
@@ -89,6 +126,8 @@
                 <p>Sessions last 7 days: {{ $analytics['sessions_last_7_days'] ?? 0 }}</p>
             </div>
         </div>
+    </div>
+</div>
 
         <div class="row mb-4">
             <div class="col-md-6">
@@ -119,8 +158,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
 <div class="row mb-4">
     <div class="col-12">
@@ -174,6 +211,15 @@
         const paymentsMonthlyLabels = {!! json_encode($paymentsLast6Labels ?? []) !!};
         const paymentsMonthlyData = {!! json_encode($paymentsLast6 ?? []) !!};
 
+        const chartOptions = {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.12)' } },
+                y: { beginAtZero: true, ticks: { color: '#94a3b8', precision: 0 }, grid: { color: 'rgba(148,163,184,0.12)' } }
+            }
+        };
+
         // Bookings weekly line
         const ctxWeek = document.getElementById('bookingsWeeklyChart');
         if (ctxWeek) {
@@ -190,7 +236,7 @@
                         tension: 0.3
                     }]
                 },
-                options: { responsive: true, plugins: { legend: { display: false } } }
+                options: chartOptions
             });
         }
 
@@ -207,7 +253,7 @@
                         backgroundColor: 'rgba(178,134,49,0.8)'
                     }]
                 },
-                options: { responsive: true, plugins: { legend: { display: false } } }
+                options: chartOptions
             });
         }
 
@@ -224,7 +270,7 @@
                         backgroundColor: 'rgba(178,134,49,0.6)'
                     }]
                 },
-                options: { responsive: true, plugins: { legend: { display: false } } }
+                options: chartOptions
             });
         }
     })();

@@ -244,3 +244,164 @@ a.btn.btn-outline-danger:hover{
 .badge.bg-success {
   color: white !important;
 }
+
+/* Selects: match text inputs (no stray white outline, inline dark-theme arrow) */
+select.form-select,
+select.form-control {
+  outline: none !important;
+  font-size: 14px !important;
+  color-scheme: dark;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.25rem !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 14px 14px !important;
+}
+select.form-select option,
+select.form-control option {
+  background-color: var(--panel-2);
+  color: var(--text);
+}
+input[type="date"].form-control {
+  color-scheme: dark;
+}
+
+/* Secondary buttons were light-grey on dark with unreadable text */
+.btn-light,
+.btn-secondary {
+  background-color: var(--panel-2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+.btn-light:hover,
+.btn-secondary:hover {
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+input[type="date"].form-control::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+input[type="file"].form-control::file-selector-button {
+  background-color: var(--panel) !important;
+  color: var(--text) !important;
+  border: 0 !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+/* Dark scrollbars (horizontal table scroll was a bright white bar) */
+* {
+  scrollbar-color: #334155 transparent;
+  scrollbar-width: thin;
+}
+.table-responsive {
+  scrollbar-color: #334155 var(--panel-2);
+}
+
+/* ---- Light-theme Bootstrap classes remapped for the dark admin ---- */
+.bg-light,
+.bg-white,
+.table-light,
+.table-light > th,
+.table-light > td,
+.card-header.bg-light,
+.card-header.bg-white,
+.list-group-item {
+  background-color: var(--panel-2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+.text-dark,
+.text-black {
+  color: var(--text) !important;
+}
+.text-primary {
+  color: var(--accent) !important;
+}
+.card-header.bg-primary,
+.card-header.bg-danger,
+.card-header.bg-info,
+.card-header.bg-warning,
+.card-header.bg-success {
+  background-color: var(--panel-2) !important;
+  color: var(--heading, var(--text)) !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-left: 3px solid var(--accent);
+}
+.card-header.bg-danger { border-left-color: var(--danger); }
+.card-header.bg-warning { border-left-color: var(--warning); }
+.card-header.bg-success { border-left-color: var(--success); }
+.card-header.bg-primary h5,
+.card-header.bg-danger h5,
+.card-header.bg-info h5,
+.card-header.bg-warning h5,
+.card-header.bg-success h5 {
+  color: inherit !important;
+}
+
+/* Badges: tinted background + light text that always reads */
+.badge {
+  font-weight: 500;
+}
+.badge.bg-secondary,
+.badge.bg-light,
+.badge.bg-dark {
+  background-color: rgba(148, 163, 184, 0.22) !important;
+  color: #e2e8f0 !important;
+}
+.badge.bg-primary {
+  background-color: rgba(99, 102, 241, 0.28) !important;
+  color: #c7d2fe !important;
+}
+.badge.bg-info {
+  background-color: rgba(14, 165, 233, 0.25) !important;
+  color: #bae6fd !important;
+}
+.badge.bg-success {
+  background-color: rgba(34, 197, 94, 0.25) !important;
+  color: #bbf7d0 !important;
+}
+.badge.bg-warning {
+  background-color: rgba(245, 158, 11, 0.25) !important;
+  color: #fde68a !important;
+}
+.badge.bg-danger {
+  background-color: rgba(239, 68, 68, 0.25) !important;
+  color: #fecaca !important;
+}
+
+/* Checkboxes / radios / switches that were bright white on dark */
+.form-check-input:not(:checked) {
+  background-color: var(--panel-2);
+  border: 1px solid #475569;
+}
+.form-check-input:checked {
+  background-color: var(--accent-2);
+  border-color: var(--accent-2);
+}
+.form-switch .form-check-input:not(:checked) {
+  background-color: #334155;
+  border-color: #334155;
+}
+
+/* Section builder cards */
+.section-card {
+  background: var(--panel);
+  border-color: var(--border) !important;
+}
+.section-card .drag-handle {
+  color: var(--muted);
+}
+
+/* Action cells wrap instead of forcing sideways table scroll */
+.table td.text-end {
+  white-space: normal;
+  min-width: 170px;
+}
+.table td.text-end > .btn,
+.table td.text-end > form {
+  margin: 2px 0 2px 2px;
+}

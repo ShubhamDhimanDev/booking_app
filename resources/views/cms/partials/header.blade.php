@@ -12,6 +12,10 @@
                 @foreach($country->headerItems()->with('page.country')->get() as $item)
                     <a href="{{ $item->href() }}" @if($item->opens_new_tab) target="_blank" rel="noopener" @endif>{{ $item->label }}</a>
                 @endforeach
+                @if($country->ecommerce_enabled)
+                    <a href="{{ route('store.index', $country->slug) }}">Store</a>
+                    <a href="{{ route('cart.show', $country->slug) }}">Cart ({{ app(\App\Services\CartService::class)->count($country) }})</a>
+                @endif
                 @auth
                     <a href="{{ route('user.bookings.index') }}">My Bookings</a>
                 @else

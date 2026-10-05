@@ -19,6 +19,7 @@ return [
         'followup', 'create-order', 'verify-payment', 'validate-promo', 'forgot-password', 'reset-password',
         'verify-email', 'confirm-password', 'email', 'dashboard', 'storage', 'vendor', 'build', 'images',
         'css', 'js', 'admins', 'cms', 'auth', 'sanctum', 'up',
+        'store', 'cart', 'checkout', 'order', 'orders',
     ],
 
     // Visitor-country lookup by IP (used when no CDN country header is present).

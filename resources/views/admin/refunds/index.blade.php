@@ -12,49 +12,49 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-2">
-            <div class="card bg-primary text-white">
+    <div class="row mb-3">
+        <div class="col-6 col-lg-4 col-xxl-2 mb-3">
+            <div class="card h-100 mb-0 bg-primary text-white">
                 <div class="card-body">
                     <h6 class="card-title">Total Refunds</h6>
                     <h3 class="mb-0">{{ $stats['total'] }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-warning text-dark">
+        <div class="col-6 col-lg-4 col-xxl-2 mb-3">
+            <div class="card h-100 mb-0 bg-warning text-dark">
                 <div class="card-body">
                     <h6 class="card-title">Pending</h6>
                     <h3 class="mb-0">{{ $stats['pending'] }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-info text-white">
+        <div class="col-6 col-lg-4 col-xxl-2 mb-3">
+            <div class="card h-100 mb-0 bg-info text-white">
                 <div class="card-body">
                     <h6 class="card-title">Processing</h6>
                     <h3 class="mb-0">{{ $stats['processing'] }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-success text-white">
+        <div class="col-6 col-lg-4 col-xxl-2 mb-3">
+            <div class="card h-100 mb-0 bg-success text-white">
                 <div class="card-body">
                     <h6 class="card-title">Completed</h6>
                     <h3 class="mb-0">{{ $stats['completed'] }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-danger text-white">
+        <div class="col-6 col-lg-4 col-xxl-2 mb-3">
+            <div class="card h-100 mb-0 bg-danger text-white">
                 <div class="card-body">
                     <h6 class="card-title">Failed</h6>
                     <h3 class="mb-0">{{ $stats['failed'] }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-dark text-white">
+        <div class="col-6 col-lg-4 col-xxl-2 mb-3">
+            <div class="card h-100 mb-0 bg-dark text-white">
                 <div class="card-body">
                     <h6 class="card-title">Total Amount</h6>
                     <h3 class="mb-0">₹{{ number_format($stats['total_amount'], 2) }}</h3>
@@ -67,7 +67,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.refunds.index') }}" class="row g-3">
-                <div class="col-md-2">
+                <div class="col-6 col-lg-4 col-xl-2">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select form-select-sm">
                         <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All</option>
@@ -77,7 +77,7 @@
                         <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-lg-4 col-xl-2">
                     <label class="form-label">Gateway</label>
                     <select name="gateway" class="form-select form-select-sm">
                         <option value="all" {{ request('gateway') == 'all' ? 'selected' : '' }}>All</option>
@@ -85,19 +85,19 @@
                         <option value="payu" {{ request('gateway') == 'payu' ? 'selected' : '' }}>PayU</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-lg-4 col-xl-2">
                     <label class="form-label">Date From</label>
                     <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-lg-4 col-xl-2">
                     <label class="form-label">Date To</label>
                     <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-lg-4 col-xl-2">
                     <label class="form-label">Search</label>
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Booking ID" value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-6 col-lg-4 col-xl-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary btn-sm me-2">Filter</button>
                     <a href="{{ route('admin.refunds.index') }}" class="btn btn-secondary btn-sm text-white">Reset</a>
                 </div>
@@ -128,9 +128,15 @@
                         @forelse($refunds as $refund)
                         <tr>
                             <td><strong>#{{ $refund->id }}</strong></td>
-                            <td><a href="{{ route('admin.bookings.index') }}?search={{ $refund->booking_id }}">BK-{{ $refund->booking_id }}</a></td>
-                            <td>{{ $refund->booking->event->title ?? 'N/A' }}</td>
-                            <td>{{ $refund->booking->booker->name ?? 'N/A' }}</td>
+                            @if($refund->order_id)
+                                <td><a href="{{ route('admin.orders.show', $refund->order_id) }}">{{ $refund->order->order_number ?? 'Order #' . $refund->order_id }}</a></td>
+                                <td>Store order</td>
+                                <td>{{ $refund->order->customer_name ?? 'N/A' }}</td>
+                            @else
+                                <td><a href="{{ route('admin.bookings.index') }}?search={{ $refund->booking_id }}">BK-{{ $refund->booking_id }}</a></td>
+                                <td>{{ $refund->booking->event->title ?? 'N/A' }}</td>
+                                <td>{{ $refund->booking->booker->name ?? 'N/A' }}</td>
+                            @endif
                             <td>
                                 <div><strong>₹{{ number_format($refund->net_refund_amount, 2) }}</strong></div>
                                 @if($refund->gateway_charges > 0)

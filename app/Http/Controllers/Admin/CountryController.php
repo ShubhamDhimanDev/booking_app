@@ -79,11 +79,13 @@ class CountryController extends Controller
             'default_timezone' => ['required', Rule::in(\DateTimeZone::listIdentifiers())],
             'header_html' => 'nullable|string',
             'footer_html' => 'nullable|string',
+            'free_session_event_id' => 'nullable|exists:events,id',
         ]);
 
         $data['iso_code'] = isset($data['iso_code']) ? strtoupper($data['iso_code']) : null;
         $data['is_active'] = $request->boolean('is_active');
         $data['is_default'] = $request->boolean('is_default');
+        $data['ecommerce_enabled'] = $request->boolean('ecommerce_enabled');
         if ($data['is_default']) {
             $data['is_active'] = true;
         }

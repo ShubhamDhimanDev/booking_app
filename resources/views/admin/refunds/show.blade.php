@@ -34,8 +34,13 @@
                         <div class="col-md-8">#{{ $refund->id }}</div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-4"><strong>Booking ID:</strong></div>
-                        <div class="col-md-8"><a href="{{ route('admin.bookings.index') }}?search={{ $refund->booking_id }}">BK-{{ $refund->booking_id }}</a></div>
+                        @if($refund->order_id)
+                            <div class="col-md-4"><strong>Order:</strong></div>
+                            <div class="col-md-8"><a href="{{ route('admin.orders.show', $refund->order_id) }}">{{ $refund->order->order_number ?? '#' . $refund->order_id }}</a></div>
+                        @else
+                            <div class="col-md-4"><strong>Booking ID:</strong></div>
+                            <div class="col-md-8"><a href="{{ route('admin.bookings.index') }}?search={{ $refund->booking_id }}">BK-{{ $refund->booking_id }}</a></div>
+                        @endif
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Payment ID:</strong></div>
@@ -114,8 +119,32 @@
             @endif
         </div>
 
-        <!-- Booking & Customer Details -->
+        <!-- Booking / Order & Customer Details -->
         <div class="col-md-4">
+            @if($refund->order)
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Order Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Order:</strong><br><a href="{{ route('admin.orders.show', $refund->order) }}">{{ $refund->order->order_number }}</a></p>
+                        <p><strong>Total:</strong><br>{{ $refund->order->currency }} {{ number_format($refund->order->total, 2) }}</p>
+                        <p><strong>Order status:</strong><br><span class="badge bg-secondary">{{ ucfirst($refund->order->status) }}</span></p>
+                        <p class="mb-0"><strong>Payment status:</strong><br><span class="badge bg-{{ $refund->order->payment_status === 'paid' ? 'success' : 'warning' }}">{{ ucfirst($refund->order->payment_status) }}</span></p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">Customer Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Name:</strong><br>{{ $refund->order->customer_name ?? 'N/A' }}</p>
+                        <p><strong>Email:</strong><br>{{ $refund->order->customer_email ?? 'N/A' }}</p>
+                        <p class="mb-0"><strong>Phone:</strong><br>{{ $refund->order->customer_phone ?? 'N/A' }}</p>
+                    </div>
+                </div>
+            @elseif($refund->booking)
             <div class="card shadow-sm mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Booking Details</h5>
@@ -145,6 +174,8 @@
                     <p><strong>Phone:</strong><br>{{ $refund->booking->booker_phone ?? 'N/A' }}</p>
                 </div>
             </div>
+        
+            @endif
         </div>
     </div>
 </div>

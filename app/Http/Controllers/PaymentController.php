@@ -404,6 +404,11 @@ class PaymentController extends Controller
         $bookingId = $payload['udf1'] ?? null;
         $status   = $payload['status'] ?? null;
 
+        // Store orders carry their order number (ORD-...) in udf1; they have their own, strictly verified handler.
+        if (str_starts_with((string) $bookingId, 'ORD-')) {
+            return app(OrderPaymentController::class)->payuWebhook($payload);
+        }
+
         // Temporary: log all payload keys so we can identify the exact webhook body structure
         Log::info('PayU Webhook Received', $request->all());
 
