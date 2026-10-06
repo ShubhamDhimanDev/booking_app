@@ -82,6 +82,14 @@
               </a>
           </li>
 
+          {{-- CMS: Form submissions --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.submissions.*') }}" href="{{ route('admin.submissions.index') }}">
+                  <i class="mdi mdi-email-outline menu-icon"></i>
+                  <span class="menu-title">Form Submissions</span>
+              </a>
+          </li>
+
           {{-- Store: Orders --}}
           <li class="nav-item">
               <a class="nav-link {{ request()->routeIs('admin.orders.*') }}" href="{{ route('admin.orders.index') }}">

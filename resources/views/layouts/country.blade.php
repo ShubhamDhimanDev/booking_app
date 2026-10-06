@@ -11,9 +11,12 @@
     @foreach($alternates ?? [] as $alt)
         <link rel="alternate" hreflang="{{ strtolower($alt->country->iso_code ?: $alt->country->slug) }}" href="{{ $alt->url() }}">
     @endforeach
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     @include('cms.partials.styles')
     <style>
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b; background: #f8fafc; }
+        body { margin: 0; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; background: linear-gradient(to bottom right, #f8fafc, #eff6ff, #eef2ff); min-height: 100vh; }
         *, *::before, *::after { box-sizing: border-box; }
     </style>
     @stack('head')

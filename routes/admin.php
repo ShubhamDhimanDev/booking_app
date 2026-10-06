@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\NavigationController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\FormSubmissionController;
 use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
@@ -96,6 +97,12 @@ Route::prefix('admin')->name('admin.')->group(function(){
         Route::put('/sections/{section}', [PageSectionController::class, 'update'])->name('sections.update');
         Route::delete('/sections/{section}', [PageSectionController::class, 'destroy'])->name('sections.destroy');
         Route::post('/cms/upload', [PageSectionController::class, 'upload'])->name('cms.upload');
+
+        // Form submissions (from `form` page sections)
+        Route::get('/submissions/export', [FormSubmissionController::class, 'export'])->name('submissions.export');
+        Route::get('/submissions', [FormSubmissionController::class, 'index'])->name('submissions.index');
+        Route::get('/submissions/{submission}', [FormSubmissionController::class, 'show'])->name('submissions.show');
+        Route::delete('/submissions/{submission}', [FormSubmissionController::class, 'destroy'])->name('submissions.destroy');
 
         // Old homepage editor -> the page builder
         Route::redirect('/homepage-settings', '/admin/pages')->name('homepage-settings.index');

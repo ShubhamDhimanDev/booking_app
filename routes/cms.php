@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CountryPageController;
+use App\Http\Controllers\FormSubmissionController;
 use App\Http\Controllers\OrderPaymentController;
 use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
@@ -40,5 +41,7 @@ Route::middleware('signed')->group(function () {
     Route::get('/{cmsCountry}/order/{orderNumber}/thank-you', [OrderPaymentController::class, 'thankYou'])->name('order.thankyou');
     Route::get('/{cmsCountry}/order/{orderNumber}/failed', [OrderPaymentController::class, 'failed'])->name('order.failed');
 });
+
+Route::post('/{cmsCountry}/forms/{section}', [FormSubmissionController::class, 'store'])->middleware('throttle:10,1')->whereNumber('section')->name('form.submit');
 
 Route::get('/{cmsCountry}/{slug}', [CountryPageController::class, 'show'])->name('country.page');

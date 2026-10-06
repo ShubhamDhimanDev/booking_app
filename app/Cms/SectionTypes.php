@@ -95,6 +95,26 @@ class SectionTypes
                     ]],
                 ],
             ],
+            'form' => [
+                'label' => 'Form (submissions saved in admin)',
+                'icon' => 'mdi-form-select',
+                'fields' => [
+                    'name' => ['type' => 'text', 'label' => 'Form name (shown in admin submissions, e.g. "Contact us")'],
+                    'heading' => ['type' => 'text', 'label' => 'Heading'],
+                    'intro' => ['type' => 'textarea', 'label' => 'Intro text'],
+                    'fields' => ['type' => 'repeater', 'label' => 'Form fields', 'fields' => [
+                        'label' => ['type' => 'text', 'label' => 'Label'],
+                        'type' => ['type' => 'select', 'label' => 'Type', 'options' => [
+                            'text' => 'Text', 'email' => 'Email', 'tel' => 'Phone', 'number' => 'Number',
+                            'textarea' => 'Long text', 'select' => 'Dropdown', 'checkbox' => 'Checkbox', 'date' => 'Date',
+                        ]],
+                        'required' => ['type' => 'select', 'label' => 'Required?', 'options' => ['0' => 'No', '1' => 'Yes']],
+                        'options' => ['type' => 'textarea', 'label' => 'Dropdown options (one per line, Dropdown type only)'],
+                    ]],
+                    'button_label' => ['type' => 'text', 'label' => 'Submit button label (default "Submit")'],
+                    'success_message' => ['type' => 'text', 'label' => 'Success message'],
+                ],
+            ],
             'cta' => [
                 'label' => 'Call to action',
                 'icon' => 'mdi-bullhorn-outline',

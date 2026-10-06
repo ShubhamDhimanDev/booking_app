@@ -28,10 +28,22 @@
                 <div class="alert alert-warning">
                     Raw HTML, CSS and JS, rendered as-is (no escaping or sanitising). If left empty, the default header/footer is built from the menus below.
                 </div>
-                <label class="form-label">Header HTML</label>
-                <textarea name="header_html" class="form-control font-monospace mb-3" rows="8">{{ old('header_html', $country->header_html) }}</textarea>
-                <label class="form-label">Footer HTML</label>
-                <textarea name="footer_html" class="form-control font-monospace" rows="8">{{ old('footer_html', $country->footer_html) }}</textarea>
+                @foreach(['header_html' => 'Header HTML', 'footer_html' => 'Footer HTML'] as $field => $label)
+                    @php $val = old($field, $country->{$field}); @endphp
+                    <div class="border rounded mb-3" style="border-color: var(--border) !important;">
+                        <button type="button" class="btn w-100 d-flex align-items-center justify-content-between text-start p-3 collapsed"
+                                data-bs-toggle="collapse" data-bs-target="#{{ $field }}-collapse" aria-expanded="false" aria-controls="{{ $field }}-collapse">
+                            <span><strong>{{ $label }}</strong>
+                                <small class="text-muted ms-2">{{ trim((string) $val) !== '' ? 'Custom HTML set' : 'Using default' }}</small></span>
+                            <i class="mdi mdi-chevron-down" style="color: var(--muted);"></i>
+                        </button>
+                        <div class="collapse" id="{{ $field }}-collapse">
+                            <div class="p-3 pt-0">
+                                <textarea name="{{ $field }}" class="form-control font-monospace" rows="12" spellcheck="false">{{ $val }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
 
@@ -108,6 +120,25 @@
             var holder = document.createElement('div'); holder.innerHTML = html.trim();
             var row = holder.firstElementChild; list.appendChild(row); wire(row); renumber(list);
         });
+    });
+})();
+</script>
+@endpush
+
+@push('scripts')
+<script>
+// Header/footer HTML textareas grow to fit their content (the manual resize handle still works).
+(function () {
+    function grow(el) {
+        el.style.height = 'auto';
+        el.style.height = Math.max(el.scrollHeight + 2, 120) + 'px';
+    }
+    document.querySelectorAll('textarea[name="header_html"], textarea[name="footer_html"]').forEach(function (ta) {
+        ta.style.overflow = 'hidden';
+        ta.addEventListener('input', function () { grow(ta); });
+        var panel = ta.closest('.collapse');
+        if (panel) panel.addEventListener('shown.bs.collapse', function () { grow(ta); });
+        else grow(ta);
     });
 })();
 </script>
