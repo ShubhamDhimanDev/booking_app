@@ -17,20 +17,25 @@
 
     // Given an IST-wall-clock date ("YYYY-MM-DD") and time ("HH:mm"), return
     // { local: "8:00 AM PDT", ist: "6:30 PM IST", sameDay: bool } for display.
+    // en-US renders India's zone as "GMT+5:30"; show "IST" instead.
+    function isIndiaTz(z) { return z === 'Asia/Kolkata' || z === 'Asia/Calcutta'; }
+    function formatTime(date, tz) {
+        const fmt = new Intl.DateTimeFormat('en-US', {
+            hour: 'numeric', minute: '2-digit', hour12: true,
+            timeZoneName: 'short', timeZone: tz,
+        });
+        if (!isIndiaTz(tz)) return fmt.format(date);
+        return fmt.formatToParts(date).map(function (p) {
+            return p.type === 'timeZoneName' ? 'IST' : p.value;
+        }).join('');
+    }
+
     window.convertIstToVisitorTz = function (dateStr, timeStr) {
         const istDate = new Date(`${dateStr}T${timeStr}:00+05:30`);
-        const localFmt = new Intl.DateTimeFormat('en-US', {
-            hour: 'numeric', minute: '2-digit', hour12: true,
-            timeZoneName: 'short', timeZone: visitorTz,
-        });
-        const istFmt = new Intl.DateTimeFormat('en-US', {
-            hour: 'numeric', minute: '2-digit', hour12: true,
-            timeZoneName: 'short', timeZone: 'Asia/Kolkata',
-        });
         const localDayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: visitorTz }); // YYYY-MM-DD
         return {
-            local: localFmt.format(istDate),
-            ist: istFmt.format(istDate),
+            local: formatTime(istDate, visitorTz),
+            ist: formatTime(istDate, 'Asia/Kolkata'),
             localDate: localDayFmt.format(istDate),
             isSameDayAsIst: localDayFmt.format(istDate) === dateStr,
         };
