@@ -109,7 +109,8 @@ class PageController extends Controller
         $countryId = $page ? $page->country_id : (int) $request->input('country_id');
 
         $data = $request->validate([
-            'country_id' => 'required|exists:countries,id',
+            // Only supplied on create; an existing page keeps its country.
+            'country_id' => [$page ? 'nullable' : 'required', 'exists:countries,id'],
             'title' => 'required|string|max:150',
             'slug' => ['required', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/', 'max:100',
                 Rule::unique('pages', 'slug')->where('country_id', $countryId)->ignore($page?->id),
