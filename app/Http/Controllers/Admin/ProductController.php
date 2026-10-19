@@ -120,6 +120,8 @@ class ProductController extends Controller
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'new_images.*' => 'image|max:10240',
+            'content' => 'nullable|array',
+            'content.consult_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|\/)\S*$/i'],
             'prices' => 'nullable|array',
             'prices.*.mrp' => 'nullable|numeric|min:0',
             'prices.*.sale_price' => 'nullable|numeric|min:0',
@@ -143,6 +145,7 @@ class ProductController extends Controller
         $productData = collect($data)->only([
             'name', 'sku', 'category_id', 'short_description', 'description', 'free_session_event_id', 'meta_title', 'meta_description',
         ])->all();
+        $productData['content'] = Product::sanitizeContent((array) $request->input('content'));
         $productData['slug'] = ($data['slug'] ?? null) ?: $this->uniqueSlug($data['name'], $product);
         $productData['sku'] = ($productData['sku'] ?? null) ?: null;
         $productData['stock_qty'] = (int) ($data['stock_qty'] ?? 0);

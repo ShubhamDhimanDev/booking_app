@@ -63,11 +63,22 @@ class StoreController extends Controller
         $hasFreeSession = $product->grants_free_session
             && ($product->free_session_event_id || $country->free_session_event_id);
 
+        // Other products sold in this country, same category first.
+        $related = Product::soldIn($country)
+            ->with(['prices' => fn ($q) => $q->where('country_id', $country->id)])
+            ->where('id', '!=', $product->id)
+            ->orderByRaw('category_id = ? desc', [$product->category_id ?? 0])
+            ->orderByDesc('is_featured')
+            ->orderByDesc('id')
+            ->limit(2)
+            ->get();
+
         return view('store.show', [
             'country' => $country,
             'product' => $product,
             'price' => $product->priceFor($country),
             'hasFreeSession' => (bool) $hasFreeSession,
+            'related' => $related,
         ]);
     }
 }

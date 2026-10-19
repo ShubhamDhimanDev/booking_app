@@ -65,7 +65,7 @@
         }
     </style>
 </head>
-<body>
+<body class="@yield('body_class')">
     @include('cms.partials.tz-boot', ['country' => $country])
     @include('cms.partials.header', ['country' => $country])
     <main class="st-wrap">

@@ -138,6 +138,8 @@
             </div>
         </div>
 
+        @include('admin.store.products._content')
+
         <div class="card shadow-sm mb-4">
             <div class="card-header">SEO</div>
             <div class="card-body">
