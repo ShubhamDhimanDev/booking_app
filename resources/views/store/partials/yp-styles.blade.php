@@ -1,6 +1,5 @@
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-body.yp-body { background: #FAF6EF; padding-bottom: 72px; }
+body.yp-body { padding-bottom: 72px; }
 body.yp-body .st-wrap { padding-top: 12px; }
 .yp {
     --ink: #373c80; --gold: #C9973A; --gold-pale: #F9F0DC; --gold-faint: #FDF8F0; --cream: #FAF6EF; --parchment: #F5EDD8;

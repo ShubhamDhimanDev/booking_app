@@ -23,13 +23,6 @@
         <form method="POST" action="{{ route('checkout.place', $country->slug) }}" class="st-summary">
             @csrf
             <h3 style="margin-top:0">Delivery details</h3>
-            <style>
-                .st-field { display: block; margin-bottom: 14px; }
-                .st-field span { display: block; font-size: .85rem; color: #475569; margin-bottom: 4px; }
-                .st-field input, .st-field textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
-                .st-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-                @media (max-width: 600px) { .st-two { grid-template-columns: 1fr; } }
-            </style>
             <div class="st-two">
                 <label class="st-field"><span>Full name</span><input name="customer_name" value="{{ old('customer_name', $user?->name) }}" required></label>
                 <label class="st-field"><span>Email</span><input type="email" name="customer_email" value="{{ old('customer_email', $user?->email) }}" required></label>
@@ -55,7 +48,7 @@
                 <div class="row"><span>{{ $line['quantity'] }} &times; {{ $line['product']->name }}</span><span>{{ $sym }}{{ number_format($line['line_total'], 2) }}</span></div>
             @endforeach
             @if($summary['promo'])
-                <div class="row" style="color:#166534"><span>Promo {{ $summary['promo']->code }}</span><span>- {{ $sym }}{{ number_format($summary['discount'], 2) }}</span></div>
+                <div class="row st-ok"><span>Promo {{ $summary['promo']->code }}</span><span>- {{ $sym }}{{ number_format($summary['discount'], 2) }}</span></div>
             @endif
             <div class="row total"><span>Total</span><span>{{ $sym }}{{ number_format($summary['total'], 2) }}</span></div>
             <p class="st-muted">No shipping charges or taxes are added.</p>

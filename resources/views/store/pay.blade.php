@@ -51,7 +51,7 @@
                             f.submit();
                         },
                         modal: { ondismiss: function () { document.getElementById('rzp-msg').textContent = 'Payment window closed. Click the button to try again.'; } },
-                        theme: { color: '#4f46e5' }
+                        theme: { color: '#373c80' }
                     });
                     rzp.open();
                 }

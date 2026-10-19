@@ -37,7 +37,7 @@
                                         @else
                                             <span class="st-muted">Removed product</span>
                                         @endif
-                                        @if($line['error'])<div style="color:#dc2626;font-size:.85rem">{{ $line['error'] }}</div>@endif
+                                        @if($line['error'])<div class="st-err">{{ $line['error'] }}</div>@endif
                                     </td>
                                     <td>
                                         {{ $sym }}{{ number_format($line['price'], 2) }}
@@ -56,7 +56,7 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <p style="margin-top:14px"><button class="cms-btn st-btn" style="background:#475569">Update cart</button></p>
+                    <p style="margin-top:14px"><button class="cms-btn st-btn st-btn-alt">Update cart</button></p>
                 </form>
 
                 @foreach($summary['lines'] as $line)
@@ -67,10 +67,10 @@
             <aside class="st-summary">
                 <div class="row"><span>Subtotal</span><span>{{ $sym }}{{ number_format($summary['subtotal'], 2) }}</span></div>
                 @if($summary['savings'] > 0)
-                    <div class="row" style="color:#166534"><span>You save (vs MRP)</span><span>{{ $sym }}{{ number_format($summary['savings'], 2) }}</span></div>
+                    <div class="row st-ok"><span>You save (vs MRP)</span><span>{{ $sym }}{{ number_format($summary['savings'], 2) }}</span></div>
                 @endif
                 @if($summary['promo'])
-                    <div class="row" style="color:#166534">
+                    <div class="row st-ok">
                         <span>Promo {{ $summary['promo']->code }}
                             <button type="submit" class="st-link" form="promo-remove" style="margin-left:6px">remove</button>
                         </span>
@@ -78,7 +78,7 @@
                     </div>
                 @endif
                 @if($summary['promo_error'])
-                    <div style="color:#dc2626;font-size:.85rem">{{ $summary['promo_error'] }}</div>
+                    <div class="st-err">{{ $summary['promo_error'] }}</div>
                 @endif
                 <div class="row total"><span>Total</span><span>{{ $sym }}{{ number_format($summary['total'], 2) }}</span></div>
                 <p class="st-muted" style="margin:6px 0 0">No shipping charges or taxes are added.</p>
@@ -86,7 +86,7 @@
                 @if(! $summary['promo'])
                     <form method="POST" action="{{ route('cart.promo', $country->slug) }}" style="display:flex;gap:8px;margin-top:18px">
                         @csrf
-                        <input type="text" name="promo_code" placeholder="Promo code" style="flex:1;min-width:0;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit">
+                        <input type="text" name="promo_code" placeholder="Promo code" class="st-input" style="flex:1;min-width:0">
                         <button class="cms-btn st-btn" style="padding:9px 16px">Apply</button>
                     </form>
                 @endif

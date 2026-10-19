@@ -34,7 +34,7 @@
                     @if($product->first_image)
                         <img src="{{ $product->first_image }}" alt="{{ $product->name }}" loading="lazy">
                     @else
-                        <div class="st-noimg"></div>
+                        <div class="st-noimg">@include('store.partials.yp-yantra')</div>
                     @endif
                 </a>
                 <div class="st-card-body">

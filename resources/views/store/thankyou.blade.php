@@ -26,7 +26,7 @@
     @endif
 
     @if($invite && $invite->status === 'pending')
-        <div class="st-summary" style="margin:20px 0;background:#eef2ff">
+        <div class="st-summary st-accent" style="margin:20px 0">
             <h3 style="margin-top:0">Your free session</h3>
             <p class="cms-text">Your order includes a free session. Choose a slot that suits you (link valid until {{ $invite->expires_at->format('j F Y') }}).</p>
             <a class="cms-btn" href="{{ url('/followup/' . $invite->token) }}">Book your free session</a>
