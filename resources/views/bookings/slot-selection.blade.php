@@ -497,7 +497,7 @@
             confirmPanel.classList.remove('hidden');
 
             const conv = window.convertIstToVisitorTz(formatLocalDate(selectedDate), time);
-            confirmText.textContent = `You've selected ${conv.localDate} at ${conv.local} (${conv.ist} India time)`;
+            confirmText.textContent = `You've selected ${conv.localDate} at ${conv.local}`;
 
             setTimeout(() => {
                 confirmPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

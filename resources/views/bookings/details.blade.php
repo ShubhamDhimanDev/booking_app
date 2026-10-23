@@ -115,8 +115,7 @@
                     <div class="space-y-2">
                         <p class="flex items-center gap-2 text-slate-900 dark:text-white font-bold">
                             <span class="material-icons-round text-primary">calendar_today</span>
-                            <span data-ist-date="{{ \Carbon\Carbon::parse($date)->format('Y-m-d') }}"
-                                  data-ist-time="{{ \Carbon\Carbon::parse($time)->format('H:i') }}">
+                            <span>
                                 {{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}, {{ \Carbon\Carbon::parse($time)->format('g:i A') }} IST
                             </span>
                         </p>
