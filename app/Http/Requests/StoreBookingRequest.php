@@ -78,6 +78,8 @@ class StoreBookingRequest extends FormRequest
     return [
       'booker_name' => 'required|string',
       'booker_email' => 'required|email',
+      'phone' => ['required', 'string', 'max:32'],
+      'additional_notes' => ['nullable', 'string', 'max:2000'],
       'booked_at_date' => $dateRules,
       'booked_at_time' => $timeRules,
       'timezone' => 'nullable|string|max:64',

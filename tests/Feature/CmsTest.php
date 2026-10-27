@@ -172,10 +172,9 @@ class CmsTest extends TestCase
         $user = User::factory()->create();
         $this->makeEvent($user, Country::where('slug', 'en-in')->first(), 'india-only', 'INR', 500, 'India Only');
 
-        // US visitor (Cloudflare header) on the Indian event: page, details and booking are all blocked
+        // US visitor (Cloudflare header) on the Indian event: page and booking are both blocked
         $this->withHeader('CF-IPCountry', 'US')->get('/en-in/e/india-only')
             ->assertForbidden()->assertSee('not available in your country')->assertSee('/en-us', false);
-        $this->withHeader('CF-IPCountry', 'US')->get('/e/india-only/details')->assertForbidden();
         $this->withHeader('CF-IPCountry', 'US')->post('/e/india-only/book', [])->assertForbidden();
 
         // Indian visitor, unknown visitor, and a visitor from a country with no site are allowed

@@ -52,20 +52,17 @@ class EventTrackingScriptsTest extends TestCase
         $response->assertDontSee('GLOBAL_GA_SHOULD_NOT_APPEAR', false);
     }
 
-    public function test_booking_details_page_renders_the_events_own_tracking_scripts()
+    public function test_event_page_fires_initiate_checkout_for_the_events_own_pixel_on_slot_selection()
     {
         $event = $this->eventWithTracking();
-        $date = now()->addDay()->format('Y-m-d');
 
-        $response = $this->get(route('bookings.details', $event->slug) . "?date={$date}&time=10:00");
+        $response = $this->get(route('events.show.public', $event));
 
         $response->assertOk();
-        $response->assertSee('EVENT_PIXEL_123', false);
-        $response->assertSee('EVENT_GA_456', false);
+        // InitiateCheckout is emitted as an inline JS call (fired on first slot selection), not on page load.
+        $response->assertSee("fbq('track', 'InitiateCheckout'", false);
+        $response->assertSee("gtag('event', 'begin_checkout'", false);
         $response->assertDontSee('GLOBAL_PIXEL_SHOULD_NOT_APPEAR', false);
-        $response->assertDontSee('GLOBAL_GA_SHOULD_NOT_APPEAR', false);
-        // InitiateCheckout is the specific conversion event fired on this page.
-        $response->assertSee('InitiateCheckout', false);
     }
 
     public function test_payment_page_renders_the_events_own_tracking_scripts()

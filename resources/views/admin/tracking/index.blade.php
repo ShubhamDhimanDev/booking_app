@@ -100,10 +100,10 @@
                             {{ $settings['meta_event_initiate_checkout'] ? 'checked' : '' }}
                         >
                         <label class="form-check-label" for="meta_event_initiate_checkout">
-                            <strong>InitiateCheckout</strong> - User starts booking details form
+                            <strong>InitiateCheckout</strong> - User selects a time slot on the booking page
                         </label>
                     </div>
-                    <small class="text-muted d-block ms-4">Fires when user lands on the details form page</small>
+                    <small class="text-muted d-block ms-4">Fires once, the first time a visitor selects a time slot</small>
                 </div>
 
                 {{-- AddPaymentInfo Event --}}
@@ -297,7 +297,7 @@
                             {{ $settings['google_event_begin_checkout'] ? 'checked' : '' }}
                         >
                         <label class="form-check-label" for="google_event_begin_checkout">
-                            <strong>begin_checkout</strong> - User starts booking
+                            <strong>begin_checkout</strong> - User selects a time slot
                         </label>
                     </div>
                     <small class="text-muted d-block ms-4">GA4 recommended event for checkout start</small>

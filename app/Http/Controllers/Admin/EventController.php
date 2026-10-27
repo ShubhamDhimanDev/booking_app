@@ -245,12 +245,7 @@ class EventController extends Controller
             }
         }
 
-        // Get active payment gateway config for frontend
-        $paymentGatewayManager = app(\App\Services\PaymentGatewayManager::class);
-        $gatewayConfig = $paymentGatewayManager->getActiveGatewayConfig();
-        $activeGateway = $gatewayConfig['name'] ?? 'razorpay';
-
-        return view('bookings.slot-selection', compact('event', 'availableSlots', 'bookedSlots', 'activeGateway', 'gatewayConfig'));
+        return view('bookings.book', compact('event', 'availableSlots', 'bookedSlots'));
     }
 
     /**

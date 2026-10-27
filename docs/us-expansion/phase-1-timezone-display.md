@@ -1,5 +1,7 @@
 # Phase 1 — Automatic Per-Visitor Timezone Display
 
+> **Note (2026-10-27):** the slot-selection and details pages referenced below have since been merged into `resources/views/bookings/book.blade.php`; `bookings/details.blade.php`, `bookings/slot-selection.blade.php` and `BookingController::showDetailsForm()` no longer exist. See [../booking-flow-merge.md](../booking-flow-merge.md). File and line references in this spec are historical.
+
 ## Goal
 
 Every visitor — Indian or American, on the India event or the future US event — sees slot times and booking confirmations in **their own local clock**, with the original IST time kept visible as a reference. Nothing about how times are stored or computed server-side changes: `config/app.php:73` stays `Asia/Kolkata`, and every `date`/`time` column keeps meaning "IST wall clock."

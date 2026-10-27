@@ -271,30 +271,12 @@ class BookingController extends Controller
 
 
   /**
-   * Show the details form after slot selection
-   * @param Event $event
-   * @param Request $request
-   * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+   * Send the visitor back to the booking page with their input and a message.
+   * Slot conflicts use the `slot` key; field-specific failures use that field's key.
    */
-  public function showDetailsForm(Event $event, Request $request)
+  protected function bookingError(string $message, string $key = 'slot')
   {
-    $date = $request->query('date');
-    $time = $request->query('time');
-    $timezone = $request->query('timezone', 'Asia/Kolkata');
-
-    // Validate that date and time are provided
-    if (!$date || !$time) {
-      return redirect()->route('events.show.public', $event->slug)
-        ->withErrors(['error' => 'Please select a date and time first.']);
-    }
-
-    // Basic date/time validation
-    if (!\Carbon\Carbon::hasFormat($date, 'Y-m-d') || !\Carbon\Carbon::hasFormat($time, 'H:i')) {
-      return redirect()->route('events.show.public', $event->slug)
-        ->withErrors(['error' => 'Invalid date or time format.']);
-    }
-
-    return view('bookings.details', compact('event', 'date', 'time', 'timezone'));
+    return redirect()->back()->withInput()->withErrors([$key => $message]);
   }
 
   /**
@@ -312,7 +294,7 @@ class BookingController extends Controller
       $followUpInvite = FollowUpInvite::where('token', $followUpToken)->first();
 
       if (!$followUpInvite || !$followUpInvite->isValid()) {
-        return response()->json(['error' => 'Invalid or expired follow-up invitation.'], 422);
+        return $this->bookingError('Invalid or expired follow-up invitation.');
       }
     }
 
@@ -328,17 +310,17 @@ class BookingController extends Controller
     // Server-side availability checks
     // 1) date within event range
     if ($event->available_from_date && Carbon::parse($bookedDate)->lt(Carbon::parse($event->available_from_date))) {
-      return response()->json(['error' => 'Selected date is before event availability.'], 422);
+      return $this->bookingError('Selected date is before event availability.', 'booked_at_date');
     }
     if ($event->available_to_date && Carbon::parse($bookedDate)->gt(Carbon::parse($event->available_to_date))) {
-      return response()->json(['error' => 'Selected date is after event availability.'], 422);
+      return $this->bookingError('Selected date is after event availability.', 'booked_at_date');
     }
 
     // 2) weekday allowed
     if (!empty($event->available_week_days) && is_array($event->available_week_days)) {
       $weekday = strtolower(Carbon::parse($bookedDate)->format('l'));
       if (! in_array($weekday, $event->available_week_days)) {
-        return response()->json(['error' => 'Bookings are not allowed on ' . ucfirst($weekday) . ' for this event.'], 422);
+        return $this->bookingError('Bookings are not allowed on ' . ucfirst($weekday) . ' for this event.', 'booked_at_date');
       }
     }
 
@@ -352,17 +334,17 @@ class BookingController extends Controller
       }
     }
     if (! $slotFound) {
-      return response()->json(['error' => 'Selected time is not available for this event.'], 422);
+      return $this->bookingError('Selected time is not available for this event.', 'booked_at_time');
     }
 
     // 4) per-event exclusion check
     $exclusion = $event->exclusions()->whereDate('date', $bookedDate)->first();
     if ($exclusion) {
       if ($exclusion->exclude_all) {
-        return response()->json(['error' => 'Selected date is blocked for this event.'], 422);
+        return $this->bookingError('Selected date is blocked for this event.', 'booked_at_date');
       }
       if (is_array($exclusion->times) && in_array($bookedTime, $exclusion->times)) {
-        return response()->json(['error' => 'Selected time is excluded for the chosen date.'], 422);
+        return $this->bookingError('Selected time is excluded for the chosen date.', 'booked_at_time');
       }
     }
 
@@ -373,7 +355,7 @@ class BookingController extends Controller
       ->where('status', 'confirmed')
       ->exists();
     if ($exists) {
-      return response()->json(['error' => 'Selected timeslot is already booked. Please choose another slot.'], 409);
+      return $this->bookingError('Selected timeslot is already booked. Please choose another slot.');
     }
 
     // 6) NEW: Check if the event owner has ANY confirmed booking at this date/time across all their events
@@ -386,7 +368,7 @@ $ownerHasBooking = Booking::whereHas('event', function($q) use ($event) {
     ->exists();
 
 if ($ownerHasBooking) {
-  return response()->json(['error' => 'The event owner is not available at this time.  Please choose another slot.'], 409);
+  return $this->bookingError('The event owner is not available at this time.  Please choose another slot.');
 }
 
     /** @var \App\Models\User|null */
@@ -1239,6 +1221,6 @@ if ($ownerHasBooking) {
       }
     }
 
-    return view('bookings.slot-selection', compact('event', 'customPrice', 'isFollowUp', 'invite', 'availableSlots', 'bookedSlots'));
+    return view('bookings.book', compact('event', 'customPrice', 'isFollowUp', 'invite', 'availableSlots', 'bookedSlots'));
   }
 }

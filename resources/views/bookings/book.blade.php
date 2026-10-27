@@ -12,12 +12,9 @@
 @section('badge-text-color', 'text-blue-600 dark:text-blue-400')
 @section('badge-text', 'Secure Booking')
 
-{{-- Include loader --}}
-@section('loader')
-@section('loader-text', 'Please wait...')
-
-{{-- Add tracking scripts --}}
-{{-- Base script loaded from layout --}}
+{{-- layouts.app renders the loader overlay when this section exists --}}
+@section('loader', '1')
+@section('loader-text', 'Processing your booking...')
 
 {{-- Custom styles --}}
 @section('additional-styles')
@@ -162,97 +159,42 @@
         box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
         transform: scale(1.05);
     }
+
+    /* Leave room for the sticky header when scrolling to the details form */
+    #detailsBlock {
+        scroll-margin-top: 6rem;
+    }
+
+    #submitBtn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
 </style>
 @endsection
 
 @section('content')
 
-        <!-- Progress Indicator -->
-        <div class="mb-10">
-            <div class="flex items-center justify-center space-x-2 sm:space-x-4">
-                <div class="flex items-center progress-step active">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-indigo-700 flex items-center justify-center ring-4 ring-primary/20 shadow-lg shadow-primary/40 animate-pulse">
-                        <span class="material-icons-round text-white text-lg">event</span>
-                    </div>
-                    <span class="ml-2 text-sm font-bold text-slate-900 dark:text-white">Details</span>
-                </div>
-                <div class="w-16 sm:w-32 h-1 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-                <div class="flex items-center progress-step">
-                    <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                        <span class="material-icons-round text-slate-400 dark:text-slate-500 text-lg">payment</span>
-                    </div>
-                    <span class="ml-2 text-sm font-semibold text-slate-400 dark:text-slate-500">Payment</span>
-                </div>
-                <div class="w-16 sm:w-32 h-1 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-                <div class="flex items-center progress-step">
-                    <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                        <span class="material-icons-round text-slate-400 dark:text-slate-500 text-lg">done_all</span>
-                    </div>
-                    <span class="ml-2 text-sm font-semibold text-slate-400 dark:text-slate-500 hidden sm:inline">Confmration</span>
-                </div>
-            </div>
-        </div>
+        @include('bookings.partials.progress')
 
-        <!-- Follow-up Session Notice -->
         @if(isset($isFollowUp) && $isFollowUp && isset($customPrice))
-        <div class="max-w-5xl mx-auto mb-6">
-            <div class="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border-2 border-emerald-200 dark:border-emerald-700 rounded-2xl p-6 shadow-lg">
-                <div class="flex items-start gap-4">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 rounded-full bg-emerald-500 dark:bg-emerald-600 flex items-center justify-center">
-                            <span class="material-icons-round text-white text-2xl">verified</span>
-                        </div>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">{{ ($invite->source ?? null) === 'order' ? 'Your Free Session' : 'Follow-up Session' }}</h3>
-                        <p class="text-slate-700 dark:text-slate-300 mb-3">{{ ($invite->source ?? null) === 'order' ? 'Thank you for your order. Choose a slot for the free session that comes with it.' : "You've been invited for a follow-up session based on your previous booking." }}</p>
-                        <div class="inline-flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full border border-emerald-200 dark:border-emerald-700">
-                            <span class="material-icons-round text-emerald-600 dark:text-emerald-400 text-lg">local_offer</span>
-                            <span class="font-bold text-slate-900 dark:text-white">
-                                @if($customPrice == 0)
-                                    <span class="text-emerald-600 dark:text-emerald-400">FREE Session!</span>
-                                @else
-                                    Special Price: {{ $event->currency_symbol ?? '₹' }}{{ number_format($customPrice, 2) }}
-                                @endif
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            @include('bookings.partials.followup-banner')
         @endif
+
+        @php
+            $bookingPrice = (isset($isFollowUp) && $isFollowUp && isset($customPrice)) ? $customPrice : $event->price;
+        @endphp
 
         <!-- Two Column Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
 
             <!-- Left Column - Event Info -->
-            <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-700 p-6 hover:shadow-xl transition-all duration-300">
-                <div class="flex flex-col space-y-4">
-                    <div class="flex items-center space-x-4">
-                        <div class="flex-shrink-0">
-                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-indigo-700 text-white text-2xl font-bold flex items-center justify-center ring-4 ring-primary/10 shadow-lg shadow-primary/20">
-                                {{ strtoupper(substr($event->user->name, 0, 1)) }}
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-semibold text-primary uppercase tracking-wider mb-1">{{ $event->user->name }}</h4>
-                            <h2 class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ $event->title }}</h2>
-                        </div>
-                    </div>
-
-                    <div class="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 px-4 py-2 rounded-full text-sm font-bold text-slate-700 dark:text-slate-300 w-fit">
-                        <span class="material-icons-round text-primary text-lg">schedule</span>
-                        <span>{{ $event->duration }} minutes</span>
-                    </div>
-
-                    <div class="pt-2">
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Description</h3>
-                        <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{!! nl2br($event->description) !!}</div>
-                    </div>
-                </div>
+            <div class="lg:col-span-2">
+                @include('bookings.partials.event-card')
             </div>
 
-            <!-- Right Column - Date & Time Selection -->
+            <!-- Right Column - Date, Time & Details -->
             <div class="lg:col-span-3 schedule bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-700 p-6 hover:shadow-xl transition-all duration-300">
             <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <span class="material-icons-round text-primary text-3xl">event</span>
@@ -260,11 +202,11 @@
             </h3>
 
             <div class="calendar-header flex items-center justify-between mb-6 bg-slate-50 dark:bg-slate-700/50 p-4 rounded-2xl">
-                <button id="prevMonth" class="w-11 h-11 rounded-xl bg-white dark:bg-slate-600 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-700 dark:text-slate-300 font-bold transition-all flex items-center justify-center shadow-sm hover:shadow-md">
+                <button type="button" id="prevMonth" class="w-11 h-11 rounded-xl bg-white dark:bg-slate-600 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-700 dark:text-slate-300 font-bold transition-all flex items-center justify-center shadow-sm hover:shadow-md">
                     <span class="material-icons-round">chevron_left</span>
                 </button>
                 <h3 id="monthLabel" class="text-xl font-extrabold text-slate-900 dark:text-white"></h3>
-                <button id="nextMonth" class="w-11 h-11 rounded-xl bg-white dark:bg-slate-600 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-700 dark:text-slate-300 font-bold transition-all flex items-center justify-center shadow-sm hover:shadow-md">
+                <button type="button" id="nextMonth" class="w-11 h-11 rounded-xl bg-white dark:bg-slate-600 hover:bg-primary hover:text-white dark:hover:bg-primary text-slate-700 dark:text-slate-300 font-bold transition-all flex items-center justify-center shadow-sm hover:shadow-md">
                     <span class="material-icons-round">chevron_right</span>
                 </button>
             </div>
@@ -278,27 +220,100 @@
                 </div>
             </div>
 
-            <div class="confirm-panel hidden mt-8 bg-gradient-to-br from-primary/5 via-indigo-50 to-purple-50 dark:from-primary/20 dark:via-slate-700 dark:to-purple-900/20 rounded-2xl p-8 mb-6 text-center border-2 border-primary/20 dark:border-primary/30 shadow-inner" id="confirmPanel">
-                <div class="flex items-start space-x-4 mb-6">
-                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-indigo-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30">
-                        <span class="material-icons-round text-white text-2xl">check_circle</span>
+            <!-- Details form (always visible; submit unlocks once a slot is chosen) -->
+            <div id="detailsBlock" class="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                    <span class="material-icons-round text-primary text-3xl">badge</span>
+                    Enter Your Details
+                </h3>
+
+                @if($errors->any())
+                    <div id="formErrors" class="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 text-red-800 dark:text-red-300 px-6 py-4 rounded-xl mb-6 shadow-sm">
+                        <div class="flex items-start space-x-3">
+                            <span class="material-icons-round text-red-500 dark:text-red-400">error</span>
+                            <div class="flex-1">
+                                <strong class="font-bold block mb-2">Error:</strong>
+                                <ul class="list-disc list-inside space-y-1 text-sm">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex-1">
-                        <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">Selected Time Slot</p>
-                        <p id="confirmText" class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight"></p>
+                @endif
+
+                <div class="mb-6 flex items-start gap-3 bg-gradient-to-br from-primary/5 via-indigo-50 to-purple-50 dark:from-primary/20 dark:via-slate-700 dark:to-purple-900/20 rounded-2xl p-4 border-2 border-primary/20 dark:border-primary/30">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-indigo-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30">
+                        <span class="material-icons-round text-white">check_circle</span>
                     </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold text-primary uppercase tracking-wider mb-1">Selected Time Slot</p>
+                        <p id="confirmText" class="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">No time selected yet</p>
+                    </div>
+                    <a href="#calendar" id="changeSlot" class="hidden text-sm font-bold text-primary hover:underline whitespace-nowrap">Change</a>
                 </div>
-                <form method="GET" action="{{ route('bookings.details', $event->slug) }}" id="slotForm">
-                    <input type="hidden" name="date" id="selectedDate">
-                    <input type="hidden" name="time" id="selectedTime">
+
+                <form method="POST" action="{{ route('bookings.store', $event->slug) }}" id="bookingForm" class="space-y-5">
+                    @csrf
+                    <input type="hidden" name="booked_at_date" id="selectedDate" value="{{ old('booked_at_date') }}">
+                    <input type="hidden" name="booked_at_time" id="selectedTime" value="{{ old('booked_at_time') }}">
                     <input type="hidden" name="timezone" id="selectedTimezone">
                     @if(isset($isFollowUp) && $isFollowUp && isset($invite))
                         <input type="hidden" name="followup_token" value="{{ $invite->token }}">
                     @endif
-                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-indigo-700 hover:opacity-95 text-white font-extrabold py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02]">
-                        <span class="material-icons-round">arrow_forward</span>
-                        Next: Enter Details
-                    </button>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                            <span class="flex items-center gap-2">
+                                <span class="material-icons-round text-primary text-sm">person</span>
+                                Full Name *
+                            </span>
+                        </label>
+                        <input type="text" name="booker_name" value="{{ old('booker_name', auth()->user()->name ?? '') }}" placeholder="Enter your full name" required
+                            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                            <span class="flex items-center gap-2">
+                                <span class="material-icons-round text-primary text-sm">email</span>
+                                Email Address *
+                            </span>
+                        </label>
+                        <input type="email" name="booker_email" value="{{ old('booker_email', auth()->user()->email ?? '') }}" placeholder="your@email.com" required
+                            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                            <span class="flex items-center gap-2">
+                                <span class="material-icons-round text-primary text-sm">phone</span>
+                                Phone Number *
+                            </span>
+                        </label>
+                        <input type="tel" name="phone" value="{{ old('phone', auth()->user()->phone ?? '') }}" placeholder="+91 XXXXXXXXXX" required
+                            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                            <span class="flex items-center gap-2">
+                                <span class="material-icons-round text-primary text-sm">notes</span>
+                                Additional Notes
+                            </span>
+                        </label>
+                        <textarea name="additional_notes" rows="3" placeholder="Any specific agenda or requirements?"
+                            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none">{{ old('additional_notes') }}</textarea>
+                    </div>
+
+                    <div class="pt-2">
+                        <p id="submitHint" class="text-sm text-center text-slate-500 dark:text-slate-400 mb-3">Choose a date and time above to continue.</p>
+                        <button type="submit" id="submitBtn" disabled class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-indigo-700 hover:opacity-95 text-white font-extrabold py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40">
+                            <span class="material-icons-round">arrow_forward</span>
+                            {{ (float) $bookingPrice == 0 ? 'Confirm Booking' : 'Continue to Payment' }}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -313,15 +328,40 @@
         const calendar = document.getElementById('calendar');
         const monthLabel = document.getElementById('monthLabel');
         const timeSlotsDiv = document.getElementById('timeSlots');
-        const confirmPanel = document.getElementById('confirmPanel');
+        const detailsBlock = document.getElementById('detailsBlock');
         const confirmText = document.getElementById('confirmText');
-        const slotForm = document.getElementById('slotForm');
+        const changeSlot = document.getElementById('changeSlot');
+        const bookingForm = document.getElementById('bookingForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitHint = document.getElementById('submitHint');
         const selectedDateInput = document.getElementById('selectedDate');
         const selectedTimeInput = document.getElementById('selectedTime');
 
         document.getElementById('selectedTimezone').value = window.__visitorTz || 'Asia/Kolkata';
 
+        // Fires the checkout-start events once per page view, the first time a slot is chosen.
+        const trackCheckoutStart = (function () {
+            let fired = false;
+            return function () {
+                if (fired) return;
+                fired = true;
+                {!! \App\Services\TrackingService::getInlineTrackingCode('InitiateCheckout', [
+                    'content_name' => $event->title,
+                    'content_ids' => [$event->id],
+                    'value' => $event->price,
+                    'currency' => $event->currency ?? 'INR',
+                ], $event) !!}
+                {!! \App\Services\TrackingService::getGoogleInlineTrackingCode('begin_checkout', [
+                    'event_name' => $event->title,
+                    'event_id' => $event->id,
+                    'value' => $event->price,
+                    'currency' => $event->currency ?? 'INR',
+                ], $event) !!}
+            };
+        })();
+
         let currentMonth = new Date();
+        currentMonth.setDate(1); // avoid month-overflow when stepping from the 29th-31st
         let selectedDate = null;
         let selectedTime = null;
 
@@ -387,6 +427,8 @@
                 const dateEl = document.createElement('div');
                 dateEl.className = 'date';
                 dateEl.textContent = i;
+                dateEl.dataset.date = dateStr;
+                if (selectedDate && dateStr === formatLocalDate(selectedDate)) dateEl.classList.add('active');
 
                 const availableDate = availableDates.find(d => d.date === dateStr);
                 const weekdayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
@@ -433,12 +475,25 @@
             document.querySelectorAll('.date').forEach(d => d.classList.remove('active'));
             el.classList.add('active');
             selectedDate = date;
+            clearSelectedSlot();
             renderTimeSlots();
+            // On narrow screens the slot list can sit below the fold.
+            timeSlotsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Drops the chosen slot (a new date was picked) and locks the submit button again.
+        function clearSelectedSlot() {
+            selectedTime = null;
+            selectedDateInput.value = '';
+            selectedTimeInput.value = '';
+            confirmText.textContent = 'No time selected yet';
+            changeSlot.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitHint.classList.remove('hidden');
         }
 
         function renderTimeSlots() {
             timeSlotsDiv.innerHTML = "";
-            confirmPanel.classList.add('hidden');
             if (!selectedDate) return;
 
             const dateStr = formatLocalDate(selectedDate);
@@ -479,14 +534,13 @@
                 t.title = `${conv.ist} (India time)`;
 
                 t.dataset.backendTime = slot.start;
-                t.addEventListener('click', () => selectTime(slot.start, t));
+                t.addEventListener('click', () => selectTime(slot.start, t, true));
                 timeSlotsDiv.appendChild(t);
             });
         }
 
-        function selectTime(time, el) {
-            console.log('Time selected:', time);
-
+        // `scroll` is false when restoring a slot after a failed submit.
+        function selectTime(time, el, scroll) {
             document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
             el.classList.add('selected');
             selectedTime = time;
@@ -494,17 +548,36 @@
             selectedDateInput.value = formatLocalDate(selectedDate);
             selectedTimeInput.value = time;
 
-            confirmPanel.classList.remove('hidden');
-
             const conv = window.convertIstToVisitorTz(formatLocalDate(selectedDate), time);
-            confirmText.textContent = `You've selected ${conv.localDate} at ${conv.local}`;
+            const prettyDate = new Date(`${formatLocalDate(selectedDate)}T${time}:00+05:30`).toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: window.__visitorTz || 'Asia/Kolkata',
+            });
+            confirmText.textContent = `${prettyDate} at ${conv.local}`;
+            changeSlot.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitHint.classList.add('hidden');
 
-            setTimeout(() => {
-                confirmPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
+            trackCheckoutStart();
 
-            console.log('Confirm panel displayed');
+            if (scroll) {
+                detailsBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
+
+        changeSlot.addEventListener('click', (e) => {
+            e.preventDefault();
+            calendar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        // Never post without a slot, and stop double submits (each submit creates a pending booking).
+        bookingForm.addEventListener('submit', (e) => {
+            if (!selectedDateInput.value || !selectedTimeInput.value) {
+                e.preventDefault();
+                return;
+            }
+            submitBtn.disabled = true;
+            document.getElementById('loader')?.classList.remove('hidden');
+        });
 
         document.getElementById('prevMonth').addEventListener('click', () => {
             currentMonth.setMonth(currentMonth.getMonth() - 1);
@@ -517,5 +590,39 @@
         });
 
         renderCalendar(currentMonth);
+
+        // Coming back via the browser's back button (page restored from cache): unlock submit again.
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted && selectedDateInput.value && selectedTimeInput.value) {
+                submitBtn.disabled = false;
+            }
+        });
+
+        // After a failed submit, put the visitor's slot back (if it is still selectable) and show the errors.
+        (function restoreSlot() {
+            const oldDate = @json(old('booked_at_date'));
+            const oldTime = @json(old('booked_at_time'));
+            const hasErrors = {{ $errors->any() ? 'true' : 'false' }};
+
+            // The hidden inputs are pre-filled from old(); clear them until a real slot is re-selected.
+            clearSelectedSlot();
+
+            if (oldDate && oldTime && /^\d{4}-\d{2}-\d{2}$/.test(oldDate)) {
+                const [y, m, d] = oldDate.split('-').map(Number);
+                currentMonth = new Date(y, m - 1, 1);
+                renderCalendar(currentMonth);
+                const dateEl = calendar.querySelector(`.date[data-date="${oldDate}"]:not(.disabled)`);
+                if (dateEl) {
+                    selectDate(new Date(y, m - 1, d), dateEl);
+                    const slotEl = Array.from(timeSlotsDiv.children).find(t => t.dataset.backendTime === oldTime);
+                    if (slotEl) selectTime(oldTime, slotEl, false);
+                }
+            }
+
+            if (hasErrors) {
+                const target = document.getElementById('formErrors') || detailsBlock;
+                setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+            }
+        })();
     </script>
 @endpush

@@ -156,7 +156,11 @@ class StoreTest extends TestCase
         $order = app(OrderService::class)->createFromCart(Cart::first(), $this->customer(), null);
         app(OrderService::class)->markPaid($order, 'razorpay', 'pay_2');
 
-        $this->get('/followup/' . $order->freeSessionInvite->token)->assertOk()->assertSee('Your Free Session');
+        $token = $order->freeSessionInvite->token;
+        $this->get('/followup/' . $token)->assertOk()
+            ->assertSee('Your Free Session')
+            // The invite token rides along on the one booking form.
+            ->assertSee('name="followup_token" value="' . $token . '"', false);
     }
 
     public function test_a_full_discount_order_skips_the_gateway_and_is_paid()

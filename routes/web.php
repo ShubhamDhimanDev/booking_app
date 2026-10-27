@@ -59,9 +59,8 @@ Route::post('/payment/payu/webhook', [PaymentController::class, 'payuWebhook'])-
 Route::post('/payment/payu/order-callback', [\App\Http\Controllers\OrderPaymentController::class, 'payuCallback'])->name('order.payu.callback');
 Route::get('/payment/failed/{booking?}', [PaymentController::class, 'paymentFailedPage'])->name('payment.failed');
 
-// Multi-page booking flow
+// Booking flow (slot + details are one page; the form posts to bookings.store)
 Route::get('/e/{event:slug}', [EventController::class, 'showPublic'])->middleware('event.country')->name('events.show.public');
-Route::get('/e/{event:slug}/details', [BookingController::class, 'showDetailsForm'])->middleware('event.country')->name('bookings.details');
 Route::post('/e/{event:slug}/book', [BookingController::class, 'store'])->middleware('event.country')->name('bookings.store');
 
 // Follow-up booking flow
