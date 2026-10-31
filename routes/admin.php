@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\NavigationController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\FormSubmissionController;
 use App\Http\Controllers\Admin\PageSectionController;
@@ -97,6 +98,9 @@ Route::prefix('admin')->name('admin.')->group(function(){
         Route::put('/sections/{section}', [PageSectionController::class, 'update'])->name('sections.update');
         Route::delete('/sections/{section}', [PageSectionController::class, 'destroy'])->name('sections.destroy');
         Route::post('/cms/upload', [PageSectionController::class, 'upload'])->name('cms.upload');
+
+        // Media manager
+        Route::resource('/media', MediaController::class)->only(['index', 'store', 'destroy']);
 
         // Form submissions (from `form` page sections)
         Route::get('/submissions/export', [FormSubmissionController::class, 'export'])->name('submissions.export');

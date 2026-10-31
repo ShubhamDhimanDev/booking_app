@@ -82,6 +82,14 @@
               </a>
           </li>
 
+          {{-- Media manager --}}
+          <li class="nav-item">
+              <a class="nav-link {{ request()->routeIs('admin.media.*') }}" href="{{ route('admin.media.index') }}">
+                  <i class="mdi mdi-image-multiple menu-icon"></i>
+                  <span class="menu-title">Media</span>
+              </a>
+          </li>
+
           {{-- CMS: Form submissions --}}
           <li class="nav-item">
               <a class="nav-link {{ request()->routeIs('admin.submissions.*') }}" href="{{ route('admin.submissions.index') }}">
